@@ -34,7 +34,7 @@ ragchain down
 - **Chroma** (vector store): http://localhost:8000
 - **ragchain API**: http://localhost:8003
 
-Note: the compose file is now the canonical `docker-compose.yml`. You can run the demo with `docker compose up -d --profile demo` or tests with `docker compose up -d --profile test --build`.
+Note: the compose file is now the canonical `docker-compose.yml`. You can run the demo with `docker compose up -d --profile demo` or start a minimal test stack with `ragchain up --profile test` (recommended for CI/tests).
 - **demo-runner**: automatically runs sample ingest + search on startup
 
 ---

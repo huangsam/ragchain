@@ -56,7 +56,7 @@ def chroma_store(request, tmp_path: Path):
             else:
                 pytest.skip(
                     "CHROMA_SERVER_URL not set and no local Chroma detected at http://127.0.0.1:8000; "
-                    "run `docker compose -f demo-compose.yml --profile test up -d --build` or set CHROMA_SERVER_URL to run remote chroma tests",
+                    "run `ragchain up --profile test` or set CHROMA_SERVER_URL to run remote chroma tests",
                 )
             # propagate for any code that reads it
             os.environ["CHROMA_SERVER_URL"] = server_url

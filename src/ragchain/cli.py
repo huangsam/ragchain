@@ -209,6 +209,7 @@ def ingest(titles: tuple[str, ...], api_url: str) -> None:  # pragma: no cover -
 
     Example: `ragchain ingest "Python_(programming_language)" "Java_(programming_language)"`
     """
+
     async def _run_ingest():
         try:
             async with httpx.AsyncClient() as client:
@@ -246,6 +247,7 @@ def search(query_text: str, api_url: str, n_results: int) -> None:  # pragma: no
 
     Example: `ragchain search "python language" --n-results 5`
     """
+
     async def _run_search():
         try:
             async with httpx.AsyncClient() as client:

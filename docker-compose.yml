@@ -7,7 +7,8 @@ services:
     volumes:
       - chroma_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      # Use Chroma v2 heartbeat endpoint (curl is missing in image, use bash tcp hack)
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8000; echo -e \"GET /api/v2/heartbeat HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; cat <&3 | grep \"200 OK\"'"]
       interval: 5s
       timeout: 5s
       retries: 5

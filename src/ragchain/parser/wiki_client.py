@@ -9,7 +9,6 @@ import aiohttp
 
 from ragchain.utils import safe_filename
 
-
 WIKI_SUMMARY = "https://en.wikipedia.org/api/rest_v1/page/summary/{title}"
 WIKI_MOBILE_SECTIONS = "https://en.wikipedia.org/api/rest_v1/page/mobile-sections/{title}"
 
@@ -33,9 +32,7 @@ async def fetch_page(title: str, session: aiohttp.ClientSession) -> Dict[str, An
     return {"title": title, "summary": summary, "sections": sections}
 
 
-async def fetch_wikipedia_pages(
-    titles: List[str], concurrency: int = 5, save_dir: Optional[Path] = None
-) -> List[Dict[str, Any]]:
+async def fetch_wikipedia_pages(titles: List[str], concurrency: int = 5, save_dir: Optional[Path] = None) -> List[Dict[str, Any]]:
     """Fetch multiple Wikipedia pages concurrently and optionally save raw JSON to disk.
 
     This uses the REST API for metadata and sections. It will respect a simple

@@ -1,14 +1,13 @@
+# Skip if chromadb is missing
+import importlib.util
+
 import pytest
 from aioresponses import aioresponses
 
-from ragchain.rag.ingest import ingest
 from ragchain.rag.embeddings import DummyEmbedding
-from ragchain.vectorstore.chroma_vectorstore import ChromaVectorStore
+from ragchain.rag.ingest import ingest
 
-# Skip if chromadb is missing
-try:
-    import chromadb
-except ImportError:
+if importlib.util.find_spec("chromadb") is None:
     pytest.skip("chromadb not installed", allow_module_level=True)
 
 

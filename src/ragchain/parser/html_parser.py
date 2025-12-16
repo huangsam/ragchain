@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from bs4 import BeautifulSoup
 from typing import Dict, List, Optional
+
+from bs4 import BeautifulSoup
 
 
 def extract_text_from_mobile_sections(sections_json: Dict) -> str:
@@ -18,7 +19,7 @@ def extract_text_from_mobile_sections(sections_json: Dict) -> str:
             continue
         soup = BeautifulSoup(html, "html.parser")
         # remove edit links and sup marks
-        for sup in soup.select("sup, .mw-editsection"):  # type: ignore
+        for sup in soup.select("sup, .mw-editsection"):
             sup.decompose()
         text = soup.get_text(separator="\n").strip()
         if text:

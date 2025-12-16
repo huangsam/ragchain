@@ -1,6 +1,5 @@
 from ragchain.parser.html_parser import extract_text_from_mobile_sections
 
-
 MOBILE_SECTIONS_SAMPLE = {
     "sections": [
         {"line": "Intro", "text": "<p>First paragraph <sup>1</sup></p>"},

@@ -3,10 +3,12 @@ from __future__ import annotations
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional
+from types import ModuleType
 
+chromadb: ModuleType | None = None
 try:
-    import chromadb
-    from chromadb.config import Settings
+    import chromadb as _chromadb
+    chromadb = _chromadb
 except Exception:  # pragma: no cover - chromadb is optional for tests
     chromadb = None
 
@@ -80,9 +82,7 @@ class ChromaVectorStore:
 
         def _query():
             # include metadatas and documents to inspect results
-            return self._collection.query(
-                query_embeddings=[embedding], n_results=n_results, include=["metadatas", "documents", "distances"]
-            )
+            return self._collection.query(query_embeddings=[embedding], n_results=n_results, include=["metadatas", "documents", "distances"])
 
         res = await loop.run_in_executor(self._executor, _query)
         return res

@@ -1,5 +1,3 @@
-import asyncio
-
 import pytest
 from aioresponses import aioresponses
 

@@ -1,7 +1,7 @@
 import pytest
 
-from ragchain.vectorstore.chroma_vectorstore import ChromaVectorStore
 from ragchain.rag.embeddings import DummyEmbedding
+from ragchain.vectorstore.chroma_vectorstore import ChromaVectorStore
 
 
 @pytest.mark.asyncio

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 
 class EmbeddingClient:
@@ -39,4 +39,6 @@ try:
             return self.model.encode(list(texts), show_progress_bar=False).tolist()
 
 except Exception:  # pragma: no cover - optional dep
-    LocalSentenceTransformer = None
+    from typing import Optional, Type
+
+    LocalSentenceTransformer = None  # type: ignore

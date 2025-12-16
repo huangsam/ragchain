@@ -20,7 +20,7 @@ class IngestReport:
     pages_skipped: int = 0
     chunks_created: int = 0
     vectors_upserted: int = 0
-    errors: List[str] = None
+    errors: Optional[List[str]] = None
 
 
 async def ingest(
@@ -50,27 +50,18 @@ async def ingest(
         sections = p.get("sections") or {}
         full_text = extract_text_from_mobile_sections(sections)
         text_to_chunk = first_para + "\n\n" + full_text if first_para else full_text
-        
+
         chunks = chunk_text(text_to_chunk, chunk_size=chunk_size, overlap=overlap)
         report.chunks_created += len(chunks)
-        
+
         embeddings = await embedding_client.embed_texts(chunks)
-        
+
         if vectorstore:
             docs = []
             title_safe = safe_filename(p.get("title", "unknown"))
             for i, (chunk, vec) in enumerate(zip(chunks, embeddings)):
                 doc_id = f"{title_safe}_{i}"
-                docs.append({
-                    "id": doc_id,
-                    "text": chunk,
-                    "metadata": {
-                        "title": p.get("title", ""),
-                        "chunk_index": i,
-                        "source": "wikipedia"
-                    },
-                    "embedding": vec
-                })
+                docs.append({"id": doc_id, "text": chunk, "metadata": {"title": p.get("title", ""), "chunk_index": i, "source": "wikipedia"}, "embedding": vec})
             await vectorstore.upsert_documents(docs)
             report.vectors_upserted += len(docs)
 

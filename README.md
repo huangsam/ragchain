@@ -16,14 +16,10 @@ ragchain up
 ragchain status
 
 # Ingest pages
-curl -X POST http://127.0.0.1:8003/ingest \
-  -H 'Content-Type: application/json' \
-  -d '{"titles":["Python_(programming_language)"]}'
+ragchain ingest "Python_(programming_language)" "Java_(programming_language)"
 
 # Search
-curl -X POST http://127.0.0.1:8003/search \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"python language","n_results":1}'
+ragchain search "python language" --n-results 5
 
 # Ask (requires local Ollama)
 # Ensure you have run `ollama pull qwen3` locally first

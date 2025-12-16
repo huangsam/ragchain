@@ -201,5 +201,85 @@ def status(api_url: str) -> None:  # pragma: no cover - manual
         raise click.ClickException(f"Health check failed: {exc}")
 
 
+@cli.command()
+@click.argument("titles", nargs=-1, required=True)
+@click.option("--api-url", default="http://127.0.0.1:8003", help="API URL")
+def ingest(titles: tuple[str, ...], api_url: str) -> None:  # pragma: no cover - manual
+    """Ingest Wikipedia pages by title(s) into the vector store.
+
+    Example: `ragchain ingest "Python_(programming_language)" "Java_(programming_language)"`
+    """
+    async def _run_ingest():
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{api_url}/ingest",
+                    json={"titles": list(titles)},
+                    timeout=120.0,
+                )
+                response.raise_for_status()
+                result = response.json()
+
+                click.echo("\n" + "=" * 80)
+                click.echo("Ingest Report:")
+                click.echo("-" * 80)
+                for key, val in result.get("report", {}).items():
+                    click.echo(f"  {key}: {val}")
+                click.echo("=" * 80 + "\n")
+
+        except httpx.ConnectError:
+            raise click.ClickException(f"Could not connect to {api_url}. Is the ragchain API running? Try: ragchain up")
+        except httpx.HTTPStatusError as exc:
+            raise click.ClickException(f"API error: {exc.status_code} {exc.response.text}")
+        except Exception as exc:
+            raise click.ClickException(f"Ingest failed: {exc}")
+
+    asyncio.run(_run_ingest())
+
+
+@cli.command()
+@click.argument("query_text")
+@click.option("--api-url", default="http://127.0.0.1:8003", help="API URL")
+@click.option("--n-results", default=3, help="Number of results to return")
+def search(query_text: str, api_url: str, n_results: int) -> None:  # pragma: no cover - manual
+    """Search the vector store for semantically similar documents.
+
+    Example: `ragchain search "python language" --n-results 5`
+    """
+    async def _run_search():
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{api_url}/search",
+                    json={"query": query_text, "n_results": n_results},
+                    timeout=30.0,
+                )
+                response.raise_for_status()
+                result = response.json()
+
+                click.echo("\n" + "=" * 80)
+                click.echo(f"Search Results for: {query_text}")
+                click.echo("-" * 80)
+
+                results = result.get("results", {})
+                documents = results.get("documents", [[]])[0]
+                metadatas = results.get("metadatas", [[]])[0]
+
+                for i, (doc, meta) in enumerate(zip(documents, metadatas), 1):
+                    click.echo(f"\n[{i}] {meta.get('title', 'Unknown')}")
+                    click.echo(f"    {doc[:200]}...")
+
+                click.echo("\n" + "=" * 80 + "\n")
+
+        except httpx.ConnectError:
+            raise click.ClickException(f"Could not connect to {api_url}. Is the ragchain API running? Try: ragchain up")
+        except httpx.HTTPStatusError as exc:
+            raise click.ClickException(f"API error: {exc.status_code} {exc.response.text}")
+        except Exception as exc:
+            raise click.ClickException(f"Search failed: {exc}")
+
+    asyncio.run(_run_search())
+
+
 if __name__ == "__main__":  # pragma: no cover - manual run
     cli()

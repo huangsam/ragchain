@@ -97,3 +97,19 @@ def test_cli_status_connect_error(monkeypatch):
     result = runner.invoke(cli, ["status"])
     assert result.exit_code != 0
     assert "Could not connect" in result.output or "Health check failed" in result.output
+
+
+def test_cli_ingest_help():
+    """Test ingest command help."""
+    runner = CliRunner()
+    result = runner.invoke(cli, ["ingest", "--help"])
+    assert result.exit_code == 0
+    assert "Usage:" in result.output
+
+
+def test_cli_search_help():
+    """Test search command help."""
+    runner = CliRunner()
+    result = runner.invoke(cli, ["search", "--help"])
+    assert result.exit_code == 0
+    assert "Usage:" in result.output

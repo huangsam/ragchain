@@ -10,8 +10,8 @@ A compact tree view of the repository layout:
 
 ```
 ragchain/
-├── api.py                # FastAPI app (/health, /ingest, /search)
-├── cli.py                # Click-based CLI (`ragchain serve`)
+├── api.py                # FastAPI app (/health, /ingest, /search, /ask)
+├── cli.py                # Click-based CLI (serve, up, down, status, ingest, search, query)
 ├── parser/
 │   ├── wiki_client.py    # Concurrent fetches of Wikipedia pages; atomic writes
 │   └── html_parser.py    # Extracts text from sections-like JSON (e.g., MediaWiki extracts)

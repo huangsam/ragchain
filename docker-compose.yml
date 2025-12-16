@@ -1,12 +1,16 @@
-version: "3.8"
 services:
-  mongo:
-    image: mongo:6.0
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "8000:8000"
     volumes:
-      - mongo_data:/data/db
+      - chroma_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  mongo_data:
+  chroma_data:

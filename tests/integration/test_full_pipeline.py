@@ -13,7 +13,7 @@ except ImportError:
 
 
 @pytest.mark.asyncio
-async def test_full_ingest_pipeline(tmp_path):
+async def test_full_ingest_pipeline(tmp_path, chroma_store):
     # 1. Setup mocks and components
     title = "Integration_Test_Page"
     summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{title}"
@@ -27,10 +27,9 @@ async def test_full_ingest_pipeline(tmp_path):
         ]
     }
 
-    # Use a persistent dir for Chroma to ensure it writes to disk (and we can check it)
-    persist_dir = tmp_path / "chroma_db"
-    store = ChromaVectorStore(persist_directory=str(persist_dir))
-    
+    # Use the chroma_store fixture which parametrizes in-process and remote server modes.
+    store = chroma_store
+
     # Use dummy embeddings (deterministic)
     emb = DummyEmbedding(dim=16)
 
@@ -52,7 +51,7 @@ async def test_full_ingest_pipeline(tmp_path):
     assert report.pages_processed == 1
     assert report.chunks_created > 0
     assert report.vectors_upserted == report.chunks_created
-    
+
     # Verify raw file was saved
     raw_file = tmp_path / "wikipages" / f"{title}.json"
     assert raw_file.exists()
@@ -61,15 +60,15 @@ async def test_full_ingest_pipeline(tmp_path):
     # Search for something that should match the summary
     query_vec = (await emb.embed_texts(["summary paragraph"]))[0]
     results = await store.search(query_vec, n_results=1)
-    
+
     assert results["ids"]
     assert len(results["ids"][0]) > 0
-    
+
     # Check metadata
     metadatas = results["metadatas"][0]
     assert metadatas[0]["title"] == title
     assert metadatas[0]["source"] == "wikipedia"
-    
+
     # Check document content
     documents = results["documents"][0]
     assert "summary" in documents[0] or "content" in documents[0]

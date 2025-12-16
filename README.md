@@ -6,7 +6,7 @@ Lightweight RAG ingestion scaffold:
 - Local, non-paid embedding support (dummy embedding or local sentence-transformers)
 - Chunking utilities and ingest orchestration
 - Unit tests via pytest + pytest-asyncio
-- Docker Compose to run MongoDB locally
+- Docker Compose to run ChromaDB locally (replaces Mongo)
 
 Quick start
 
@@ -20,5 +20,23 @@ Chroma notes
 
 - We provide a `ChromaVectorStore` adapter at `src/ragchain/vectorstore/chroma_vectorstore.py` for local development.
 - To enable Chroma functionality, install the dependency: `uv add chromadb`.
-- Some environments may need `pydantic-settings` installed due to pydantic v2 changes: `uv add pydantic-settings`.
+- Some environments may need `pydantic-settings` installed due to Pydantic v2 changes: `uv add pydantic-settings`.
 - If your environment still raises errors when importing `chromadb`, the tests that exercise Chroma will be skipped; consult the error message and consider pinning `pydantic` or installing `pydantic-settings`.
+
+Running remote integration tests
+
+If you want to run the integration tests against a running Chroma server locally, start the service with Docker Compose and point `CHROMA_SERVER_URL` at it. The test suite will use `http://localhost:8000` by default when present.
+
+1. Start Chroma locally:
+
+```bash
+docker-compose up -d
+```
+
+2. Run the remote integration tests:
+
+```bash
+CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
+```
+
+If you prefer not to run the server locally, set `CHROMA_SERVER_URL` to a reachable Chroma instance and the tests will use that instead.

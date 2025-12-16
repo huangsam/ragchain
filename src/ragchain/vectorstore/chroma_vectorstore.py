@@ -12,16 +12,40 @@ except Exception:  # pragma: no cover - chromadb is optional for tests
 
 
 class ChromaVectorStore:
-    """Simple Chroma adapter with async-friendly methods (runs blocking calls in a threadpool)."""
+    """Flexible Chroma adapter with async-friendly methods (runs blocking calls in a threadpool).
+
+    Behavior:
+    - If `server_url` is provided (or CHROMA_SERVER_URL env var is set), uses the remote HTTP client.
+    - Else if `persist_directory` is provided, uses a persistent in-process client.
+    - Else uses an in-memory ephemeral client.
+    """
 
     def __init__(
-        self, client: Optional[Any] = None, collection_name: str = "ragchain", persist_directory: Optional[str] = None
+        self,
+        client: Optional[Any] = None,
+        collection_name: str = "ragchain",
+        persist_directory: Optional[str] = None,
+        server_url: Optional[str] = None,
     ):
         if chromadb is None:
             raise ImportError("chromadb is not installed")
 
+        # Server URL takes precedence. Allow environment override too.
+        import os
+
+        server_url = server_url or os.environ.get("CHROMA_SERVER_URL")
+
         if client is None:
-            if persist_directory:
+            if server_url:
+                # parse server_url like http[s]://host:port
+                from urllib.parse import urlparse
+
+                parsed = urlparse(server_url)
+                host = parsed.hostname or "localhost"
+                port = parsed.port or (443 if parsed.scheme == "https" else 8000)
+                ssl = parsed.scheme == "https"
+                client = chromadb.HttpClient(host=host, port=port, ssl=ssl)
+            elif persist_directory:
                 client = chromadb.PersistentClient(path=persist_directory)
             else:
                 client = chromadb.Client()

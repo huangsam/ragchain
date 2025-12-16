@@ -40,7 +40,7 @@ ragchain/
   - `chromadb` — optional; used by `ChromaVectorStore`
   - `fastapi`, `uvicorn` — API server
   - `click` — CLI
-  - `sentence-transformers` — optional for non-dummy embeddings
+  - `sentence-transformers` — provides `LocalSentenceTransformer` for real embeddings
   - `pydantic-settings` — compatibility with Pydantic v2 in some environments
 
 - Developer tooling (installed via `uv sync` / `uv add`):

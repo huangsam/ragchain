@@ -13,7 +13,7 @@ Start the demo stack and interact with the API:
 ragchain up
 
 # Health check
-curl http://127.0.0.1:8003/health
+ragchain status
 
 # Ingest pages
 curl -X POST http://127.0.0.1:8003/ingest \
@@ -27,10 +27,8 @@ curl -X POST http://127.0.0.1:8003/search \
 
 # Ask (requires local Ollama)
 # Ensure you have run `ollama pull qwen3` locally first
-# You can specify any model you have pulled (e.g., "llama3", "mistral", "qwen3")
-curl -X POST http://127.0.0.1:8003/ask \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"What is Python?", "model": "qwen3"}'
+ragchain query demo
+ragchain query "What is Python?"
 
 # Stop the stack
 ragchain down

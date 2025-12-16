@@ -4,9 +4,10 @@ It expects CHROMA_SERVER_URL to be set (or will use in-process Chroma) and
 that the ragchain API is reachable at http://ragchain:8000 when run via docker-compose.
 """
 
+import asyncio
 import os
 import time
-import asyncio
+
 import aiohttp
 
 API_URL = os.environ.get("RAGCHAIN_API_URL", "http://ragchain:8000")

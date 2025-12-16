@@ -1,8 +1,9 @@
+
 import pytest
-import shutil
+
+from ragchain.rag.embeddings import LocalSentenceTransformer
 from ragchain.rag.ingest import ingest
 from ragchain.vectorstore.chroma_vectorstore import ChromaVectorStore
-from ragchain.rag.embeddings import LocalSentenceTransformer
 
 # Skip if sentence-transformers is not installed or if we are in a CI environment without model download capability
 try:
@@ -22,7 +23,7 @@ async def test_real_embedding_ingest_and_search(tmp_path):
     """
     # 1. Setup
     # We'll mock the wikipedia fetch to avoid network calls and ensure deterministic content
-    from unittest.mock import patch, MagicMock
+    from unittest.mock import patch
 
     # Create a local vector store in a temp dir
     persist_dir = tmp_path / "chroma_db"

@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import asyncio
-import json
-import logging
-import threading
 import itertools
-import sys
-
-import click
+import logging
 import shutil
 import subprocess
-import uvicorn
+import sys
+import threading
+
+import click
 import httpx
+import uvicorn
 
 logger = logging.getLogger("ragchain.cli")
 

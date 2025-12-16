@@ -1,62 +1,31 @@
 # ragchain
 
-Lightweight RAG ingestion scaffold:
+Lightweight RAG ingestion scaffold — scraper, chunker, embeddings, and a Chroma adapter.
 
-- Async Wikipedia scraper (REST API first, then mobile-sections HTML parsed via BeautifulSoup)
-- Local, non-paid embedding support (dummy embedding or local sentence-transformers)
-- Chunking utilities and ingest orchestration
-- Unit tests via pytest + pytest-asyncio
-- Docker Compose to run ChromaDB locally (replaces Mongo)
+## Quick start
 
-Quick start
+1. Install deps and dev tools: `uv sync` (or use your virtualenv + pip).
+2. Fetch pages: `python main.py --titles "Python_(programming_language)" --save-dir wikipages`.
+3. Run tests: `uv run --with-editable . pytest -q`.
 
-1. Create a virtualenv and install deps from `pyproject.toml`.
-2. Run `python main.py --titles "Python_(programming_language)" --save-dir wikipages` to fetch a page.
-3. Run `docker compose up -d` to start Mongo (for later integration tests / vectorstore).
-
-Serve the API locally
-
-To run the FastAPI app locally for development:
+### Run the API
 
 ```bash
-# development server using uvicorn
+# development server
 python -m uvicorn ragchain.api:app --reload --port 8000
-```
-
-Or via the package CLI (after installing editable package):
-
-```bash
-# if package is installed in editable mode (uv run --with-editable .), use:
-python -m ragchain.cli serve --port 8000
-# or if `ragchain` script is on your PATH:
+# or via CLI after editable install
 ragchain serve --port 8000
 ```
 
-There is also a VS Code task: **Run ragchain (uvicorn)** in `.vscode/tasks.json` to start the server from the editor.
+### Chroma & remote tests
 
-See `src/ragchain/` for implementation details.
+- Local Chroma (Docker): `docker-compose up -d` (server defaults to http://localhost:8000).
+- Run remote tests: `CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py`
 
-Chroma notes
+## Notes
 
-- We provide a `ChromaVectorStore` adapter at `src/ragchain/vectorstore/chroma_vectorstore.py` for local development.
-- To enable Chroma functionality, install the dependency: `uv add chromadb`.
-- Some environments may need `pydantic-settings` installed due to Pydantic v2 changes: `uv add pydantic-settings`.
-- If your environment still raises errors when importing `chromadb`, the tests that exercise Chroma will be skipped; consult the error message and consider pinning `pydantic` or installing `pydantic-settings`.
+- Use `CHROMA_PERSIST_DIRECTORY` for an on-disk in-process Chroma during local runs.
+- If `chromadb` isn't available, Chroma-related tests are skipped.
+- Recommended Python: **3.12**.
 
-Running remote integration tests
-
-If you want to run the integration tests against a running Chroma server locally, start the service with Docker Compose and point `CHROMA_SERVER_URL` at it. The test suite will use `http://localhost:8000` by default when present.
-
-1. Start Chroma locally:
-
-```bash
-docker-compose up -d
-```
-
-2. Run the remote integration tests:
-
-```bash
-CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
-```
-
-If you prefer not to run the server locally, set `CHROMA_SERVER_URL` to a reachable Chroma instance and the tests will use that instead.
+See `AGENTS.md` for a short repo overview and developer notes.

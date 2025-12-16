@@ -56,7 +56,7 @@ Question:
             ],
             options={
                 "temperature": 0.0,  # Deterministic output
-            }
+            },
         )
 
         return response["message"]["content"]

@@ -83,5 +83,6 @@ def down(remove_volumes: bool, remove_orphans: bool, profile: str) -> None:  # p
 
     click.echo("✓ Demo stack stopped and removed.")
 
+
 if __name__ == "__main__":  # pragma: no cover - manual run
     cli()

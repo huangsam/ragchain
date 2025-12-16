@@ -5,9 +5,16 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from ragchain.rag.embeddings import DummyEmbedding, EmbeddingClient
+from ragchain.rag.embeddings import DummyEmbedding, EmbeddingClient, LocalSentenceTransformer
 from ragchain.rag.generation import OllamaGenerator
 from ragchain.vectorstore.chroma_vectorstore import ChromaVectorStore
+
+
+def get_embedding_client() -> EmbeddingClient:
+    """Return a real embedding model if available, else dummy."""
+    if LocalSentenceTransformer:
+        return LocalSentenceTransformer()
+    return DummyEmbedding()
 
 
 class IngestRequest(BaseModel):
@@ -35,8 +42,8 @@ async def health() -> Dict[str, str]:
 
 @app.post("/ingest")
 async def ingest_endpoint(req: IngestRequest, embedding: Optional[str] = None) -> Dict[str, Any]:
-    """Trigger ingest for provided titles. Uses DummyEmbedding by default."""
-    emb_client: EmbeddingClient = DummyEmbedding()
+    """Trigger ingest for provided titles. Uses LocalSentenceTransformer by default."""
+    emb_client = get_embedding_client()
 
     # Allow configuration via environment for tests/local runs. This lets
     # callers use a local persistent store (CHROMA_PERSIST_DIRECTORY) or a
@@ -63,7 +70,7 @@ async def ingest_endpoint(req: IngestRequest, embedding: Optional[str] = None) -
 
 @app.post("/search")
 async def search_endpoint(req: SearchRequest) -> Dict[str, Any]:
-    emb = DummyEmbedding()
+    emb = get_embedding_client()
     vec = (await emb.embed_texts([req.query]))[0]
     store = ChromaVectorStore()
     results = await store.search(vec, n_results=req.n_results)
@@ -73,7 +80,7 @@ async def search_endpoint(req: SearchRequest) -> Dict[str, Any]:
 @app.post("/ask")
 async def ask_endpoint(req: AskRequest) -> Dict[str, Any]:
     # 1. Retrieval
-    emb = DummyEmbedding()
+    emb = get_embedding_client()
     vec = (await emb.embed_texts([req.query]))[0]
 
     # Configure store (respect env vars for remote/local)

@@ -7,7 +7,7 @@ from ragchain.vectorstore.chroma_vectorstore import ChromaVectorStore
 
 # Skip if sentence-transformers is not installed or if we are in a CI environment without model download capability
 try:
-    from sentence_transformers import SentenceTransformer
+    import sentence_transformers  # noqa: F401
 
     HAS_ST = True
 except ImportError:

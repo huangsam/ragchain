@@ -15,6 +15,36 @@ import uvicorn
 logger = logging.getLogger("ragchain.cli")
 
 
+class _QuerySpinner:
+    """Simple CLI spinner for long-running operations."""
+
+    def __init__(self):
+        self.spinner = itertools.cycle(["|", "/", "-", "\\"])
+        self.running = False
+        self.thread = None
+
+    def start(self):
+        """Start the spinner animation."""
+        self.running = True
+        self.thread = threading.Thread(target=self._spin, daemon=True)
+        self.thread.start()
+
+    def _spin(self):
+        """Animate the spinner."""
+        while self.running:
+            sys.stdout.write(f"\r⏳ Querying ragchain... {next(self.spinner)}")
+            sys.stdout.flush()
+            threading.Event().wait(0.1)
+
+    def stop(self):
+        """Stop the spinner and clear the line."""
+        self.running = False
+        if self.thread:
+            self.thread.join()
+        sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the spinner line
+        sys.stdout.flush()
+
+
 @click.group()
 def cli() -> None:  # pragma: no cover - CLI glue
     """ragchain CLI"""
@@ -100,41 +130,25 @@ def query(query_type: str, api_url: str, n_results: int) -> None:  # pragma: no 
     """
     # Map 'demo' to the preset query
     if query_type.lower() == "demo":
-        query_text = "Based on the ingested Wikipedia pages, which three programming languages would you recommend for building a high-performance web backend today, and what are the trade-offs for each?"
+        query_text = (
+            "Based on the ingested Wikipedia pages, which three programming "
+            "languages would you recommend for building a high-performance web backend today, "
+            "and what are the trade-offs for each?"
+        )
     else:
         query_text = query_type
 
-    class Spinner:
-        def __init__(self):
-            self.spinner = itertools.cycle(["|", "/", "-", "\\"])
-            self.running = False
-            self.thread = None
-
-        def start(self):
-            self.running = True
-            self.thread = threading.Thread(target=self._spin, daemon=True)
-            self.thread.start()
-
-        def _spin(self):
-            while self.running:
-                sys.stdout.write(f"\r⏳ Querying ragchain... {next(self.spinner)}")
-                sys.stdout.flush()
-                threading.Event().wait(0.1)
-
-        def stop(self):
-            self.running = False
-            if self.thread:
-                self.thread.join()
-            sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the spinner line
-            sys.stdout.flush()
-
     async def _run_query():
-        spinner = Spinner()
+        spinner = _QuerySpinner()
         spinner.start()
         try:
             async with httpx.AsyncClient() as client:
                 try:
-                    response = await client.post(f"{api_url}/ask", json={"query": query_text, "n_results": n_results}, timeout=60.0)
+                    response = await client.post(
+                        f"{api_url}/ask",
+                        json={"query": query_text, "n_results": n_results},
+                        timeout=60.0,
+                    )
                     response.raise_for_status()
                     result = response.json()
 
@@ -153,10 +167,15 @@ def query(query_type: str, api_url: str, n_results: int) -> None:  # pragma: no 
 
                 except httpx.ConnectError:
                     spinner.stop()
-                    raise click.ClickException(f"Could not connect to {api_url}. Is the ragchain API running? Try: ragchain up")
+                    raise click.ClickException(
+                        f"Could not connect to {api_url}. Is the ragchain API running? "
+                        "Try: ragchain up"
+                    )
                 except httpx.HTTPStatusError as exc:
                     spinner.stop()
-                    raise click.ClickException(f"API error: {exc.status_code} {exc.response.text}")
+                    raise click.ClickException(
+                        f"API error: {exc.status_code} {exc.response.text}"
+                    )
                 except Exception as exc:
                     spinner.stop()
                     raise click.ClickException(f"Query failed: {exc}")

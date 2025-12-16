@@ -12,7 +12,7 @@ from ragchain.vectorstore.chroma_vectorstore import ChromaVectorStore
 
 def get_embedding_client() -> EmbeddingClient:
     """Return a real embedding model if available, else dummy."""
-    if LocalSentenceTransformer:
+    if LocalSentenceTransformer is not None:
         return LocalSentenceTransformer()
     return DummyEmbedding()
 

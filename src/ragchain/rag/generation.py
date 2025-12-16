@@ -1,5 +1,5 @@
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import ollama
 
@@ -9,7 +9,7 @@ DEFAULT_MODEL = "qwen3"
 
 
 class OllamaGenerator:
-    def __init__(self, model: str = None, base_url: str = None):
+    def __init__(self, model: Optional[str] = None, base_url: Optional[str] = None):
         self.model = model or os.environ.get("OLLAMA_MODEL", DEFAULT_MODEL)
         # If running in Docker, we might need to point to host.docker.internal
         self.base_url = base_url or os.environ.get("OLLAMA_HOST")

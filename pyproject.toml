@@ -38,7 +38,6 @@ where = ["src"]
 [project.scripts]
 ragchain = "ragchain.cli:cli"
 
-
 [tool.ruff]
 line-length = 160
 

@@ -1,7 +1,8 @@
 import os
+
 import pytest
-from fastapi.testclient import TestClient
 from aioresponses import aioresponses
+from fastapi.testclient import TestClient
 
 from ragchain.api import app
 

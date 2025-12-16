@@ -5,8 +5,9 @@ Note: These tests focus on behavior validation rather than internal implementati
 Full integration tests are better suited for testing with actual Chroma instances.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 
 
 @pytest.fixture
@@ -63,6 +64,7 @@ def test_vectorstore_single_embedding_dimension():
 
 def test_vectorstore_embedding_normalization():
     """Test that embeddings can be normalized."""
+
     def normalize_embedding(emb):
         norm = sum(x * x for x in emb) ** 0.5
         return [x / norm for x in emb] if norm > 0 else emb
@@ -77,6 +79,7 @@ def test_vectorstore_embedding_normalization():
 
 def test_vectorstore_cosine_similarity():
     """Test cosine similarity calculation between embeddings."""
+
     def cosine_similarity(a, b):
         dot = sum(x * y for x, y in zip(a, b))
         norm_a = sum(x * x for x in a) ** 0.5
@@ -88,7 +91,7 @@ def test_vectorstore_cosine_similarity():
     emb2 = [0.89, 0.11]  # Very similar
 
     # Dissimilar embeddings
-    emb3 = [0.0, 1.0]    # Orthogonal to emb1
+    emb3 = [0.0, 1.0]  # Orthogonal to emb1
 
     sim_similar = cosine_similarity(emb1, emb2)
     sim_dissimilar = cosine_similarity(emb1, emb3)

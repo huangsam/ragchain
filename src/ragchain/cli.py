@@ -64,13 +64,13 @@ def up(detached: bool, build: bool, profile: str) -> None:  # pragma: no cover -
 
 
 @cli.command()
-@click.option("--remove-volumes/--no-remove-volumes", default=False, help="Remove volumes with -v")
+@click.option("--volumes/--no-volumes", default=False, help="Remove named volumes (wipes data)")
 @click.option("--remove-orphans/--no-remove-orphans", default=False, help="Pass --remove-orphans to down")
 @click.option("--profile", default="demo", help="Compose profile to stop (demo|test)")
-def down(remove_volumes: bool, remove_orphans: bool, profile: str) -> None:  # pragma: no cover - manual
+def down(volumes: bool, remove_orphans: bool, profile: str) -> None:  # pragma: no cover - manual
     """Stop and remove Docker Compose services started by `ragchain up` (demo-compose.yml)."""
     cmd = _compose_cmd() + ["-f", "docker-compose.yml", "--profile", profile, "down"]
-    if remove_volumes:
+    if volumes:
         cmd.append("-v")
     if remove_orphans:
         cmd.append("--remove-orphans")

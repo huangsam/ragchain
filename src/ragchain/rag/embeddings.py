@@ -39,8 +39,11 @@ try:
             self.model = SentenceTransformer(model_name)
 
         async def embed_texts(self, texts: Iterable[str]) -> List[List[float]]:
-            # sentence-transformers is sync; run in threadpool if awaited in async code
-            return self.model.encode(list(texts), show_progress_bar=False).tolist()
+            # sentence-transformers is sync; run in threadpool to avoid blocking the event loop
+            import asyncio
+            loop = asyncio.get_running_loop()
+            # The model.encode method releases the GIL mostly, but running in executor is safer for async
+            return await loop.run_in_executor(None, lambda: self.model.encode(list(texts), show_progress_bar=False).tolist())
 
 except Exception:  # pragma: no cover - optional dep
     LocalSentenceTransformer = None  # type: ignore

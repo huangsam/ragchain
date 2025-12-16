@@ -20,6 +20,13 @@ ragchain serve --port 8000
 ### Chroma & remote tests
 
 - Local Chroma (Docker): `docker-compose up -d` (server defaults to http://localhost:8000).
+
+- To ingest pages AND persist them to the running Chroma instance (recommended newcomer flow):
+
+  1. Start Chroma: `docker-compose up -d`
+  2. Export the server URL: `export CHROMA_SERVER_URL=http://localhost:8000`
+  3. Run the ingest CLI (example): `python main.py --titles "Python_(programming_language)" --save-dir wikipages`
+
 - Run remote tests: `CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py`
 
 ## Notes

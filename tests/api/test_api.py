@@ -24,19 +24,14 @@ def test_ingest_and_search(tmp_path, titles):
 
     for title in titles:
         summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{title}"
-        sections_url = f"https://en.wikipedia.org/api/rest_v1/page/mobile-sections/{title}"
+        extract_url = f"https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={title}&explaintext=1&redirects=1"
 
         summary_json = {"title": title, "extract": "This is the summary paragraph."}
-        sections_json = {
-            "sections": [
-                {"line": "Section 1", "text": "<p>This is the content of section 1.</p>"},
-                {"line": "Section 2", "text": "<p>This is the content of section 2.</p>"},
-            ]
-        }
+        extract_json = {"query": {"pages": {"1": {"extract": "This is the content of the page."}}}}
 
         with aioresponses() as m:
             m.get(summary_url, payload=summary_json)
-            m.get(sections_url, payload=sections_json)
+            m.get(extract_url, payload=extract_json)
 
             r = client.post("/ingest", json={"titles": [title]})
             assert r.status_code == 200

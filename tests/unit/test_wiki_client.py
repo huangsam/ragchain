@@ -8,14 +8,14 @@ from ragchain.parser.wiki_client import fetch_wikipedia_pages
 async def test_fetch_wikipedia_pages_writes_tmp(tmp_path):
     title = "Python_(programming_language)"
     summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{title}"
-    sections_url = f"https://en.wikipedia.org/api/rest_v1/page/mobile-sections/{title}"
+    extract_url = f"https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={title}&explaintext=1&redirects=1"
 
     summary_json = {"title": title, "extract": "Python is..."}
-    sections_json = {"sections": [{"line": "Intro", "text": "<p>Python is a language</p>"}]}
+    extract_json = {"query": {"pages": {"123": {"extract": "Python is..."}}}}
 
     with aioresponses() as m:
         m.get(summary_url, payload=summary_json)
-        m.get(sections_url, payload=sections_json)
+        m.get(extract_url, payload=extract_json)
 
         results = await fetch_wikipedia_pages([title], concurrency=1, save_dir=tmp_path)
         assert len(results) == 1

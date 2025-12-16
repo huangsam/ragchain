@@ -6,10 +6,11 @@ from bs4 import BeautifulSoup
 
 
 def extract_text_from_mobile_sections(sections_json: Dict) -> str:
-    """Extract readable text from Wikipedia mobile-sections JSON.
+    """Extract readable text from a sections-like JSON structure.
 
-    The mobile-sections API returns 'sections' where each section has an
-    'text' field containing HTML for that section.
+    The parser expects a `sections` list where each entry has a `text` field
+    containing HTML for that section. This is compatible with a synthesized
+    shape produced from the MediaWiki `extracts` API.
     """
     parts: List[str] = []
     sections = sections_json.get("sections") or []

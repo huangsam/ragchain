@@ -46,7 +46,12 @@ def chroma_store(request, tmp_path: Path):
         if not server_url:
             # If a local server is available at 127.0.0.1:8000, use it. Otherwise skip and instruct the user.
             # Prefer v2 heartbeat; fall back to legacy /health and root / if needed.
-            if _http_ok("http://127.0.0.1:8000/api/v2/heartbeat") or _http_ok("http://127.0.0.1:8000/v2/health") or _http_ok("http://127.0.0.1:8000/health") or _http_ok("http://127.0.0.1:8000/"):
+            if (
+                _http_ok("http://127.0.0.1:8000/api/v2/heartbeat")
+                or _http_ok("http://127.0.0.1:8000/v2/health")
+                or _http_ok("http://127.0.0.1:8000/health")
+                or _http_ok("http://127.0.0.1:8000/")
+            ):
                 server_url = "http://127.0.0.1:8000"
             else:
                 pytest.skip(

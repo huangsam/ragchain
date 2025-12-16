@@ -10,7 +10,7 @@ import aiohttp
 from ragchain.utils import safe_filename
 
 WIKI_SUMMARY = "https://en.wikipedia.org/api/rest_v1/page/summary/{title}"
-WIKI_MOBILE_SECTIONS = "https://en.wikipedia.org/api/rest_v1/page/mobile-sections/{title}"
+WIKI_EXTRACT = "https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={title}&explaintext=1&redirects=1"
 
 
 async def fetch_page(title: str, session: aiohttp.ClientSession) -> Dict[str, Any]:
@@ -19,15 +19,24 @@ async def fetch_page(title: str, session: aiohttp.ClientSession) -> Dict[str, An
     Returns the combined JSON results.
     """
     summary_url = WIKI_SUMMARY.format(title=title)
-    sections_url = WIKI_MOBILE_SECTIONS.format(title=title)
+    # We use the MediaWiki 'extracts' API to get plain-text extracts for a
+    # page and then synthesize a small 'sections' shape compatible with the
+    # downstream HTML parser. The historical mobile-sections REST endpoint
+    # has been removed in some deployments, so we avoid relying on it entirely.
 
     async with session.get(summary_url) as r:
         r.raise_for_status()
         summary = await r.json()
 
-    async with session.get(sections_url) as r:
-        r.raise_for_status()
-        sections = await r.json()
+    extract_url = WIKI_EXTRACT.format(title=title)
+    async with session.get(extract_url) as r2:
+        r2.raise_for_status()
+        data = await r2.json()
+        pages = data.get("query", {}).get("pages", {})
+        # Take the first page entry (the dict keys are pageids)
+        page = next(iter(pages.values())) if pages else {}
+        extract_text = page.get("extract", "") or ""
+        sections = {"sections": [{"line": "extract", "text": f"<p>{extract_text}</p>"}]}
 
     return {"title": title, "summary": summary, "sections": sections}
 

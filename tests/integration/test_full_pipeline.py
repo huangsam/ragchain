@@ -16,15 +16,10 @@ async def test_full_ingest_pipeline(tmp_path, chroma_store):
     # 1. Setup mocks and components
     title = "Integration_Test_Page"
     summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{title}"
-    sections_url = f"https://en.wikipedia.org/api/rest_v1/page/mobile-sections/{title}"
+    extract_url = f"https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&titles={title}&explaintext=1&redirects=1"
 
     summary_json = {"title": title, "extract": "This is the summary paragraph."}
-    sections_json = {
-        "sections": [
-            {"line": "Section 1", "text": "<p>This is the content of section 1.</p>"},
-            {"line": "Section 2", "text": "<p>This is the content of section 2.</p>"},
-        ]
-    }
+    extract_json = {"query": {"pages": {"1": {"extract": "This is the content of section 1.\n\nThis is the content of section 2."}}}}
 
     # Use the chroma_store fixture which parametrizes in-process and remote server modes.
     store = chroma_store
@@ -35,7 +30,7 @@ async def test_full_ingest_pipeline(tmp_path, chroma_store):
     # 2. Run Ingest
     with aioresponses() as m:
         m.get(summary_url, payload=summary_json)
-        m.get(sections_url, payload=sections_json)
+        m.get(extract_url, payload=extract_json)
 
         report = await ingest(
             titles=[title],

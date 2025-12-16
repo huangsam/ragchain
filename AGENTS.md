@@ -14,7 +14,7 @@ ragchain/
 ├── cli.py                # Click-based CLI (`ragchain serve`)
 ├── parser/
 │   ├── wiki_client.py    # Concurrent fetches of Wikipedia pages; atomic writes
-│   └── html_parser.py    # Extracts text from mobile-sections HTML
+│   └── html_parser.py    # Extracts text from sections-like JSON (e.g., MediaWiki extracts)
 ├── rag/
 │   ├── chunker.py        # char-based sliding-window chunker
 │   ├── embeddings.py     # DummyEmbedding + optional sentence-transformers adapter

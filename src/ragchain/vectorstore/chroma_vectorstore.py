@@ -89,7 +89,6 @@ class ChromaVectorStore:
 
         await loop.run_in_executor(self._executor, _upsert)
 
-
     async def search(self, embedding: List[float], n_results: int = 4) -> Dict[str, Any]:
         """Search the collection by an embedding vector and return the raw Chroma response."""
 

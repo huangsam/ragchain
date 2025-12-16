@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
+import threading
+import itertools
+import sys
 
 import click
 import shutil
 import subprocess
 import uvicorn
+import httpx
 
 logger = logging.getLogger("ragchain.cli")
 
@@ -82,6 +88,90 @@ def down(volumes: bool, remove_orphans: bool, profile: str) -> None:  # pragma: 
         raise click.ClickException(f"docker-compose down failed: {exc}")
 
     click.echo("✓ Demo stack stopped and removed.")
+
+
+@cli.command()
+@click.argument("query_type", default="demo", required=False)
+@click.option("--api-url", default="http://127.0.0.1:8003", help="API URL")
+@click.option("--n-results", default=6, help="Number of context chunks to retrieve")
+def query(query_type: str, api_url: str, n_results: int) -> None:  # pragma: no cover - manual
+    """Query the ragchain RAG system.
+
+    Use 'demo' for the pre-set insightful query, or provide your own query text.
+    """
+    # Map 'demo' to the preset query
+    if query_type.lower() == "demo":
+        query_text = "Based on the ingested Wikipedia pages, which three programming languages would you recommend for building a high-performance web backend today, and what are the trade-offs for each?"
+    else:
+        query_text = query_type
+
+    class Spinner:
+        def __init__(self):
+            self.spinner = itertools.cycle(["|", "/", "-", "\\"])
+            self.running = False
+            self.thread = None
+
+        def start(self):
+            self.running = True
+            self.thread = threading.Thread(target=self._spin, daemon=True)
+            self.thread.start()
+
+        def _spin(self):
+            while self.running:
+                sys.stdout.write(f"\r⏳ Querying ragchain... {next(self.spinner)}")
+                sys.stdout.flush()
+                threading.Event().wait(0.1)
+
+        def stop(self):
+            self.running = False
+            if self.thread:
+                self.thread.join()
+            sys.stdout.write("\r" + " " * 40 + "\r")  # Clear the spinner line
+            sys.stdout.flush()
+
+    async def _run_query():
+        spinner = Spinner()
+        spinner.start()
+        try:
+            async with httpx.AsyncClient() as client:
+                try:
+                    response = await client.post(
+                        f"{api_url}/ask",
+                        json={"query": query_text, "n_results": n_results},
+                        timeout=60.0
+                    )
+                    response.raise_for_status()
+                    result = response.json()
+
+                    spinner.stop()
+
+                    # Pretty-print the result
+                    click.echo("\n" + "=" * 80)
+                    click.echo(f"Query: {query_text}\n")
+                    click.echo("Answer:")
+                    click.echo("-" * 80)
+                    click.echo(result["answer"])
+                    click.echo("\n" + "-" * 80)
+                    click.echo(f"Model: {result['model']}")
+                    click.echo(f"Context chunks retrieved: {len(result['context'])}")
+                    click.echo("=" * 80 + "\n")
+
+                except httpx.ConnectError:
+                    spinner.stop()
+                    raise click.ClickException(
+                        f"Could not connect to {api_url}. Is the ragchain API running? "
+                        "Try: ragchain up"
+                    )
+                except httpx.HTTPStatusError as exc:
+                    spinner.stop()
+                    raise click.ClickException(f"API error: {exc.status_code} {exc.response.text}")
+                except Exception as exc:
+                    spinner.stop()
+                    raise click.ClickException(f"Query failed: {exc}")
+        finally:
+            spinner.stop()
+
+    asyncio.run(_run_query())
 
 
 if __name__ == "__main__":  # pragma: no cover - manual run

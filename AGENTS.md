@@ -78,9 +78,9 @@ ragchain down --profile test
 
   - `ragchain up` will run `docker compose up -d --profile demo` to start the demo stack (Chroma + ragchain + demo-runner). For CI / integration tests you can simply run `ragchain up --profile test` instead.
   - `ragchain down` will stop the demo compose stack.
-  - A `demo-compose.yml` is included that starts Chroma, the ragchain API, and a small demo runner that performs an example ingest + search; run it with `docker-compose -f demo-compose.yml up --build`.
+  - A `docker-compose.yml` is included that starts Chroma, the ragchain API, and a small demo runner that performs an example ingest + search; run it with `docker-compose up --build`.
 
-- The test fixture `chroma_store` will skip remote tests cleanly if no server is reachable and guide you to run `docker compose -f demo-compose.yml --profile test up -d --build`.
+- The test fixture `chroma_store` will skip remote tests cleanly if no server is reachable and guide you to run `docker compose --profile test up -d --build`.
 
 ---
 

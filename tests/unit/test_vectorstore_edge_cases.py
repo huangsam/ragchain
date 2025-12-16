@@ -5,7 +5,7 @@ Note: These tests focus on behavior validation rather than internal implementati
 Full integration tests are better suited for testing with actual Chroma instances.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

@@ -1,4 +1,3 @@
-import pytest
 from click.testing import CliRunner
 
 from ragchain.cli import cli
@@ -68,7 +67,7 @@ def test_cli_status_success(monkeypatch):
 
     class DummyResp:
         status_code = 200
-        text = "{\"status\": \"ok\"}"
+        text = '{"status": "ok"}'
 
         def raise_for_status(self):
             return None

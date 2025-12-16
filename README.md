@@ -19,11 +19,11 @@ ragchain serve --port 8000
 
 ### Chroma & remote tests
 
-- Local Chroma (Docker): `docker-compose up -d` (server defaults to http://localhost:8000).
+- Local Chroma (Docker): `docker-compose -f test-compose.yml up -d --build` (server defaults to http://localhost:8000).
 
 - To ingest pages AND persist them to the running Chroma instance (recommended newcomer flow):
 
-  1. Start Chroma: `docker-compose up -d` (or `ragchain up`)
+  1. Start Chroma: `docker-compose -f test-compose.yml up -d --build` (or `ragchain up`)
   2. Export the server URL: `export CHROMA_SERVER_URL=http://localhost:8000`
   3. Run the ingest CLI (example): `python main.py --titles "Python_(programming_language)" --save-dir wikipages`
 
@@ -32,6 +32,18 @@ ragchain serve --port 8000
   - Start services: `ragchain up` (shorthand for `docker-compose up -d`)
   - Stop services: `ragchain down` (shorthand for `docker-compose down`)
   - Remove volumes: `ragchain down --remove-volumes`
+
+- Demo compose file
+
+  - A `demo-compose.yml` is provided to bring up a demo stack (Chroma, the ragchain API, and a demo client that runs ingest & search). Start it with:
+
+    ```bash
+    docker compose -f demo-compose.yml up --build
+    # or
+    docker-compose -f demo-compose.yml up --build
+    ```
+
+  - The demo-runner will wait for the API and perform a sample ingest + search, printing results to the demo container logs.
 
 - Run remote tests: `CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py`
 

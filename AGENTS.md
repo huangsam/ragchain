@@ -49,7 +49,7 @@ ragchain/
   - mypy — static typing checks (configured to ignore missing imports and run in silent follow-import mode)
 
 - Project entry points:
-  - `ragchain` console script -> `ragchain.cli:main` (install in editable mode to use `ragchain serve`)
+  - `ragchain` console script -> `ragchain.cli:cli` (install in editable mode to use `ragchain serve`, `ragchain up`, and `ragchain down`)
 
 - Recommended Python version: **3.12** (some deps such as `chromadb` and sentence-transformers have prebuilt wheels for this version).
 
@@ -66,11 +66,19 @@ uv run --with-editable . pytest -q
 - Run remote integration tests against a local Chroma service:
 
 ```bash
-docker-compose up -d
+# Start a Chroma test stack for CI-like tests
+docker-compose -f test-compose.yml up -d --build
+# Run the remote integration test that targets the running server
 CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
 ```
 
-- The test fixture `chroma_store` will skip remote tests cleanly if no server is reachable and guide you to run `docker-compose up -d`.
+- Local/demo conveniences:
+
+  - `ragchain up` will run `docker-compose -f test-compose.yml up -d --build` to start a local test/demo Chroma stack.
+  - `ragchain down` will stop the compose stack.
+  - A `demo-compose.yml` is included that starts Chroma, the ragchain API, and a small demo runner that performs an example ingest + search; run it with `docker-compose -f demo-compose.yml up --build`.
+
+- The test fixture `chroma_store` will skip remote tests cleanly if no server is reachable and guide you to run `docker-compose -f test-compose.yml up -d --build`.
 
 ---
 

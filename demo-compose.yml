@@ -1,0 +1,42 @@
+services:
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_demo_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8000; echo -e \"GET /api/v2/heartbeat HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; cat <&3 | grep \"200 OK\"'"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ragchain:
+    build:
+      context: .
+      dockerfile: Dockerfile.demo
+    depends_on:
+      chroma:
+        condition: service_healthy
+    environment:
+      - CHROMA_SERVER_URL=http://chroma:8000
+    # Map to a different host port to avoid conflicts with local dev servers
+    ports:
+      - "8003:8000"
+
+  demo-runner:
+    image: python:3.12-slim
+    depends_on:
+      ragchain:
+        condition: service_started
+      chroma:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts
+    environment:
+      - RAGCHAIN_API_URL=http://ragchain:8000
+      - CHROMA_SERVER_URL=http://chroma:8000
+    entrypoint: ["python", "/scripts/demo_runner.py"]
+
+volumes:
+  chroma_demo_data:

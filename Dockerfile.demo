@@ -1,0 +1,19 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install build deps for optional packages (chroma may be optional)
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential git ca-certificates curl && rm -rf /var/lib/apt/lists/*
+
+# Copy project and install in editable mode
+COPY pyproject.toml .
+COPY src ./src
+
+# Install package in editable mode and the 'uv' helper used in development
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -e . && \
+    pip install --no-cache-dir uv
+
+# Default command is to start the API via the project's 'ragchain' CLI using 'uv'
+# We disable auto-reload in containers for a single-process production-like run.
+CMD ["uv", "run", "--with-editable", ".", "ragchain", "serve", "--host", "0.0.0.0", "--port", "8000", "--no-reload"]

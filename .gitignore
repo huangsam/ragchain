@@ -11,3 +11,6 @@ wheels/
 
 # Persisted wikipedia pages
 wikipages/
+
+# Personal artifacts
+brainstorm/

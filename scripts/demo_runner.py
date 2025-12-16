@@ -34,10 +34,35 @@ if __name__ == "__main__":
         print("ragchain API didn't become healthy in time", flush=True)
         raise SystemExit(2)
 
-    print("Triggering ingest for Python_(programming_language)", flush=True)
-    r = requests.post(INGEST, json={"titles": ["Python_(programming_language)"]}, timeout=300)
+    print("Triggering ingest for TIOBE top languages (sample list)", flush=True)
+    titles = [
+        "Python_(programming_language)",
+        "C_(programming_language)",
+        "C%2B%2B",
+        "Java_(programming_language)",
+        "C_Sharp_(programming_language)",
+        "JavaScript",
+        "SQL",
+        "PHP",
+        "R_(programming_language)",
+        "Go_(programming_language)",
+        "Swift_(programming_language)",
+        "MATLAB",
+        "Ruby_(programming_language)",
+        "Visual_Basic",
+        "Assembly_language",
+        "Objective-C",
+        "Fortran",
+        "Kotlin_(programming_language)",
+        "Dart_(programming_language)",
+        "TypeScript",
+    ]
+
+    r = requests.post(INGEST, json={"titles": titles}, timeout=900)
     print("Ingest response:", r.status_code, r.text, flush=True)
 
-    print("Searching for 'python language'", flush=True)
-    r2 = requests.post(SEARCH, json={"query": "python language", "n_results": 1}, timeout=30)
-    print("Search response:", r2.status_code, r2.text, flush=True)
+    # Run a few sample searches to verify ingestion
+    for q in ["python", "java", "javascript"]:
+        print(f"Searching for '{q}'", flush=True)
+        r2 = requests.post(SEARCH, json={"query": q, "n_results": 1}, timeout=30)
+        print("Search response:", r2.status_code, r2.text, flush=True)

@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Persisted wikipedia pages
+wikipages/

@@ -1,4 +1,3 @@
-
 import pytest
 
 from ragchain.rag.embeddings import LocalSentenceTransformer

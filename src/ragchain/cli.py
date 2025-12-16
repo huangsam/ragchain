@@ -167,15 +167,10 @@ def query(query_type: str, api_url: str, n_results: int) -> None:  # pragma: no 
 
                 except httpx.ConnectError:
                     spinner.stop()
-                    raise click.ClickException(
-                        f"Could not connect to {api_url}. Is the ragchain API running? "
-                        "Try: ragchain up"
-                    )
+                    raise click.ClickException(f"Could not connect to {api_url}. Is the ragchain API running? Try: ragchain up")
                 except httpx.HTTPStatusError as exc:
                     spinner.stop()
-                    raise click.ClickException(
-                        f"API error: {exc.status_code} {exc.response.text}"
-                    )
+                    raise click.ClickException(f"API error: {exc.status_code} {exc.response.text}")
                 except Exception as exc:
                     spinner.stop()
                     raise click.ClickException(f"Query failed: {exc}")

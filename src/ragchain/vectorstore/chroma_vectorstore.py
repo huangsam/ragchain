@@ -39,6 +39,11 @@ class ChromaVectorStore:
         server_url = server_url or os.environ.get("CHROMA_SERVER_URL")
 
         if client is None:
+            # Choose a client implementation based on configuration.
+            # Precedence: explicit server_url (remote HTTP client) > persistent
+            # local directory > ephemeral in-memory client. This allows tests and
+            # deployments to choose the desired mode via environment or explicit
+            # constructor args.
             if server_url:
                 # parse server_url like http[s]://host:port
                 from urllib.parse import urlparse
@@ -55,7 +60,12 @@ class ChromaVectorStore:
 
         self.client = client
         self.collection_name = collection_name
+        # Create or fetch the named collection - this is a light-weight op for
+        # in-process clients and issues a network call for remote clients.
         self._collection = self.client.get_or_create_collection(self.collection_name)
+        # Use a threadpool to run blocking Chroma operations without blocking
+        # the async event loop; we keep the pool small because operations are
+        # typically short-lived.
         self._executor = ThreadPoolExecutor(max_workers=2)
 
     async def upsert_documents(self, docs: List[Dict[str, Any]]) -> None:
@@ -71,10 +81,14 @@ class ChromaVectorStore:
         loop = asyncio.get_running_loop()
 
         def _upsert():
+            # Perform the actual upsert synchronously inside threadpool. We
+            # build the payload lists above so the synchronous code receives
+            # plain Python lists and not async iterables.
             # chroma's upsert signature uses keyword args
             self._collection.upsert(ids=ids, documents=documents, metadatas=metadatas, embeddings=embeddings)
 
         await loop.run_in_executor(self._executor, _upsert)
+
 
     async def search(self, embedding: List[float], n_results: int = 4) -> Dict[str, Any]:
         """Search the collection by an embedding vector and return the raw Chroma response."""
@@ -82,7 +96,11 @@ class ChromaVectorStore:
         loop = asyncio.get_running_loop()
 
         def _query():
-            # include metadatas and documents to inspect results
+            # Query the collection by a single embedding. We pass a list of
+            # embeddings (length-1) to match the Chroma API which supports
+            # batch queries; this keeps the return structure consistent.
+            # Request metadatas and documents so callers can inspect the results
+            # and validate metadata-driven filters.
             return self._collection.query(query_embeddings=[embedding], n_results=n_results, include=["metadatas", "documents", "distances"])
 
         res = await loop.run_in_executor(self._executor, _query)

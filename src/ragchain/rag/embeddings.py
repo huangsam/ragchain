@@ -19,8 +19,12 @@ class DummyEmbedding(EmbeddingClient):
         self.dim = dim
 
     async def embed_texts(self, texts: Iterable[str]) -> List[List[float]]:
+        # Create deterministic embeddings by hashing each input text. This
+        # makes tests reproducible and avoids depending on an external model.
         out: List[List[float]] = []
         for t in texts:
+            # Use SHA256 digest bytes as a source of pseudo-random but stable
+            # values and map the values into a small float range.
             h = hashlib.sha256(t.encode("utf-8")).digest()
             vec = [((b % 127) - 63) / 63.0 for b in h[: self.dim]]
             out.append(vec)

@@ -31,7 +31,9 @@ async def ingest_endpoint(req: IngestRequest, embedding: Optional[str] = None) -
     """Trigger ingest for provided titles. Uses DummyEmbedding by default."""
     emb_client: EmbeddingClient = DummyEmbedding()
 
-    # Allow configuration via environment for tests/local runs
+    # Allow configuration via environment for tests/local runs. This lets
+    # callers use a local persistent store (CHROMA_PERSIST_DIRECTORY) or a
+    # remote server (CHROMA_SERVER_URL) without changing application code.
     import os
 
     server_url = os.environ.get("CHROMA_SERVER_URL")

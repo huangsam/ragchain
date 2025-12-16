@@ -39,19 +39,28 @@ async def fetch_wikipedia_pages(titles: List[str], concurrency: int = 5, save_di
     concurrency limit.
     """
     results: List[Dict[str, Any]] = []
+    # Limit concurrent outbound HTTP requests using a semaphore.
+    # This keeps memory/connection usage bounded when fetching many pages.
     sem = asyncio.Semaphore(concurrency)
 
     async def _fetch(title: str):
+        # Acquire the semaphore before creating a session and requesting the page.
+        # Each task will perform a short-lived ClientSession to avoid sharing state.
         async with sem:
             timeout = aiohttp.ClientTimeout(total=30)
             headers = {"User-Agent": "ragchain/0.1 (github.com)"}
             async with aiohttp.ClientSession(timeout=timeout, headers=headers) as session:
                 return await fetch_page(title, session)
 
+    # Start tasks for all requested titles; tasks execute concurrently but are bound
+    # by the semaphore above.
     coros = [asyncio.create_task(_fetch(t)) for t in titles]
 
+    # Process tasks as they finish (as_completed) so slower pages don't block faster ones.
     for c in asyncio.as_completed(coros):
         data = await c
+        # Optionally persist raw JSON to disk. This writes to a temporary file
+        # and atomically replaces the final file to avoid partial writes.
         if save_dir:
             save_dir = Path(save_dir)
             save_dir.mkdir(parents=True, exist_ok=True)
@@ -60,6 +69,7 @@ async def fetch_wikipedia_pages(titles: List[str], concurrency: int = 5, save_di
             final_path = save_dir / filename
             tmp_path.write_text(json.dumps(data, ensure_ascii=False))
             tmp_path.replace(final_path)
+        # Append the fetched page to results after (optionally) persisting it.
         results.append(data)
 
     return results

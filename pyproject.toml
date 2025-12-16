@@ -16,6 +16,7 @@ dependencies = [
   "uvicorn[standard]>=0.22",
   "httpx>=0.24",
   "click>=8.1",
+  "ollama>=0.6.1",
 ]
 
 [tool.poetry.dev-dependencies]

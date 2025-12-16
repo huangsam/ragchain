@@ -21,6 +21,10 @@ services:
     profiles: ["demo"]
     environment:
       - CHROMA_SERVER_URL=http://chroma:8000
+      # Point to host's Ollama instance
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      # Default model to use (ensure you have pulled it: `ollama pull qwen3`)
+      - OLLAMA_MODEL=qwen3
     # Map to a different host port to avoid conflicts with local dev servers
     ports:
       - "8003:8000"

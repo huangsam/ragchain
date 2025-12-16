@@ -25,6 +25,13 @@ curl -X POST http://127.0.0.1:8003/search \
   -H 'Content-Type: application/json' \
   -d '{"query":"python language","n_results":1}'
 
+# Ask (requires local Ollama)
+# Ensure you have run `ollama pull qwen3` locally first
+# You can specify any model you have pulled (e.g., "llama3", "mistral", "qwen3")
+curl -X POST http://127.0.0.1:8003/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"What is Python?", "model": "qwen3"}'
+
 # Stop the stack
 ragchain down
 ```

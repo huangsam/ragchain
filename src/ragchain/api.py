@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from ragchain.rag.embeddings import DummyEmbedding, EmbeddingClient
+from ragchain.rag.generation import OllamaGenerator
 from ragchain.vectorstore.chroma_vectorstore import ChromaVectorStore
 
 
@@ -16,6 +17,12 @@ class IngestRequest(BaseModel):
 class SearchRequest(BaseModel):
     query: str
     n_results: int = 4
+
+
+class AskRequest(BaseModel):
+    query: str
+    n_results: int = 4
+    model: Optional[str] = None
 
 
 app = FastAPI(title="ragchain API", version="0.1")
@@ -61,3 +68,33 @@ async def search_endpoint(req: SearchRequest) -> Dict[str, Any]:
     store = ChromaVectorStore()
     results = await store.search(vec, n_results=req.n_results)
     return {"results": results}
+
+
+@app.post("/ask")
+async def ask_endpoint(req: AskRequest) -> Dict[str, Any]:
+    # 1. Retrieval
+    emb = DummyEmbedding()
+    vec = (await emb.embed_texts([req.query]))[0]
+
+    # Configure store (respect env vars for remote/local)
+    import os
+
+    server_url = os.environ.get("CHROMA_SERVER_URL")
+    persist_dir = os.environ.get("CHROMA_PERSIST_DIRECTORY")
+    store = ChromaVectorStore(server_url=server_url, persist_directory=persist_dir)
+
+    results = await store.search(vec, n_results=req.n_results)
+
+    # 2. Extract context
+    # Chroma returns list of lists (batch). We only have one query.
+    context_chunks = results["documents"][0] if results.get("documents") else []
+
+    # 3. Generation
+    generator = OllamaGenerator(model=req.model)
+    answer = await generator.generate(req.query, context_chunks)
+
+    return {
+        "answer": answer,
+        "context": context_chunks,
+        "model": generator.model,
+    }

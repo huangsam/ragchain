@@ -70,6 +70,8 @@ uv run --with-editable . pytest -q
 docker-compose -f test-compose.yml up -d --build
 # Run the remote integration test that targets the running server
 CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
+# Tear down the test stack
+docker-compose -f test-compose.yml down
 ```
 
 - Local/demo conveniences:

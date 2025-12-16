@@ -60,3 +60,41 @@ def test_cli_query_demo_exists():
     assert result.exit_code == 0
     # Should mention something about querying
     assert "query" in result.output.lower()
+
+
+def test_cli_status_success(monkeypatch):
+    """Test `ragchain status` prints OK on healthy API."""
+    runner = CliRunner()
+
+    class DummyResp:
+        status_code = 200
+        text = "{\"status\": \"ok\"}"
+
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"status": "ok"}
+
+    def fake_get(url, timeout=...):
+        assert url.endswith("/health")
+        return DummyResp()
+
+    monkeypatch.setattr("httpx.get", fake_get)
+
+    result = runner.invoke(cli, ["status"])
+    assert result.exit_code == 0
+    assert "OK:" in result.output
+
+
+def test_cli_status_connect_error(monkeypatch):
+    """Test `ragchain status` handles connection error gracefully."""
+    runner = CliRunner()
+
+    def fake_get(url, timeout=...):
+        raise Exception("connection refused")
+
+    monkeypatch.setattr("httpx.get", fake_get)
+    result = runner.invoke(cli, ["status"])
+    assert result.exit_code != 0
+    assert "Could not connect" in result.output or "Health check failed" in result.output

@@ -180,5 +180,26 @@ def query(query_type: str, api_url: str, n_results: int) -> None:  # pragma: no 
     asyncio.run(_run_query())
 
 
+@cli.command()
+@click.option("--api-url", default="http://127.0.0.1:8003", help="API URL")
+def status(api_url: str) -> None:  # pragma: no cover - manual
+    """Check the `/health` endpoint of the ragchain API and print a short status.
+
+    Example: `ragchain status --api-url http://localhost:8003`
+    """
+    try:
+        resp = httpx.get(f"{api_url}/health", timeout=5.0)
+        resp.raise_for_status()
+        data = resp.json() if resp.text else {}
+        # Pretty message
+        click.echo(f"OK: {data}")
+    except httpx.ConnectError:
+        raise click.ClickException(f"Could not connect to {api_url}. Is the ragchain API running? Try: ragchain up")
+    except httpx.HTTPStatusError as exc:
+        raise click.ClickException(f"API error: {exc.response.status_code} {exc.response.text}")
+    except Exception as exc:
+        raise click.ClickException(f"Health check failed: {exc}")
+
+
 if __name__ == "__main__":  # pragma: no cover - manual run
     cli()

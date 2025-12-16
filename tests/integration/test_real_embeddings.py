@@ -7,9 +7,11 @@ from ragchain.rag.embeddings import LocalSentenceTransformer
 # Skip if sentence-transformers is not installed or if we are in a CI environment without model download capability
 try:
     from sentence_transformers import SentenceTransformer
+
     HAS_ST = True
 except ImportError:
     HAS_ST = False
+
 
 @pytest.mark.skipif(not HAS_ST, reason="sentence-transformers not installed")
 @pytest.mark.asyncio
@@ -33,7 +35,9 @@ async def test_real_embedding_ingest_and_search(tmp_path):
     # Page 1: Python
     python_text = "Python is a high-level, general-purpose programming language. Its design philosophy emphasizes code readability."
     # Page 2: Java
-    java_text = "Java is a high-level, class-based, object-oriented programming language that is designed to have as few implementation dependencies as possible."
+    java_text = (
+        "Java is a high-level, class-based, object-oriented programming language that is designed to have as few implementation dependencies as possible."
+    )
 
     # Mock the wiki_client.fetch_pages to return our fake data
     # We need to mock ragchain.parser.wiki_client.WikiClient.fetch_pages or similar
@@ -49,29 +53,14 @@ async def test_real_embedding_ingest_and_search(tmp_path):
         # Mock return values. fetch_wikipedia_pages returns a list of page dicts
         async def fake_fetch(titles, save_dir=None):
             return [
-                    {
-                        "title": "Python",
-                        "summary": {"extract": python_text},
-                        "sections": {}
-                    },
-                    {
-                        "title": "Java",
-                        "summary": {"extract": java_text},
-                        "sections": {}
-                    }
-                ]
+                {"title": "Python", "summary": {"extract": python_text}, "sections": {}},
+                {"title": "Java", "summary": {"extract": java_text}, "sections": {}},
+            ]
 
         mock_fetch.side_effect = fake_fetch
 
         # 2. Ingest
-        await ingest(
-            titles=["Python", "Java"],
-            save_dir=tmp_path / "wikipages",
-            chunk_size=500,
-            overlap=0,
-            embedding_client=emb,
-            vectorstore=store
-        )
+        await ingest(titles=["Python", "Java"], save_dir=tmp_path / "wikipages", chunk_size=500, overlap=0, embedding_client=emb, vectorstore=store)
 
     # 3. Search
     # Query for "readability" -> should match Python
@@ -91,4 +80,3 @@ async def test_real_embedding_ingest_and_search(tmp_path):
 
     top_title_java = results_java["metadatas"][0][0]["title"]
     assert "Java" in top_title_java, f"Expected Java, got {top_title_java}"
-

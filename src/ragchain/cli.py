@@ -135,11 +135,7 @@ def query(query_type: str, api_url: str, n_results: int) -> None:  # pragma: no 
         try:
             async with httpx.AsyncClient() as client:
                 try:
-                    response = await client.post(
-                        f"{api_url}/ask",
-                        json={"query": query_text, "n_results": n_results},
-                        timeout=60.0
-                    )
+                    response = await client.post(f"{api_url}/ask", json={"query": query_text, "n_results": n_results}, timeout=60.0)
                     response.raise_for_status()
                     result = response.json()
 
@@ -158,10 +154,7 @@ def query(query_type: str, api_url: str, n_results: int) -> None:  # pragma: no 
 
                 except httpx.ConnectError:
                     spinner.stop()
-                    raise click.ClickException(
-                        f"Could not connect to {api_url}. Is the ragchain API running? "
-                        "Try: ragchain up"
-                    )
+                    raise click.ClickException(f"Could not connect to {api_url}. Is the ragchain API running? Try: ragchain up")
                 except httpx.HTTPStatusError as exc:
                     spinner.stop()
                     raise click.ClickException(f"API error: {exc.status_code} {exc.response.text}")

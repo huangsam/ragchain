@@ -2793,7 +2793,6 @@ requires-dist = [
     { name = "ollama", specifier = ">=0.6.1" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "sentence-transformers", specifier = ">=5.2.0" },
-    { name = "sentence-transformers", marker = "extra == 'hf'", specifier = ">=2.2" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.22" },
 ]
 

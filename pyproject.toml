@@ -7,7 +7,6 @@ requires-python = ">=3.10"
 dependencies = [
   "aiohttp>=3.8,<4",
   "beautifulsoup4>=4.12",
-  "sentence-transformers>=2.2 ; extra == 'hf'",
   "numpy",
   "chromadb>=0.4.0",
   "pydantic-settings>=2.12.0",
@@ -18,13 +17,6 @@ dependencies = [
   "click>=8.1",
   "ollama>=0.6.1",
 ]
-
-[tool.poetry.dev-dependencies]
-pytest = "^7.0"
-pytest-asyncio = "^0.21"
-aioresponses = "^0.8"
-pytest-mock = "^3.10"
-mongomock = "^4.1"
 
 [dependency-groups]
 dev = [

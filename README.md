@@ -64,7 +64,7 @@ curl -X POST http://127.0.0.1:8001/ingest \
   -d '{"titles":["Python_(programming_language)"]}'
 
 # Run integration tests against running Chroma
-docker-compose -f test-compose.yml up -d --build
+docker compose -f demo-compose.yml --profile test up -d --build
 CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
 ```
 

@@ -40,12 +40,14 @@ def _compose_cmd() -> list[str]:
 @cli.command()
 @click.option("--detached/--no-detached", default=True, help="Run compose up detached")
 @click.option("--build/--no-build", default=True, help="Pass --build to `up`")
-def up(detached: bool, build: bool) -> None:  # pragma: no cover - manual
+@click.option("--profile", default="demo", help="Compose profile to start (demo|test)")
+def up(detached: bool, build: bool, profile: str) -> None:  # pragma: no cover - manual
     """Start the local Docker Compose services (Chroma + ragchain + demo-runner).
 
-    This uses demo-compose.yml by default. For testing/CI, use test-compose.yml directly.
+    This uses `demo-compose.yml` by default with the `demo` profile. Use
+    `--profile test` for a minimal stack suitable for integration tests.
     """
-    cmd = _compose_cmd() + ["-f", "demo-compose.yml", "up"]
+    cmd = _compose_cmd() + ["-f", "demo-compose.yml", "--profile", profile, "up"]
     if detached:
         cmd.append("-d")
     if build:
@@ -57,16 +59,17 @@ def up(detached: bool, build: bool) -> None:  # pragma: no cover - manual
     except subprocess.CalledProcessError as exc:  # pragma: no cover - env dependent
         raise click.ClickException(f"docker-compose up failed: {exc}")
 
-    click.echo("✓ Demo stack started (Chroma on http://localhost:8000, ragchain on http://localhost:8003).")
+    click.echo(f"✓ Demo stack started (profile={profile}).")
     click.echo("  Tip: export CHROMA_SERVER_URL=http://localhost:8000 for local ragchain server")
 
 
 @cli.command()
 @click.option("--remove-volumes/--no-remove-volumes", default=False, help="Remove volumes with -v")
 @click.option("--remove-orphans/--no-remove-orphans", default=False, help="Pass --remove-orphans to down")
-def down(remove_volumes: bool, remove_orphans: bool) -> None:  # pragma: no cover - manual
+@click.option("--profile", default="demo", help="Compose profile to stop (demo|test)")
+def down(remove_volumes: bool, remove_orphans: bool, profile: str) -> None:  # pragma: no cover - manual
     """Stop and remove Docker Compose services started by `ragchain up` (demo-compose.yml)."""
-    cmd = _compose_cmd() + ["-f", "demo-compose.yml", "down"]
+    cmd = _compose_cmd() + ["-f", "demo-compose.yml", "--profile", profile, "down"]
     if remove_volumes:
         cmd.append("-v")
     if remove_orphans:
@@ -79,7 +82,6 @@ def down(remove_volumes: bool, remove_orphans: bool) -> None:  # pragma: no cove
         raise click.ClickException(f"docker-compose down failed: {exc}")
 
     click.echo("✓ Demo stack stopped and removed.")
-
 
 if __name__ == "__main__":  # pragma: no cover - manual run
     cli()

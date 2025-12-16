@@ -67,20 +67,20 @@ uv run --with-editable . pytest -q
 
 ```bash
 # Start a Chroma test stack for CI-like tests
-docker-compose -f test-compose.yml up -d --build
+docker compose -f demo-compose.yml --profile test up -d --build
 # Run the remote integration test that targets the running server
 CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
 # Tear down the test stack
-docker-compose -f test-compose.yml down
+docker compose -f demo-compose.yml --profile test down
 ```
 
 - Local/demo conveniences:
 
-  - `ragchain up` will run `docker-compose -f test-compose.yml up -d --build` to start a local test/demo Chroma stack.
-  - `ragchain down` will stop the compose stack.
+  - `ragchain up` will run `docker-compose -f demo-compose.yml --profile demo up -d --build` to start the demo stack (Chroma + ragchain + demo-runner). For CI / integration tests use `docker compose -f demo-compose.yml --profile test up -d --build` instead.
+  - `ragchain down` will stop the demo compose stack.
   - A `demo-compose.yml` is included that starts Chroma, the ragchain API, and a small demo runner that performs an example ingest + search; run it with `docker-compose -f demo-compose.yml up --build`.
 
-- The test fixture `chroma_store` will skip remote tests cleanly if no server is reachable and guide you to run `docker-compose -f test-compose.yml up -d --build`.
+- The test fixture `chroma_store` will skip remote tests cleanly if no server is reachable and guide you to run `docker compose -f demo-compose.yml --profile test up -d --build`.
 
 ---
 

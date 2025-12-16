@@ -12,6 +12,10 @@ dependencies = [
   "chromadb>=0.4.0",
   "pydantic-settings>=2.12.0",
   "sentence-transformers>=5.2.0",
+  "fastapi>=0.95",
+  "uvicorn[standard]>=0.22",
+  "httpx>=0.24",
+  "click>=8.1",
 ]
 
 [tool.poetry.dev-dependencies]
@@ -37,6 +41,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.scripts]
+ragchain = "ragchain.cli:main"
 
 
 [tool.ruff]

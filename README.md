@@ -14,6 +14,26 @@ Quick start
 2. Run `python main.py --titles "Python_(programming_language)" --save-dir wikipages` to fetch a page.
 3. Run `docker compose up -d` to start Mongo (for later integration tests / vectorstore).
 
+Serve the API locally
+
+To run the FastAPI app locally for development:
+
+```bash
+# development server using uvicorn
+python -m uvicorn ragchain.api:app --reload --port 8000
+```
+
+Or via the package CLI (after installing editable package):
+
+```bash
+# if package is installed in editable mode (uv run --with-editable .), use:
+python -m ragchain.cli serve --port 8000
+# or if `ragchain` script is on your PATH:
+ragchain serve --port 8000
+```
+
+There is also a VS Code task: **Run ragchain (uvicorn)** in `.vscode/tasks.json` to start the server from the editor.
+
 See `src/ragchain/` for implementation details.
 
 Chroma notes

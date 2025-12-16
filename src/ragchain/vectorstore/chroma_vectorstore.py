@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Dict, List, Optional
 from types import ModuleType
+from typing import Any, Dict, List, Optional
 
 chromadb: ModuleType | None = None
 try:
     import chromadb as _chromadb
+
     chromadb = _chromadb
 except Exception:  # pragma: no cover - chromadb is optional for tests
     chromadb = None

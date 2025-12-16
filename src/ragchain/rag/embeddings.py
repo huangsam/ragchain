@@ -39,6 +39,4 @@ try:
             return self.model.encode(list(texts), show_progress_bar=False).tolist()
 
 except Exception:  # pragma: no cover - optional dep
-    from typing import Optional, Type
-
     LocalSentenceTransformer = None  # type: ignore

@@ -48,6 +48,8 @@ ragchain = "ragchain.cli:cli"
 
 [tool.ruff]
 line-length = 160
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "I", "C", "Q"]
 extend-ignore = ["E203"]
 

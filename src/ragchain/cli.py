@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 
 import click
+import shutil
+import subprocess
 import uvicorn
 
 logger = logging.getLogger("ragchain.cli")
@@ -21,6 +23,59 @@ def serve(host: str, port: int, reload: bool) -> None:  # pragma: no cover - run
     """Run the API server (uvicorn)"""
     logger.info("Starting ragchain API on %s:%d (reload=%s)", host, port, reload)
     uvicorn.run("ragchain.api:app", host=host, port=port, reload=reload)
+
+
+def _compose_cmd() -> list[str]:
+    """Return a docker-compose command list, preferring the classic
+    `docker-compose` binary and falling back to `docker compose` if available.
+    """
+    if shutil.which("docker-compose"):
+        return ["docker-compose"]
+    if shutil.which("docker"):
+        # Use the docker CLI with the compose subcommand
+        return ["docker", "compose"]
+    raise click.ClickException("docker-compose or docker CLI not found on PATH")
+
+
+@cli.command()
+@click.option("--detached/--no-detached", default=True, help="Run compose up detached")
+@click.option("--build/--no-build", default=False, help="Pass --build to `up`")
+def up(detached: bool, build: bool) -> None:  # pragma: no cover - manual
+    """Start the local Docker Compose services (e.g., Chroma)."""
+    cmd = _compose_cmd() + ["up"]
+    if detached:
+        cmd.append("-d")
+    if build:
+        cmd.append("--build")
+
+    click.echo(f"Running: {' '.join(cmd)}")
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as exc:  # pragma: no cover - env dependent
+        raise click.ClickException(f"docker-compose up failed: {exc}")
+
+    click.echo("Chroma (docker-compose) started.")
+    click.echo("Tip: export CHROMA_SERVER_URL=http://localhost:8000 to point ragchain at the running service")
+
+
+@cli.command()
+@click.option("--remove-volumes/--no-remove-volumes", default=False, help="Remove volumes with -v")
+@click.option("--remove-orphans/--no-remove-orphans", default=False, help="Pass --remove-orphans to down")
+def down(remove_volumes: bool, remove_orphans: bool) -> None:  # pragma: no cover - manual
+    """Stop and remove Docker Compose services started by `ragchain up`."""
+    cmd = _compose_cmd() + ["down"]
+    if remove_volumes:
+        cmd.append("-v")
+    if remove_orphans:
+        cmd.append("--remove-orphans")
+
+    click.echo(f"Running: {' '.join(cmd)}")
+    try:
+        subprocess.run(cmd, check=True)
+    except subprocess.CalledProcessError as exc:  # pragma: no cover - env dependent
+        raise click.ClickException(f"docker-compose down failed: {exc}")
+
+    click.echo("Chroma (docker-compose) stopped and removed.")
 
 
 if __name__ == "__main__":  # pragma: no cover - manual run

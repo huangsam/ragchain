@@ -43,7 +43,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [project.scripts]
-ragchain = "ragchain.cli:main"
+ragchain = "ragchain.cli:cli"
 
 
 [tool.ruff]

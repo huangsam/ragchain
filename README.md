@@ -23,9 +23,15 @@ ragchain serve --port 8000
 
 - To ingest pages AND persist them to the running Chroma instance (recommended newcomer flow):
 
-  1. Start Chroma: `docker-compose up -d`
+  1. Start Chroma: `docker-compose up -d` (or `ragchain up`)
   2. Export the server URL: `export CHROMA_SERVER_URL=http://localhost:8000`
   3. Run the ingest CLI (example): `python main.py --titles "Python_(programming_language)" --save-dir wikipages`
+
+- Convenience: use the CLI to manage local Chroma
+
+  - Start services: `ragchain up` (shorthand for `docker-compose up -d`)
+  - Stop services: `ragchain down` (shorthand for `docker-compose down`)
+  - Remove volumes: `ragchain down --remove-volumes`
 
 - Run remote tests: `CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py`
 

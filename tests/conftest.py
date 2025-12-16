@@ -34,7 +34,7 @@ def chroma_store(request, tmp_path: Path):
     if mode == "remote":
         server_url = os.environ.get("CHROMA_SERVER_URL")
 
-        def _http_ok(url, timeout=2):
+        def _http_ok(url, timeout=1):
             import urllib.request
 
             try:

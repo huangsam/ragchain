@@ -39,10 +39,13 @@ def _compose_cmd() -> list[str]:
 
 @cli.command()
 @click.option("--detached/--no-detached", default=True, help="Run compose up detached")
-@click.option("--build/--no-build", default=False, help="Pass --build to `up`")
+@click.option("--build/--no-build", default=True, help="Pass --build to `up`")
 def up(detached: bool, build: bool) -> None:  # pragma: no cover - manual
-    """Start the local Docker Compose services (e.g., Chroma)."""
-    cmd = _compose_cmd() + ["up"]
+    """Start the local Docker Compose services (Chroma + ragchain + demo-runner).
+
+    This uses demo-compose.yml by default. For testing/CI, use test-compose.yml directly.
+    """
+    cmd = _compose_cmd() + ["-f", "demo-compose.yml", "up"]
     if detached:
         cmd.append("-d")
     if build:
@@ -50,20 +53,20 @@ def up(detached: bool, build: bool) -> None:  # pragma: no cover - manual
 
     click.echo(f"Running: {' '.join(cmd)}")
     try:
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, cwd=".")
     except subprocess.CalledProcessError as exc:  # pragma: no cover - env dependent
         raise click.ClickException(f"docker-compose up failed: {exc}")
 
-    click.echo("Chroma (docker-compose) started.")
-    click.echo("Tip: export CHROMA_SERVER_URL=http://localhost:8000 to point ragchain at the running service")
+    click.echo("✓ Demo stack started (Chroma on http://localhost:8000, ragchain on http://localhost:8003).")
+    click.echo("  Tip: export CHROMA_SERVER_URL=http://localhost:8000 for local ragchain server")
 
 
 @cli.command()
 @click.option("--remove-volumes/--no-remove-volumes", default=False, help="Remove volumes with -v")
 @click.option("--remove-orphans/--no-remove-orphans", default=False, help="Pass --remove-orphans to down")
 def down(remove_volumes: bool, remove_orphans: bool) -> None:  # pragma: no cover - manual
-    """Stop and remove Docker Compose services started by `ragchain up`."""
-    cmd = _compose_cmd() + ["down"]
+    """Stop and remove Docker Compose services started by `ragchain up` (demo-compose.yml)."""
+    cmd = _compose_cmd() + ["-f", "demo-compose.yml", "down"]
     if remove_volumes:
         cmd.append("-v")
     if remove_orphans:
@@ -71,11 +74,11 @@ def down(remove_volumes: bool, remove_orphans: bool) -> None:  # pragma: no cove
 
     click.echo(f"Running: {' '.join(cmd)}")
     try:
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, cwd=".")
     except subprocess.CalledProcessError as exc:  # pragma: no cover - env dependent
         raise click.ClickException(f"docker-compose down failed: {exc}")
 
-    click.echo("Chroma (docker-compose) stopped and removed.")
+    click.echo("✓ Demo stack stopped and removed.")
 
 
 if __name__ == "__main__":  # pragma: no cover - manual run

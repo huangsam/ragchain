@@ -2,55 +2,79 @@
 
 Lightweight RAG ingestion scaffold — scraper, chunker, embeddings, and a Chroma adapter.
 
-## Quick start
+---
 
-1. Install deps and dev tools: `uv sync` (or use your virtualenv + pip).
-2. Fetch pages: `python main.py --titles "Python_(programming_language)" --save-dir wikipages`.
-3. Run tests: `uv run --with-editable . pytest -q`.
+## 🚀 Quick Start (Users)
 
-### Run the API
+Start the demo stack and interact with the API:
 
 ```bash
-# development server
-python -m uvicorn ragchain.api:app --reload --port 8000
-# or via CLI after editable install
-ragchain serve --port 8000
+# Start the demo stack (Chroma + ragchain API + demo-runner)
+ragchain up
+
+# Health check
+curl http://127.0.0.1:8003/health
+
+# Ingest pages
+curl -X POST http://127.0.0.1:8003/ingest \
+  -H 'Content-Type: application/json' \
+  -d '{"titles":["Python_(programming_language)"]}'
+
+# Search
+curl -X POST http://127.0.0.1:8003/search \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"python language","n_results":1}'
+
+# Stop the stack
+ragchain down
 ```
 
-### Chroma & remote tests
+### What's running
 
-- Local Chroma (Docker): `docker-compose -f test-compose.yml up -d --build` (server defaults to http://localhost:8000).
+- **Chroma** (vector store): http://localhost:8000
+- **ragchain API**: http://localhost:8003
+- **demo-runner**: automatically runs sample ingest + search on startup
 
-- To ingest pages AND persist them to the running Chroma instance (recommended newcomer flow):
+---
 
-  1. Start Chroma: `docker-compose -f test-compose.yml up -d --build` (or `ragchain up`)
-  2. Export the server URL: `export CHROMA_SERVER_URL=http://localhost:8000`
-  3. Run the ingest CLI (example): `python main.py --titles "Python_(programming_language)" --save-dir wikipages`
+## 👨‍💻 Development Setup
 
-- Convenience: use the CLI to manage local Chroma
+```bash
+# Install deps and dev tools
+uv sync
 
-  - Start services: `ragchain up` (shorthand for `docker-compose up -d`)
-  - Stop services: `ragchain down` (shorthand for `docker-compose down`)
-  - Remove volumes: `ragchain down --remove-volumes`
+# Run unit tests
+uv run --with-editable . pytest -q
 
-- Demo compose file
+# Run a sample ingest (saves to wikipages/)
+python main.py --titles "Python_(programming_language)" --save-dir wikipages
 
-  - A `demo-compose.yml` is provided to bring up a demo stack (Chroma, the ragchain API, and a demo client that runs ingest & search). Start it with:
+# Start Chroma stack (one terminal)
+ragchain up
 
-    ```bash
-    docker compose -f demo-compose.yml up --build
-    # or
-    docker-compose -f demo-compose.yml up --build
-    ```
+# In another terminal, start the local API server
+ragchain serve --port 8001
+# or
+uv run --with-editable . python -m uvicorn ragchain.api:app --reload --port 8001
 
-  - The demo-runner will wait for the API and perform a sample ingest + search, printing results to the demo container logs.
+# Test the API
+export CHROMA_SERVER_URL=http://localhost:8000
+curl -X POST http://127.0.0.1:8001/ingest \
+  -H 'Content-Type: application/json' \
+  -d '{"titles":["Python_(programming_language)"]}'
 
-- Run remote tests: `CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py`
+# Run integration tests against running Chroma
+docker-compose -f test-compose.yml up -d --build
+CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
+```
 
-## Notes
+---
 
-- Use `CHROMA_PERSIST_DIRECTORY` for an on-disk in-process Chroma during local runs.
-- If `chromadb` isn't available, Chroma-related tests are skipped.
-- Recommended Python: **3.12**.
+## 📝 Notes
 
-See `AGENTS.md` for a short repo overview and developer notes.
+- Python: **3.12** recommended (some deps have optimized wheels).
+- **CHROMA_PERSIST_DIRECTORY**: use for on-disk in-process Chroma during local runs.
+- **CHROMA_SERVER_URL**: point ragchain at a running Chroma instance (e.g., from `ragchain up`).
+- If `chromadb` isn't installed, Chroma-related tests are skipped.
+
+See [AGENTS.md](AGENTS.md) for project layout, tooling, and architecture notes.

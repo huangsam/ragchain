@@ -1,6 +1,10 @@
-# ragchain
+# RAGchain
 
-Lightweight RAG ingestion scaffold — scraper, chunker, embeddings, and a Chroma adapter.
+Your local RAG stack — no APIs, no cloud, full control.
+
+**Key Features:** Built-in Wikipedia fetcher, semantic search with real embeddings, LLM-powered answer generation via local Ollama, Docker Compose demo stack, and a full CLI for ingest/search/query workflows.
+
+**Motivation:** A minimal, self-contained RAG pipeline that runs entirely locally—no external APIs, no cloud dependencies—perfect for prototyping, teaching, and production use cases where data privacy and reproducibility matter.
 
 ---
 

@@ -47,7 +47,7 @@ def up(detached: bool, build: bool, profile: str) -> None:  # pragma: no cover -
     This uses `demo-compose.yml` by default with the `demo` profile. Use
     `--profile test` for a minimal stack suitable for integration tests.
     """
-    cmd = _compose_cmd() + ["-f", "demo-compose.yml", "--profile", profile, "up"]
+    cmd = _compose_cmd() + ["-f", "docker-compose.yml", "--profile", profile, "up"]
     if detached:
         cmd.append("-d")
     if build:
@@ -69,7 +69,7 @@ def up(detached: bool, build: bool, profile: str) -> None:  # pragma: no cover -
 @click.option("--profile", default="demo", help="Compose profile to stop (demo|test)")
 def down(remove_volumes: bool, remove_orphans: bool, profile: str) -> None:  # pragma: no cover - manual
     """Stop and remove Docker Compose services started by `ragchain up` (demo-compose.yml)."""
-    cmd = _compose_cmd() + ["-f", "demo-compose.yml", "--profile", profile, "down"]
+    cmd = _compose_cmd() + ["-f", "docker-compose.yml", "--profile", profile, "down"]
     if remove_volumes:
         cmd.append("-v")
     if remove_orphans:

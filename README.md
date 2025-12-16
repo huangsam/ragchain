@@ -33,6 +33,8 @@ ragchain down
 
 - **Chroma** (vector store): http://localhost:8000
 - **ragchain API**: http://localhost:8003
+
+Note: the compose file is now the canonical `docker-compose.yml`. You can run the demo with `docker compose up -d --profile demo` or tests with `docker compose up -d --profile test --build`.
 - **demo-runner**: automatically runs sample ingest + search on startup
 
 ---
@@ -64,7 +66,7 @@ curl -X POST http://127.0.0.1:8001/ingest \
   -d '{"titles":["Python_(programming_language)"]}'
 
 # Run integration tests against running Chroma
-docker compose -f demo-compose.yml --profile test up -d --build
+docker compose up -d --profile test --build
 CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
 ```
 

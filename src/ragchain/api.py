@@ -87,14 +87,21 @@ async def ask_endpoint(req: AskRequest) -> Dict[str, Any]:
 
     # 2. Extract context
     # Chroma returns list of lists (batch). We only have one query.
-    context_chunks = results["documents"][0] if results.get("documents") else []
+    # We need both documents and metadatas to provide better context.
+    documents = results["documents"][0] if results.get("documents") else []
+    metadatas = results["metadatas"][0] if results.get("metadatas") else []
+
+    # Combine into a list of dicts for the generator
+    context_items = []
+    for doc, meta in zip(documents, metadatas):
+        context_items.append({"text": doc, "meta": meta})
 
     # 3. Generation
     generator = OllamaGenerator(model=req.model)
-    answer = await generator.generate(req.query, context_chunks)
+    answer = await generator.generate(req.query, context_items)
 
     return {
         "answer": answer,
-        "context": context_chunks,
+        "context": documents,  # Keep returning raw text list for backward compat/debugging
         "model": generator.model,
     }

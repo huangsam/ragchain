@@ -82,7 +82,8 @@ async def ingest_documents(docs: List[Document]) -> dict:
 
     start_time = time.perf_counter()
 
-    # Split documents
+    # Split documents with balanced chunk size for good retrieval granularity
+    # 2500 chars provides focused context without over-chunking
     splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=50)
     chunks = splitter.split_documents(docs)
     split_time = time.perf_counter() - start_time

@@ -29,8 +29,8 @@ ragchain search "memory management" --k 5
 
 # Ask questions using RAG (requires local Ollama)
 # Ensure you have run `ollama pull qwen3` locally first
-ragchain query "What is Python used for?"
-ragchain query "Compare Go and Rust for systems programming"
+ragchain ask "What is Python used for?"
+ragchain ask "Compare Go and Rust for systems programming"
 
 # Or manually ingest a different set of languages
 ragchain ingest --n 10  # Fetches top 10 from TIOBE

@@ -11,7 +11,7 @@ A compact tree view of the repository layout:
 ```
 src/ragchain/
 ├── api.py                # FastAPI app (/health, /ingest, /search, /ask)
-├── cli.py                # Click-based CLI (serve, up, down, status, ingest, search, query)
+├── cli.py                # Click-based CLI (serve, ingest, search, ask)
 ├── loaders.py            # Document loaders for Wikipedia and other sources
 ├── rag.py                # LangChain RAG pipeline (embedding, chunking, retrieval, generation)
 └── __init__.py           # Package initialization

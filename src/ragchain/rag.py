@@ -11,7 +11,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 CHROMA_PERSIST_DIR = os.environ.get("CHROMA_PERSIST_DIRECTORY", "./chroma_data")
 CHROMA_SERVER_URL = os.environ.get("CHROMA_SERVER_URL", None)
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "qwen3")
+OLLAMA_EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 
 
 def get_embedder():
@@ -24,13 +24,14 @@ def get_vector_store():
     embedder = get_embedder()
 
     if CHROMA_SERVER_URL:
-        # Remote Chroma server
+        # Remote Chroma server - use ChromaClient
+        from chromadb import HttpClient
+        client = HttpClient(host=CHROMA_SERVER_URL.replace("http://", "").split(":")[0],
+                           port=int(CHROMA_SERVER_URL.split(":")[-1]) if ":" in CHROMA_SERVER_URL else 8000)
         return Chroma(
             collection_name="ragchain",
             embedding_function=embedder,
-            client_type="remote",
-            host=CHROMA_SERVER_URL.replace("http://", "").split(":")[0],
-            port=int(CHROMA_SERVER_URL.split(":")[-1]) if ":" in CHROMA_SERVER_URL else 8000,
+            client=client,
         )
     else:
         # Persistent local Chroma

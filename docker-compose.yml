@@ -43,15 +43,16 @@ services:
       context: .
       dockerfile: Dockerfile.demo
     depends_on:
-      - ragchain
-      - chroma
+      ragchain:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
     profiles: ["demo"]
-    volumes:
-      - ./scripts:/scripts
     environment:
       - RAGCHAIN_API_URL=http://ragchain:8000
       - CHROMA_SERVER_URL=http://chroma:8000
-    entrypoint: ["python", "/scripts/demo_runner.py"]
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+    entrypoint: ["ragchain", "ingest", "--n", "20"]
 
 volumes:
   chroma_demo_data:

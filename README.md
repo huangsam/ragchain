@@ -19,7 +19,7 @@ Start the demo stack and interact with the RAG pipeline to analyze programming l
 
 ```bash
 # Start the demo stack (Chroma + ragchain API + demo-runner)
-docker compose --profile demo up -d
+docker compose --profile demo up --build -d
 
 # The demo-runner automatically ingests the top 20 TIOBE-ranked languages from Wikipedia
 

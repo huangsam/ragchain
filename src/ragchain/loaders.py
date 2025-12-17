@@ -2,6 +2,7 @@
 from typing import List
 
 import aiohttp
+from aiohttp import ClientTimeout
 from bs4 import BeautifulSoup
 from langchain_core.documents import Document
 
@@ -11,7 +12,7 @@ async def load_tiobe_languages(n: int = 50) -> List[str]:
     url = "https://www.tiobe.com/tiobe-index/"
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url, timeout=15) as r:
+            async with session.get(url, timeout=ClientTimeout(total=15)) as r:
                 html = await r.text()
     except Exception as e:
         print(f"Warning: failed to fetch TIOBE: {e}")

@@ -40,7 +40,7 @@ def ingest(n):
 
         click.echo("Loading Wikipedia pages...")
         docs = await load_wikipedia_pages(langs)
-        click.echo(f"Loaded {len(docs)} documents from languages: {', '.join(set(d.metadata.get('language', 'Unknown') for d in docs))}")
+        click.echo(f"Loaded {len(docs)} documents from languages: {', '.join({d.metadata.get('language', 'Unknown') for d in docs})}")
 
         click.echo("Ingesting into vector store...")
         result = await ingest_documents(docs)

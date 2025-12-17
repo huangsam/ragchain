@@ -66,9 +66,9 @@ async def search_endpoint(req: SearchRequest):
 async def ask(req: AskRequest):
     """Search + generate answer using Ollama LLM."""
     try:
+        from langchain_community.llms.ollama import Ollama
         from langchain_core.prompts import ChatPromptTemplate
         from langchain_core.runnables import RunnablePassthrough
-        from langchain_community.llms.ollama import Ollama
 
         from ragchain.rag import OLLAMA_BASE_URL, get_vector_store
 

@@ -103,6 +103,7 @@ async def ingest_documents(docs: List[Document]) -> dict:
 
     # Generate unique IDs based on content hash + index to ensure no duplicates
     import hashlib
+
     ids = [f"{hashlib.md5(text.encode()).hexdigest()[:12]}_{i}" for i, text in enumerate(chunk_texts)]
 
     store._collection.add(

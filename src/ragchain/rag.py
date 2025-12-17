@@ -64,35 +64,46 @@ def get_vector_store():
 async def ingest_documents(docs: List[Document]) -> dict:
     """Process and store documents in vector store.
 
-    Pipeline: Split docs → Embed chunks → Store in Chroma (batched).
+    Pipeline: Split docs → Batch embed chunks → Store pre-embedded in Chroma.
 
     Optimizations:
-    - Larger chunks (1500 chars) reduce embedding overhead
-    - Smaller overlap (100 chars) minimizes redundancy
-    - Batched upserts (500 at a time) prevent memory spikes
+    - Pre-compute all embeddings in one batch call to Ollama (much faster than individual calls)
+    - Add pre-embedded documents directly to Chroma (skips embedding overhead)
+    - Larger chunks (2500) reduce total chunks needed
 
     Args:
         docs: List of LangChain Documents to ingest
 
     Returns:
-        dict with keys: status='ok', count=<number of chunks>, message=<status message>, elapsed_seconds=<float>
+        dict with keys: status, count, message, elapsed_seconds, chunks_per_sec
     """
     if not docs:
         return {"status": "ok", "count": 0, "message": "No documents to ingest", "elapsed_seconds": 0.0, "chunks_per_sec": 0.0}
 
     start_time = time.perf_counter()
 
-    # Split documents with aggressive optimization to reduce chunk count
-    # Larger chunk_size (2500) + minimal overlap (50) significantly reduces embeddings needed
+    # Split documents
     splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=50)
     chunks = splitter.split_documents(docs)
 
-    # Get store and add documents in smaller batches for better pipelining
+    # Pre-compute all embeddings in batch (much faster than individual calls)
+    embedder = get_embedder()
+    chunk_texts = [chunk.page_content for chunk in chunks]
+    embeddings = embedder.embed_documents(chunk_texts)  # Single batch call to Ollama
+
+    # Add pre-embedded documents directly to Chroma collection (skips redundant embedding)
     store = get_vector_store()
-    batch_size = 100
-    for i in range(0, len(chunks), batch_size):
-        batch = chunks[i : i + batch_size]
-        store.add_documents(batch)
+
+    # Generate deterministic IDs based on content hash
+    import hashlib
+    ids = [hashlib.md5(text.encode()).hexdigest()[:12] for text in chunk_texts]
+
+    store._collection.add(
+        ids=ids,
+        embeddings=embeddings,
+        documents=chunk_texts,
+        metadatas=[chunk.metadata for chunk in chunks],
+    )
 
     elapsed = time.perf_counter() - start_time
     chunks_per_sec = len(chunks) / elapsed if elapsed > 0 else 0

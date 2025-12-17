@@ -2,7 +2,7 @@
 
 Your local RAG stack — no APIs, no cloud, full control.
 
-**Key Features:** Built-in Wikipedia fetcher, semantic search with real embeddings, LLM-powered answer generation via local Ollama, Docker Compose demo stack, and a full CLI for ingest/search/query workflows.
+**Key Features:** Built-in Wikipedia fetcher, semantic search with qwen3-embedding (4096-dimensional vectors), LLM-powered answer generation via local Ollama, Docker Compose demo stack, and a full CLI for ingest/search/query workflows.
 
 **Motivation:** A minimal, self-contained RAG pipeline that runs entirely locally—no external APIs, no cloud dependencies—perfect for prototyping, teaching, and production use cases where data privacy and reproducibility matter.
 
@@ -79,9 +79,11 @@ CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/in
 
 ## 📝 Notes
 
-- Python: **3.12** recommended (some deps have optimized wheels).
+- Python: **3.12** recommended (LangChain ecosystem has optimized wheels).
 - **CHROMA_PERSIST_DIRECTORY**: use for on-disk in-process Chroma during local runs.
 - **CHROMA_SERVER_URL**: point ragchain at a running Chroma instance (e.g., from `ragchain up`).
-- If `chromadb` isn't installed, Chroma-related tests are skipped.
+- **OLLAMA_BASE_URL**: configure where Ollama is running (default: `http://localhost:11434`).
+- **OLLAMA_EMBED_MODEL**: embedding model (default: `qwen3-embedding` for 4096-dimensional vectors).
+- **OLLAMA_MODEL**: LLM model for generation (ensure pulled: `ollama pull qwen3`).
 
 See [AGENTS.md](AGENTS.md) for project layout, tooling, and architecture notes.

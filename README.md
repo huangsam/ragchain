@@ -2,7 +2,7 @@
 
 Your local RAG stack — no APIs, no cloud, full control.
 
-**Key Features:** Built-in Wikipedia fetcher, semantic search with qwen3-embedding (4096-dimensional vectors), LLM-powered answer generation via local Ollama, Docker Compose demo stack, and a full CLI for ingest/search/query workflows.
+**Key Features:** Analyze programming languages with TIOBE-ranked Wikipedia articles, semantic search with qwen3-embedding (4096-dimensional vectors), LLM-powered answer generation via local Ollama, Docker Compose demo stack, and a full CLI for ingest/search/query workflows.
 
 **Motivation:** A minimal, self-contained RAG pipeline that runs entirely locally—no external APIs, no cloud dependencies—perfect for prototyping, teaching, and production use cases where data privacy and reproducibility matter.
 
@@ -10,25 +10,25 @@ Your local RAG stack — no APIs, no cloud, full control.
 
 ## 🚀 Quick Start (Users)
 
-Start the demo stack and interact with the API:
+Start the demo stack and interact with the RAG pipeline to analyze programming languages:
 
 ```bash
 # Start the demo stack (Chroma + ragchain API + demo-runner)
 ragchain up
 
-# Health check
-ragchain status
+# The demo-runner automatically ingests the top 20 TIOBE-ranked languages from Wikipedia
 
-# Ingest pages
-ragchain ingest "Python_(programming_language)" "Java_(programming_language)"
+# Search ingested programming language data
+ragchain search "functional programming paradigm" --k 4
+ragchain search "memory management" --k 5
 
-# Search
-ragchain search "python language" --n-results 5
-
-# Ask (requires local Ollama)
+# Ask questions using RAG (requires local Ollama)
 # Ensure you have run `ollama pull qwen3` locally first
-ragchain query demo
-ragchain query "What is Python?"
+ragchain query "What is Python used for?"
+ragchain query "Compare Go and Rust for systems programming"
+
+# Or manually ingest a different set of languages
+ragchain ingest --n 10  # Fetches top 10 from TIOBE
 
 # Stop the stack
 ragchain down
@@ -36,44 +36,18 @@ ragchain down
 
 ### What's running
 
-- **Chroma** (vector store): http://localhost:8000
-- **ragchain API**: http://localhost:8003
+- **Chroma** (vector store): http://localhost:8000 — persists programming language embeddings
+- **ragchain API**: http://localhost:8003 — REST endpoints for ingest, search, and ask
+- **demo-runner**: automatically fetches top 20 TIOBE languages and ingests Wikipedia articles on startup
 
-Note: the compose file is now the canonical `docker-compose.yml`. You can run the demo with `docker compose up -d --profile demo` or start a minimal test stack with `ragchain up --profile test` (recommended for CI/tests).
-- **demo-runner**: automatically runs sample ingest + search on startup
+**Demo Focus:** The current demo is tailored for **programming language analysis**. It:
+1. Fetches top languages from the TIOBE index
+2. Loads Wikipedia articles for each language
+3. Chunks and embeds them with qwen3-embedding (4096-dimensional vectors)
+4. Enables semantic search over language documentation
+5. Supports RAG queries via local Ollama
 
----
-
-## 👨‍💻 Development Setup
-
-```bash
-# Install deps and dev tools
-uv sync
-
-# Run unit tests
-uv run --with-editable . pytest -q
-
-# Run a sample ingest (saves to wikipages/)
-python main.py --titles "Python_(programming_language)" --save-dir wikipages
-
-# Start Chroma stack (one terminal)
-ragchain up
-
-# In another terminal, start the local API server
-ragchain serve --port 8001
-# or
-uv run --with-editable . python -m uvicorn ragchain.api:app --reload --port 8001
-
-# Test the API
-export CHROMA_SERVER_URL=http://localhost:8000
-curl -X POST http://127.0.0.1:8001/ingest \
-  -H 'Content-Type: application/json' \
-  -d '{"titles":["Python_(programming_language)"]}'
-
-# Run integration tests against running Chroma
-docker compose up -d --profile test --build
-CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
-```
+Note: Use `docker compose up -d --profile demo` or `ragchain up --profile test` (minimal stack for CI). See [AGENTS.md](AGENTS.md) for architecture details.
 
 ---
 

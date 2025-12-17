@@ -1,4 +1,5 @@
 """Custom document loaders for RAG pipeline."""
+
 import asyncio
 from typing import List
 
@@ -44,7 +45,7 @@ async def load_tiobe_languages(n: int = 50) -> List[str]:
 def _load_single_page(lang: str) -> Document:
     """Load a single Wikipedia page with timeout."""
     from langchain_community.document_loaders import WikipediaLoader
-    
+
     try:
         # Set a shorter timeout for Wikipedia loader to avoid hanging
         loader = WikipediaLoader(query=f"{lang} programming language", load_max_docs=1)
@@ -61,13 +62,14 @@ async def load_wikipedia_pages(language_names: List[str]) -> List[Document]:
     """Fetch Wikipedia pages for given programming languages using LangChain's WikipediaLoader."""
     docs = []
     loop = asyncio.get_event_loop()
-    
+
     # Load pages with concurrent futures to avoid blocking
     import concurrent.futures
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         futures = [loop.run_in_executor(executor, _load_single_page, lang) for lang in language_names]
         results = await asyncio.gather(*futures, return_exceptions=True)
-        
+
         for result in results:
             if isinstance(result, Document):
                 docs.append(result)

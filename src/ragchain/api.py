@@ -1,4 +1,5 @@
 """FastAPI application for RAG endpoints."""
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -89,11 +90,7 @@ Answer:"""
         def format_docs(docs):
             return "\n\n".join([d.page_content for d in docs])
 
-        chain = (
-            {"context": retriever | format_docs, "question": RunnablePassthrough()}
-            | prompt
-            | llm
-        )
+        chain = {"context": retriever | format_docs, "question": RunnablePassthrough()} | prompt | llm
         answer = chain.invoke(req.query)
 
         return {"query": req.query, "answer": answer}

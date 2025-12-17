@@ -1,4 +1,5 @@
 """Unit tests for RAG pipeline."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest

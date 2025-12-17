@@ -1,4 +1,5 @@
 """CLI for ragchain."""
+
 import asyncio
 
 import click
@@ -30,6 +31,7 @@ def serve(host, port):
 @click.option("--n", default=10, help="Number of languages to ingest")
 def ingest(n):
     """Ingest programming languages from TIOBE."""
+
     async def _ingest():
         click.echo(f"Fetching top {n} languages from TIOBE...")
         langs = await load_tiobe_languages(n)
@@ -51,6 +53,7 @@ def ingest(n):
 @click.option("--k", default=4, help="Number of results")
 def search(query, k):
     """Search the vector store."""
+
     async def _search():
         from ragchain.rag import search as search_func
 
@@ -68,11 +71,10 @@ def search(query, k):
 @click.option("--model", default="qwen3")
 def ask(query, model):
     """Ask a question using RAG + LLM."""
+
     async def _ask():
         async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                f"{API_URL}/ask", json={"query": query, "model": model}
-            )
+            resp = await client.post(f"{API_URL}/ask", json={"query": query, "model": model})
             resp.raise_for_status()
             result = resp.json()
             click.echo(f"Q: {result['query']}")

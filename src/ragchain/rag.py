@@ -1,4 +1,5 @@
 """RAG pipeline orchestration using LangChain."""
+
 import os
 from pathlib import Path
 from typing import List
@@ -26,8 +27,10 @@ def get_vector_store():
     if CHROMA_SERVER_URL:
         # Remote Chroma server - use ChromaClient
         from chromadb import HttpClient
-        client = HttpClient(host=CHROMA_SERVER_URL.replace("http://", "").split(":")[0],
-                           port=int(CHROMA_SERVER_URL.split(":")[-1]) if ":" in CHROMA_SERVER_URL else 8000)
+
+        client = HttpClient(
+            host=CHROMA_SERVER_URL.replace("http://", "").split(":")[0], port=int(CHROMA_SERVER_URL.split(":")[-1]) if ":" in CHROMA_SERVER_URL else 8000
+        )
         return Chroma(
             collection_name="ragchain",
             embedding_function=embedder,
@@ -66,8 +69,5 @@ async def search(query: str, k: int = 4) -> dict:
 
     return {
         "query": query,
-        "results": [
-            {"content": r.page_content, "metadata": r.metadata, "distance": 0.0}
-            for r in results
-        ],
+        "results": [{"content": r.page_content, "metadata": r.metadata, "distance": 0.0} for r in results],
     }

@@ -21,8 +21,6 @@ Start the demo stack and interact with the RAG pipeline to analyze programming l
 # Start the demo stack (Chroma + ragchain API + demo-runner)
 docker compose --profile demo up --build -d
 
-# The demo-runner automatically ingests the top 20 TIOBE-ranked languages from Wikipedia
-
 # Search ingested programming language data
 ragchain search "functional programming paradigm" --k 4
 ragchain search "memory management" --k 5

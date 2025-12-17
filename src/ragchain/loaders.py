@@ -42,7 +42,7 @@ async def load_tiobe_languages(n: int = 50) -> List[str]:
     return languages[:n]
 
 
-def _load_single_page(lang: str) -> Document:
+def _load_single_page(lang: str) -> Document | None:
     """Load a single Wikipedia page with timeout."""
     from langchain_community.document_loaders import WikipediaLoader
 

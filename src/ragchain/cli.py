@@ -1,6 +1,7 @@
 """CLI for ragchain."""
 
 import asyncio
+import os
 
 import click
 import httpx
@@ -8,7 +9,7 @@ import httpx
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.rag import ingest_documents
 
-API_URL = "http://localhost:8000"
+API_URL = os.environ.get("RAGCHAIN_API_URL", "http://localhost:8000")
 
 
 @click.group()
@@ -35,11 +36,11 @@ def ingest(n):
     async def _ingest():
         click.echo(f"Fetching top {n} languages from TIOBE...")
         langs = await load_tiobe_languages(n)
-        click.echo(f"Fetched {len(langs)} languages")
+        click.echo(f"Fetched {len(langs)} languages: {', '.join(langs)}")
 
         click.echo("Loading Wikipedia pages...")
         docs = await load_wikipedia_pages(langs)
-        click.echo(f"Loaded {len(docs)} documents")
+        click.echo(f"Loaded {len(docs)} documents from languages: {', '.join(set(d.metadata.get('language', 'Unknown') for d in docs))}")
 
         click.echo("Ingesting into vector store...")
         result = await ingest_documents(docs)

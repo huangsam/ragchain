@@ -23,8 +23,8 @@ services:
       - CHROMA_SERVER_URL=http://chroma:8000
       # Point to host's Ollama instance
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
-      # Embedding model (nomic-embed-text supports embeddings)
-      - OLLAMA_EMBED_MODEL=nomic-embed-text
+      # Embedding model (qwen3-embedding for better semantic search)
+      - OLLAMA_EMBED_MODEL=qwen3-embedding
       # Default model to use for generation (ensure you have pulled it: `ollama pull qwen3`)
       - OLLAMA_MODEL=qwen3
       # Cache HuggingFace models to a volume so we don't re-download on every restart

@@ -9,7 +9,7 @@ import httpx
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.rag import ingest_documents
 
-API_URL = os.environ.get("RAGCHAIN_API_URL", "http://localhost:8000")
+API_URL = os.environ.get("RAGCHAIN_API_URL", "http://localhost:8003")
 
 
 @click.group()
@@ -98,11 +98,13 @@ def ask(query, model):
     """
 
     async def _ask():
-        async with httpx.AsyncClient() as client:
+        # Increase timeout since LLM generation can take 30-60 seconds
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            click.echo("Asking question (this may take a while for LLM generation)...")
             resp = await client.post(f"{API_URL}/ask", json={"query": query, "model": model})
             resp.raise_for_status()
             result = resp.json()
-            click.echo(f"Q: {result['query']}")
+            click.echo(f"\nQ: {result['query']}")
             click.echo(f"A: {result['answer']}")
 
     asyncio.run(_ask())

@@ -85,13 +85,19 @@ async def ingest_documents(docs: List[Document]) -> dict:
     # Split documents
     splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=50)
     chunks = splitter.split_documents(docs)
+    split_time = time.perf_counter() - start_time
+    print(f"⏱️  Split time: {split_time:.2f}s")
 
     # Pre-compute all embeddings in batch (much faster than individual calls)
+    embed_start = time.perf_counter()
     embedder = get_embedder()
     chunk_texts = [chunk.page_content for chunk in chunks]
     embeddings = embedder.embed_documents(chunk_texts)  # Single batch call to Ollama
+    embed_time = time.perf_counter() - embed_start
+    print(f"⏱️  Embedding time: {embed_time:.2f}s for {len(chunks)} chunks")
 
     # Add pre-embedded documents directly to Chroma collection (skips redundant embedding)
+    store_start = time.perf_counter()
     store = get_vector_store()
 
     # Generate unique IDs based on content hash + index to ensure no duplicates
@@ -104,6 +110,8 @@ async def ingest_documents(docs: List[Document]) -> dict:
         documents=chunk_texts,
         metadatas=[chunk.metadata for chunk in chunks],
     )
+    store_time = time.perf_counter() - store_start
+    print(f"⏱️  Chroma add time: {store_time:.2f}s")
 
     elapsed = time.perf_counter() - start_time
     chunks_per_sec = len(chunks) / elapsed if elapsed > 0 else 0

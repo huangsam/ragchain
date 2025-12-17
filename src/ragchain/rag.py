@@ -94,9 +94,9 @@ async def ingest_documents(docs: List[Document]) -> dict:
     # Add pre-embedded documents directly to Chroma collection (skips redundant embedding)
     store = get_vector_store()
 
-    # Generate deterministic IDs based on content hash
+    # Generate unique IDs based on content hash + index to ensure no duplicates
     import hashlib
-    ids = [hashlib.md5(text.encode()).hexdigest()[:12] for text in chunk_texts]
+    ids = [f"{hashlib.md5(text.encode()).hexdigest()[:12]}_{i}" for i, text in enumerate(chunk_texts)]
 
     store._collection.add(
         ids=ids,

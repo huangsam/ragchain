@@ -2,19 +2,24 @@
 
 Your local RAG stack — no APIs, no cloud, full control.
 
-**Key Features:** Analyze programming languages with TIOBE-ranked Wikipedia articles, semantic search with qwen3-embedding (4096-dimensional vectors), LLM-powered answer generation via local Ollama, Docker Compose demo stack, and a full CLI for ingest/search/query workflows.
+**Key Features:**
+- Analyze programming languages with TIOBE-ranked Wikipedia articles
+- Semantic search with qwen3-embedding (4096-dimensional vectors)
+- LLM-powered answer generation via local Ollama
+- Docker Compose demo stack
+- Full CLI for ingest/search/query workflows
 
-**Motivation:** A minimal, self-contained RAG pipeline that runs entirely locally—no external APIs, no cloud dependencies—perfect for prototyping, teaching, and production use cases where data privacy and reproducibility matter.
+**Motivation:**
+- A minimal, self-contained RAG pipeline that runs entirely locally
+- Perfect for prototyping and teaching where reproducibility matters
 
----
-
-## 🚀 Quick Start (Users)
+## Quick start
 
 Start the demo stack and interact with the RAG pipeline to analyze programming languages:
 
 ```bash
 # Start the demo stack (Chroma + ragchain API + demo-runner)
-ragchain up
+docker compose --profile demo up -d
 
 # The demo-runner automatically ingests the top 20 TIOBE-ranked languages from Wikipedia
 
@@ -31,7 +36,7 @@ ragchain query "Compare Go and Rust for systems programming"
 ragchain ingest --n 10  # Fetches top 10 from TIOBE
 
 # Stop the stack
-ragchain down
+docker compose --profile demo down -v
 ```
 
 ### What's running
@@ -47,17 +52,17 @@ ragchain down
 4. Enables semantic search over language documentation
 5. Supports RAG queries via local Ollama
 
-Note: Use `docker compose up -d --profile demo` or `ragchain up --profile test` (minimal stack for CI). See [AGENTS.md](AGENTS.md) for architecture details.
-
----
-
-## 📝 Notes
+## Notes
 
 - Python: **3.12** recommended (LangChain ecosystem has optimized wheels).
+
+**Vector Store Configuration:**
 - **CHROMA_PERSIST_DIRECTORY**: use for on-disk in-process Chroma during local runs.
 - **CHROMA_SERVER_URL**: point ragchain at a running Chroma instance (e.g., from `ragchain up`).
+
+**LLM Configuration:**
 - **OLLAMA_BASE_URL**: configure where Ollama is running (default: `http://localhost:11434`).
-- **OLLAMA_EMBED_MODEL**: embedding model (default: `qwen3-embedding` for 4096-dimensional vectors).
+- **OLLAMA_EMBED_MODEL**: embedding model (default: `qwen3-embedding`).
 - **OLLAMA_MODEL**: LLM model for generation (ensure pulled: `ollama pull qwen3`).
 
 See [AGENTS.md](AGENTS.md) for project layout, tooling, and architecture notes.

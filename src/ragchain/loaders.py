@@ -10,7 +10,15 @@ from langchain_core.documents import Document
 
 
 async def load_tiobe_languages(n: int = 50) -> List[str]:
-    """Fetch top-n programming languages from TIOBE index."""
+    """Fetch top-n programming languages from TIOBE index.
+
+    Args:
+        n: Number of languages to fetch (max: 50, default: 50)
+
+    Returns:
+        List of programming language names in TIOBE ranking order.
+        Returns empty list if fetch fails.
+    """
     url = "https://www.tiobe.com/tiobe-index/"
     try:
         async with aiohttp.ClientSession() as session:
@@ -43,7 +51,14 @@ async def load_tiobe_languages(n: int = 50) -> List[str]:
 
 
 def _load_single_page(lang: str) -> Document | None:
-    """Load a single Wikipedia page with timeout."""
+    """Load Wikipedia page for a programming language.
+
+    Args:
+        lang: Programming language name (e.g., 'Python')
+
+    Returns:
+        Document with page content and language metadata, or None if loading fails.
+    """
     from langchain_community.document_loaders import WikipediaLoader
 
     try:
@@ -59,7 +74,17 @@ def _load_single_page(lang: str) -> Document | None:
 
 
 async def load_wikipedia_pages(language_names: List[str]) -> List[Document]:
-    """Fetch Wikipedia pages for given programming languages using LangChain's WikipediaLoader."""
+    """Fetch Wikipedia pages for programming languages concurrently.
+
+    Loads Wikipedia articles for given languages using concurrent ThreadPoolExecutor.
+
+    Args:
+        language_names: List of programming language names to fetch
+
+    Returns:
+        List of Documents with Wikipedia content and language metadata.
+        Failed languages are silently skipped.
+    """
     docs = []
     loop = asyncio.get_event_loop()
 

@@ -10,28 +10,39 @@ app = FastAPI()
 
 
 class IngestRequest(BaseModel):
+    """Request schema for document ingestion endpoint.
+
+    Either specify languages list or n_languages to fetch from TIOBE.
+    """
     languages: list[str] | None = None
     n_languages: int = 10
 
 
 class SearchRequest(BaseModel):
+    """Request schema for semantic search endpoint."""
     query: str
     k: int = 4
 
 
 class AskRequest(BaseModel):
+    """Request schema for RAG-based question answering endpoint."""
     query: str
     model: str = "qwen3"
 
 
 @app.get("/health")
 async def health():
+    """Health check endpoint. Returns API status."""
     return {"status": "ok"}
 
 
 @app.post("/ingest")
 async def ingest(req: IngestRequest):
-    """Ingest programming languages from TIOBE or provided list."""
+    """Ingest programming languages into vector store.
+
+    Fetches Wikipedia articles and stores them in Chroma for semantic search.
+    Returns ingestion result with chunk count.
+    """
     try:
         if req.languages:
             langs = req.languages
@@ -54,7 +65,10 @@ async def ingest(req: IngestRequest):
 
 @app.post("/search")
 async def search_endpoint(req: SearchRequest):
-    """Search the vector store."""
+    """Perform semantic search on ingested documents.
+
+    Returns top-k most similar documents based on vector similarity.
+    """
     try:
         result = await search(req.query, k=req.k)
         return result
@@ -64,7 +78,11 @@ async def search_endpoint(req: SearchRequest):
 
 @app.post("/ask")
 async def ask(req: AskRequest):
-    """Search + generate answer using Ollama LLM."""
+    """Answer questions using RAG (retrieval-augmented generation).
+
+    Retrieves relevant document context and generates answers using Ollama LLM.
+    Combines semantic search with LLM generation for informed responses.
+    """
     try:
         from langchain_community.llms.ollama import Ollama
         from langchain_core.prompts import ChatPromptTemplate
@@ -88,6 +106,7 @@ Answer:"""
         prompt = ChatPromptTemplate.from_template(template)
 
         def format_docs(docs):
+            """Format retrieved documents as newline-separated text for LLM context."""
             return "\n\n".join([d.page_content for d in docs])
 
         chain = {"context": retriever | format_docs, "question": RunnablePassthrough()} | prompt | llm

@@ -16,12 +16,26 @@ OLLAMA_EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "qwen3-embedding")
 
 
 def get_embedder():
-    """Return Ollama embedder."""
+    """Create Ollama embedding function.
+
+    Returns OllamaEmbeddings configured with qwen3-embedding model.
+    Uses 4096-dimensional vector embeddings for rich semantic representation.
+
+    Returns:
+        OllamaEmbeddings instance configured with model and base URL from env vars.
+    """
     return OllamaEmbeddings(model=OLLAMA_EMBED_MODEL, base_url=OLLAMA_BASE_URL)
 
 
 def get_vector_store():
-    """Get or create Chroma vector store."""
+    """Get or create Chroma vector store for semantic search.
+
+    Returns either remote Chroma (HTTP) or local persistent Chroma depending on
+    CHROMA_SERVER_URL environment variable.
+
+    Returns:
+        Chroma instance configured with embedder and collection name.
+    """
     embedder = get_embedder()
 
     if CHROMA_SERVER_URL:
@@ -47,7 +61,16 @@ def get_vector_store():
 
 
 async def ingest_documents(docs: List[Document]) -> dict:
-    """Ingest documents: split, embed, and store in Chroma."""
+    """Process and store documents in vector store.
+
+    Pipeline: Split docs → Embed chunks → Store in Chroma.
+
+    Args:
+        docs: List of LangChain Documents to ingest
+
+    Returns:
+        dict with keys: status='ok', count=<number of chunks>, message=<status message>
+    """
     if not docs:
         return {"status": "ok", "count": 0, "message": "No documents to ingest"}
 
@@ -63,7 +86,15 @@ async def ingest_documents(docs: List[Document]) -> dict:
 
 
 async def search(query: str, k: int = 4) -> dict:
-    """Search the vector store."""
+    """Perform semantic similarity search on stored documents.
+
+    Args:
+        query: Search query text (e.g., 'Python machine learning')
+        k: Number of results to return (default: 4)
+
+    Returns:
+        dict with 'query' and 'results' list of {content, metadata, distance}
+    """
     store = get_vector_store()
     results = store.similarity_search(query, k=k)
 

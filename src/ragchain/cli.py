@@ -22,7 +22,12 @@ def cli():
 @click.option("--host", default="0.0.0.0", help="Host to bind to")
 @click.option("--port", default=8000, help="Port to bind to")
 def serve(host, port):
-    """Start the API server."""
+    """Start the FastAPI server for RAG endpoints.
+
+    Args:
+        host: Host to bind to (default: 0.0.0.0)
+        port: Port to bind to (default: 8000)
+    """
     import uvicorn
 
     uvicorn.run("ragchain.api:app", host=host, port=port, reload=True)
@@ -31,7 +36,14 @@ def serve(host, port):
 @cli.command()
 @click.option("--n", default=10, help="Number of languages to ingest")
 def ingest(n):
-    """Ingest programming languages from TIOBE."""
+    """Ingest programming language documents into local vector store.
+
+    Fetches top-n from TIOBE, loads Wikipedia articles, splits them,
+    and stores in Chroma for semantic search.
+
+    Args:
+        n: Number of languages to ingest (default: 10)
+    """
 
     async def _ingest():
         click.echo(f"Fetching top {n} languages from TIOBE...")
@@ -53,7 +65,12 @@ def ingest(n):
 @click.argument("query")
 @click.option("--k", default=4, help="Number of results")
 def search(query, k):
-    """Search the vector store."""
+    """Search ingested documents using semantic similarity.
+
+    Args:
+        query: Search query (positional argument)
+        k: Number of results to return (default: 4)
+    """
 
     async def _search():
         from ragchain.rag import search as search_func
@@ -71,7 +88,14 @@ def search(query, k):
 @click.argument("query")
 @click.option("--model", default="qwen3")
 def ask(query, model):
-    """Ask a question using RAG + LLM."""
+    """Ask a question and get an answer using RAG + LLM.
+
+    Sends question to the API server for retrieval and LLM-based generation.
+
+    Args:
+        query: Question to ask (positional argument)
+        model: LLM model to use for generation (default: qwen3)
+    """
 
     async def _ask():
         async with httpx.AsyncClient() as client:

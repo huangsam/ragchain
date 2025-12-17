@@ -14,6 +14,5 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -e . && \
     pip install --no-cache-dir uv
 
-# Default command is to start the API via the project's 'ragchain' CLI using 'uv'
-# We disable auto-reload in containers for a single-process production-like run.
-CMD ["uv", "run", "--with-editable", ".", "ragchain", "serve", "--host", "0.0.0.0", "--port", "8000", "--no-reload"]
+# Default command is to start the API via the project's 'ragchain' CLI
+CMD ["ragchain", "serve", "--host", "0.0.0.0", "--port", "8000"]

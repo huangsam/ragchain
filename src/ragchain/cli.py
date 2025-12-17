@@ -28,33 +28,39 @@ def serve(host, port):
 
 @cli.command()
 @click.option("--n", default=10, help="Number of languages to ingest")
-async def ingest(n):
+def ingest(n):
     """Ingest programming languages from TIOBE."""
-    click.echo(f"Fetching top {n} languages from TIOBE...")
-    langs = await load_tiobe_languages(n)
-    click.echo(f"Fetched {len(langs)} languages")
+    async def _ingest():
+        click.echo(f"Fetching top {n} languages from TIOBE...")
+        langs = await load_tiobe_languages(n)
+        click.echo(f"Fetched {len(langs)} languages")
 
-    click.echo("Loading Wikipedia pages...")
-    docs = await load_wikipedia_pages(langs)
-    click.echo(f"Loaded {len(docs)} documents")
+        click.echo("Loading Wikipedia pages...")
+        docs = await load_wikipedia_pages(langs)
+        click.echo(f"Loaded {len(docs)} documents")
 
-    click.echo("Ingesting into vector store...")
-    result = await ingest_documents(docs)
-    click.echo(f"Result: {result}")
+        click.echo("Ingesting into vector store...")
+        result = await ingest_documents(docs)
+        click.echo(f"Result: {result}")
+
+    asyncio.run(_ingest())
 
 
 @cli.command()
 @click.argument("query")
 @click.option("--k", default=4, help="Number of results")
-async def search(query, k):
+def search(query, k):
     """Search the vector store."""
-    from ragchain.rag import search as search_func
+    async def _search():
+        from ragchain.rag import search as search_func
 
-    result = await search_func(query, k=k)
-    click.echo(f"Query: {result['query']}")
-    for i, res in enumerate(result["results"], 1):
-        click.echo(f"\n{i}. {res['metadata'].get('title', 'Unknown')}")
-        click.echo(f"   {res['content'][:200]}...")
+        result = await search_func(query, k=k)
+        click.echo(f"Query: {result['query']}")
+        for i, res in enumerate(result["results"], 1):
+            click.echo(f"\n{i}. {res['metadata'].get('title', 'Unknown')}")
+            click.echo(f"   {res['content'][:200]}...")
+
+    asyncio.run(_search())
 
 
 @cli.command()

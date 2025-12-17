@@ -14,18 +14,21 @@ class IngestRequest(BaseModel):
 
     Either specify languages list or n_languages to fetch from TIOBE.
     """
+
     languages: list[str] | None = None
     n_languages: int = 10
 
 
 class SearchRequest(BaseModel):
     """Request schema for semantic search endpoint."""
+
     query: str
     k: int = 4
 
 
 class AskRequest(BaseModel):
     """Request schema for RAG-based question answering endpoint."""
+
     query: str
     model: str = "qwen3"
 

@@ -23,7 +23,7 @@ class SearchRequest(BaseModel):
     """Request schema for semantic search endpoint."""
 
     query: str
-    k: int = 4
+    k: int = 8
 
 
 class AskRequest(BaseModel):
@@ -94,7 +94,7 @@ async def ask(req: AskRequest):
         from ragchain.rag import OLLAMA_BASE_URL, get_vector_store
 
         store = get_vector_store()
-        retriever = store.as_retriever(search_kwargs={"k": 4})
+        retriever = store.as_retriever(search_kwargs={"k": 8})
         llm = Ollama(model=req.model, base_url=OLLAMA_BASE_URL, temperature=0.7)
 
         # Build a simple RAG chain using LCEL

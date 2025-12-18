@@ -29,6 +29,9 @@ ragchain search "memory management" --k 5
 # Ensure you have run `ollama pull qwen3` locally first
 ragchain ask "What is Python used for?"
 ragchain ask "Compare Go and Rust for systems programming"
+ragchain ask "What are the best languages for data science?"
+ragchain ask "What languages are used for mobile development?"
+ragchain ask "What languages are used for web development?"
 
 # Or manually ingest a different set of languages
 ragchain ingest --n 10  # Fetches top 10 from TIOBE

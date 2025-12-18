@@ -94,12 +94,12 @@ async def ingest_documents(docs: List[Document]) -> dict:
     }
 
 
-async def search(query: str, k: int = 4) -> dict:
+async def search(query: str, k: int = 8) -> dict:
     """Perform semantic similarity search on stored documents.
 
     Args:
         query: Search query text (e.g., 'Python machine learning')
-        k: Number of results to return (default: 4)
+        k: Number of results to return (default: 8)
 
     Returns:
         dict with 'query' and 'results' list of {content, metadata, distance}

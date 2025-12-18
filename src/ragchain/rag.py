@@ -108,13 +108,13 @@ class EnsembleRetriever(BaseRetriever):
 def get_embedder():
     """Create Ollama embedding function.
 
-    Returns OllamaEmbeddings configured with qwen3-embedding:0.6b model.
-    Uses 1024-dimensional vector embeddings with 32k token context window.
+    Returns OllamaEmbeddings configured with bge-m3 model.
+    Uses 1024-dimensional vector embeddings with 8k token context window.
 
     Returns:
         OllamaEmbeddings instance configured with model and base URL from env vars.
     """
-    return OllamaEmbeddings(model=config.ollama_embed_model, base_url=config.ollama_base_url, num_ctx=32768)
+    return OllamaEmbeddings(model=config.ollama_embed_model, base_url=config.ollama_base_url, num_ctx=8192)
 
 
 def get_vector_store():

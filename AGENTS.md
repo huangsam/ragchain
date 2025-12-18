@@ -29,7 +29,7 @@ src/ragchain/
   - Used throughout the codebase for consistent configuration access
 
 - **`rag.py`** is the core retrieval layer:
-  - `get_embedder()` — Creates OllamaEmbeddings with `qwen3-embedding:0.6b` model for 1024-dimensional vectors with 32k context
+  - `get_embedder()` — Creates OllamaEmbeddings with `bge-m3` model for 1024-dimensional vectors with 8k context
   - `get_vector_store()` — Returns Chroma (local persistent or remote HTTP) with LangChain integration
   - `ingest_documents()` — Fetches documents → parses → chunks recursively → embeds → upserts to vector store
   - `search()` — Legacy ensemble retrieval (BM25 + Chroma with RRF)
@@ -82,7 +82,7 @@ src/ragchain/
 
 - **LangChain ecosystem** — LangChain, LangChain-Community, LangChain-Ollama, LangChain-Chroma for unified RAG orchestration
 - **LangGraph** — `langgraph` for agentic RAG orchestration with state management and conditional routing
-- **Ollama integration** — `langchain-ollama` for embedding (`qwen3-embedding:0.6b`) and LLM generation
+- **Ollama integration** — `langchain-ollama` for embedding (`bge-m3`) and LLM generation
 - **Vector store** — `chromadb` for semantic search (supports local persistent and remote HTTP)
 - **BM25** — `rank-bm25` for keyword-based retrieval and ensemble ranking
 - **FastAPI & Uvicorn** — REST API server
@@ -148,6 +148,6 @@ ragchain down --profile test
 - **Reciprocal Rank Fusion** — Principled ensemble ranking (score = 1/(rank+60)) combining BM25 keyword and semantic search
 - **Self-correcting** — Automatic query rewriting on retrieval failure (max 1 retry) with LLM-based relevance grading
 - **Performance optimized** — Parallel retrieval (ThreadPoolExecutor), retriever caching, optional grading, and fast-path routing
-- **qwen3-embedding:0.6b model** — 1024-dimensional embeddings with 32k context window for superior semantic search (via Ollama)
+- **bge-m3 model** — 1024-dimensional embeddings with 8k context window for superior semantic search (via Ollama)
 - **Flexible & composable** — Supports local/remote Chroma storage; easily swappable embedders, vector stores, and LLM models via config
 - **Deterministic testing** — Mock HTTP (aioresponses) enables testing without Ollama/Chroma servers; Docker profiles for CI/demo

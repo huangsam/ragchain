@@ -61,21 +61,18 @@ class EnsembleRetriever(BaseRetriever):
         doc_scores: Dict[str, float] = defaultdict(float)
         doc_map: Dict[str, Document] = {}
 
-        # Score BM25 results with weight
         for rank, doc in enumerate(bm25_docs):
             content = doc.page_content
             rrf_score = self.bm25_weight * (1.0 / (rank + rrf_k))
             doc_scores[content] += rrf_score
             doc_map[content] = doc
 
-        # Score Chroma results with weight
         for rank, doc in enumerate(chroma_docs):
             content = doc.page_content
             rrf_score = self.chroma_weight * (1.0 / (rank + rrf_k))
             doc_scores[content] += rrf_score
             doc_map[content] = doc
 
-        # Sort by combined RRF score descending
         sorted_docs = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)
         return [doc_map[content] for content, _ in sorted_docs]
 
@@ -95,11 +92,9 @@ class EnsembleRetriever(BaseRetriever):
         log_with_prefix(logger, logging.DEBUG, "EnsembleRetriever", f"Query: {query[:50]}...")
         start = time.time()
 
-        # Fetch from both retrievers in parallel
         bm25_docs, chroma_docs = self._parallel_retrieve(query)
         log_timing(logger, "EnsembleRetriever", start, f"Parallel retrieval: BM25={len(bm25_docs)}, Chroma={len(chroma_docs)}")
 
-        # Compute RRF scores and sort
         sorted_docs = self._compute_rrf_scores(bm25_docs, chroma_docs)
         log_timing(logger, "EnsembleRetriever", start, f"RRF combined {len(sorted_docs)} unique docs")
 
@@ -134,7 +129,6 @@ def get_vector_store():
     embedder = get_embedder()
 
     if config.chroma_server_url:
-        # Remote Chroma server - use ChromaClient
         from chromadb import HttpClient
 
         parsed = urlparse(config.chroma_server_url)
@@ -145,7 +139,6 @@ def get_vector_store():
             client=client,
         )
     else:
-        # Persistent local Chroma
         Path(config.chroma_persist_directory).mkdir(parents=True, exist_ok=True)
         return Chroma(
             collection_name="ragchain",
@@ -170,15 +163,12 @@ async def ingest_documents(docs: List[Document]) -> dict:
 
     start_time = time.perf_counter()
 
-    # Split documents into chunks (optimized for semantic quality)
     splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=100)
     chunks = splitter.split_documents(docs)
 
-    # Add to vector store (LangChain handles embedding internally)
     store = get_vector_store()
     store.add_documents(chunks)
 
-    # Clear retriever cache to pick up new documents
     get_ensemble_retriever.cache_clear()
 
     elapsed = time.perf_counter() - start_time
@@ -259,13 +249,11 @@ def get_ensemble_retriever(k: int = 8, bm25_weight: float = 0.4, chroma_weight: 
 
     log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"Loaded {len(docs)} documents from Chroma")
 
-    # Create retrievers
     bm25_retriever = _create_bm25_retriever(docs, k)
     log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"BM25 initialized with k={k} over {len(docs)} docs")
 
     chroma_retriever = _create_chroma_retriever(store, k)
 
-    # Create ensemble retriever with specified weights
     retriever = EnsembleRetriever(
         bm25_retriever=bm25_retriever,
         chroma_retriever=chroma_retriever,
@@ -289,10 +277,8 @@ async def search(query: str, k: int = 8) -> dict:
     """
     ensemble_retriever = get_ensemble_retriever(k)
 
-    # Retrieve relevant documents
     results = ensemble_retriever.get_relevant_documents(query)
 
-    # Limit to k results
     results = results[:k]
 
     return {

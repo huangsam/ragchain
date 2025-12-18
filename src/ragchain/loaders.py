@@ -9,9 +9,9 @@ from aiohttp import ClientTimeout
 from bs4 import BeautifulSoup
 from langchain_core.documents import Document
 
-logger = logging.getLogger(__name__)
-
 from ragchain.utils import log_with_prefix
+
+logger = logging.getLogger(__name__)
 
 
 async def load_tiobe_languages(n: int = 50) -> List[str]:

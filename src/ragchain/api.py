@@ -127,7 +127,6 @@ async def ask(req: AskRequest):
 
         from ragchain.graph import rag_graph
 
-        # Initialize state dict
         initial_state = {
             "query": req.query,
             "intent": "CONCEPT",
@@ -137,7 +136,6 @@ async def ask(req: AskRequest):
             "retry_count": 0,
         }
 
-        # Run the agentic RAG graph directly (sync)
         log_with_prefix(logger, logging.INFO, "/ask", "Starting LangGraph pipeline")
         graph_start = time.time()
         final_state = rag_graph.invoke(initial_state)  # type: ignore[arg-type]
@@ -145,8 +143,6 @@ async def ask(req: AskRequest):
 
         retrieved_docs = final_state["retrieved_docs"]
         log_with_prefix(logger, logging.INFO, "/ask", f"Retrieved {len(retrieved_docs)} documents")
-
-        # Generate answer from retrieved docs
 
         log_with_prefix(logger, logging.INFO, "/ask", "Generating answer")
         gen_start = time.time()

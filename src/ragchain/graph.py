@@ -73,7 +73,6 @@ def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
 
     query = state.get("rewritten_query") or state["query"]
 
-    # Set weights based on intent
     weights = {
         "FACT": (0.7, 0.3),  # Keyword-heavy for lists/rankings
         "CONCEPT": (0.3, 0.7),  # Semantic-heavy for natural questions
@@ -82,7 +81,6 @@ def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
     bm25_weight, chroma_weight = weights.get(state["intent"], (0.5, 0.5))
     logger.info(f"[adaptive_retriever] Using weights: BM25={bm25_weight}, Chroma={chroma_weight}")
 
-    # Get ensemble retriever with intent-specific weights (uses parallel retrieval by default)
     try:
         retriever = get_ensemble_retriever(k=8, bm25_weight=bm25_weight, chroma_weight=chroma_weight)
         docs = retriever.get_relevant_documents(query)

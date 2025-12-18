@@ -1,6 +1,5 @@
 """RAG pipeline orchestration using LangChain."""
 
-import asyncio
 import logging
 import time
 from collections import defaultdict

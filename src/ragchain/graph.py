@@ -111,7 +111,7 @@ def retrieval_grader(state: IntentRoutingState) -> IntentRoutingState:
 
     # If we've already retried once, accept the docs (avoid endless loop)
     if state.get("retry_count", 0) > 0:
-        logger.info(f"[retrieval_grader] Already retried once, accepting docs to avoid infinite loop")
+        logger.info("[retrieval_grader] Already retried once, accepting docs to avoid infinite loop")
         return {**state, "retrieval_grade": "YES"}
 
     llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)

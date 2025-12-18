@@ -27,11 +27,21 @@ ragchain search "memory management" --k 5
 
 # Ask questions using RAG (requires local Ollama)
 # Ensure you have run `ollama pull qwen3` locally first
+
+# Factual, general purpose
 ragchain ask "What is Python used for?"
+# Comparative analysis
 ragchain ask "Compare Go and Rust for systems programming"
-ragchain ask "What are the best languages for data science?"
-ragchain ask "What languages are used for mobile development?"
-ragchain ask "What languages are used for web development?"
+# Paradigm specific
+ragchain ask "What are the key features of functional programming in Haskell?"
+# Historical evolution
+ragchain ask "How has Java evolved since its release?"
+# Technical concepts
+ragchain ask "What are the main differences between interpreted and compiled languages?"
+# Domain application
+ragchain ask "Which languages are commonly used for machine learning?"
+# Ranking and popularity
+ragchain ask "What are the top 10 most popular languages?"
 
 # Or manually ingest a different set of languages
 ragchain ingest --n 10  # Fetches top 10 from TIOBE

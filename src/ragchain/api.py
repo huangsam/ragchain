@@ -9,6 +9,7 @@ from pydantic import BaseModel, field_validator
 from ragchain.config import config
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.rag import ingest_documents, search
+from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
 app = FastAPI()
@@ -118,7 +119,7 @@ async def ask(req: AskRequest):
     and grading results for quality. Retries with rewritten queries if needed.
     """
     start = time.time()
-    logger.info(f"[/ask] Received query: {req.query[:50]}...")
+    log_with_prefix(logger, logging.INFO, "/ask", f"Received query: {req.query[:50]}...")
 
     try:
         from langchain_core.prompts import ChatPromptTemplate
@@ -137,17 +138,17 @@ async def ask(req: AskRequest):
         }
 
         # Run the agentic RAG graph directly (sync)
-        logger.info("[/ask] Starting LangGraph pipeline")
+        log_with_prefix(logger, logging.INFO, "/ask", "Starting LangGraph pipeline")
         graph_start = time.time()
         final_state = rag_graph.invoke(initial_state)  # type: ignore[arg-type]
-        logger.info(f"[/ask] LangGraph completed in {time.time() - graph_start:.2f}s")
+        log_timing(logger, "/ask", graph_start, "LangGraph completed")
 
         retrieved_docs = final_state["retrieved_docs"]
-        logger.info(f"[/ask] Retrieved {len(retrieved_docs)} documents")
+        log_with_prefix(logger, logging.INFO, "/ask", f"Retrieved {len(retrieved_docs)} documents")
 
         # Generate answer from retrieved docs
 
-        logger.info("[/ask] Generating answer")
+        log_with_prefix(logger, logging.INFO, "/ask", "Generating answer")
         gen_start = time.time()
         llm = OllamaLLM(model=req.model, base_url=config.ollama_base_url, temperature=0.7)
 
@@ -155,12 +156,11 @@ async def ask(req: AskRequest):
 
         context = "\n\n".join([doc.page_content for doc in retrieved_docs])
         answer = llm.invoke(prompt.format(context=context, question=req.query))
-        logger.info(f"[/ask] Answer generated in {time.time() - gen_start:.2f}s")
+        log_timing(logger, "/ask", gen_start, "Answer generated")
 
-        total_elapsed = time.time() - start
-        logger.info(f"[/ask] Completed in {total_elapsed:.2f}s")
+        log_timing(logger, "/ask", start, "Completed")
 
         return {"query": req.query, "answer": answer}
     except Exception as e:
-        logger.error(f"[/ask] Error: {e}", exc_info=True)
+        log_with_prefix(logger, logging.ERROR, "/ask", f"Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

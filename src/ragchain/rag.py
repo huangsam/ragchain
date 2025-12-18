@@ -17,6 +17,7 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from ragchain.config import config
+from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -91,16 +92,16 @@ class EnsembleRetriever(BaseRetriever):
         Returns:
             List of retrieved documents sorted by RRF score.
         """
-        logger.debug(f"[EnsembleRetriever] Query: {query[:50]}...")
+        log_with_prefix(logger, logging.DEBUG, "EnsembleRetriever", f"Query: {query[:50]}...")
         start = time.time()
 
         # Fetch from both retrievers in parallel
         bm25_docs, chroma_docs = self._parallel_retrieve(query)
-        logger.debug(f"[EnsembleRetriever] Parallel retrieval: BM25={len(bm25_docs)}, Chroma={len(chroma_docs)} in {time.time() - start:.2f}s")
+        log_timing(logger, "EnsembleRetriever", start, f"Parallel retrieval: BM25={len(bm25_docs)}, Chroma={len(chroma_docs)}")
 
         # Compute RRF scores and sort
         sorted_docs = self._compute_rrf_scores(bm25_docs, chroma_docs)
-        logger.debug(f"[EnsembleRetriever] RRF combined {len(sorted_docs)} unique docs in {time.time() - start:.2f}s")
+        log_timing(logger, "EnsembleRetriever", start, f"RRF combined {len(sorted_docs)} unique docs")
 
         return sorted_docs
 
@@ -250,17 +251,17 @@ def get_ensemble_retriever(k: int = 8, bm25_weight: float = 0.4, chroma_weight: 
     Returns:
         EnsembleRetriever instance (cached if available)
     """
-    logger.debug(f"[get_ensemble_retriever] Creating new retriever with k={k}, bm25={bm25_weight}, chroma={chroma_weight}")
+    log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"Creating new retriever with k={k}, bm25={bm25_weight}, chroma={chroma_weight}")
     start = time.time()
 
     store = get_vector_store()
     docs = _load_documents_from_chroma(store)
 
-    logger.debug(f"[get_ensemble_retriever] Loaded {len(docs)} documents from Chroma")
+    log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"Loaded {len(docs)} documents from Chroma")
 
     # Create retrievers
     bm25_retriever = _create_bm25_retriever(docs, k)
-    logger.debug(f"[get_ensemble_retriever] BM25 initialized with k={k} over {len(docs)} docs")
+    log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"BM25 initialized with k={k} over {len(docs)} docs")
 
     chroma_retriever = _create_chroma_retriever(store, k)
 
@@ -272,7 +273,7 @@ def get_ensemble_retriever(k: int = 8, bm25_weight: float = 0.4, chroma_weight: 
         chroma_weight=chroma_weight,
     )
 
-    logger.debug(f"[get_ensemble_retriever] Ensemble created in {time.time() - start:.2f}s")
+    log_timing(logger, "get_ensemble_retriever", start, "Ensemble created")
     return retriever
 
 

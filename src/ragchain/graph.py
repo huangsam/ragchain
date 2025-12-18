@@ -16,6 +16,7 @@ from ragchain.router import (
     QUERY_REWRITER_PROMPT,
     RETRIEVAL_GRADER_PROMPT,
 )
+from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +45,11 @@ def _is_simple_query(query: str) -> bool:
 def intent_router(state: IntentRoutingState) -> IntentRoutingState:
     """Route query to intent category."""
     start = time.time()
-    logger.info(f"[intent_router] Starting for query: {state['query'][:50]}...")
+    log_with_prefix(logger, logging.INFO, "intent_router", f"Starting for query: {state['query'][:50]}...")
 
     # Fast-path: Skip LLM for simple queries if routing is disabled
     if not config.enable_intent_routing or _is_simple_query(state["query"]):
-        logger.info("[intent_router] Using fast-path, defaulting to CONCEPT")
+        log_with_prefix(logger, logging.INFO, "intent_router", "Using fast-path, defaulting to CONCEPT")
         return {**state, "intent": "CONCEPT", "original_query": state["query"]}
 
     llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)
@@ -60,8 +61,7 @@ def intent_router(state: IntentRoutingState) -> IntentRoutingState:
     valid_intents: list[Literal["FACT", "CONCEPT", "COMPARISON"]] = ["FACT", "CONCEPT", "COMPARISON"]
     intent_value: Literal["FACT", "CONCEPT", "COMPARISON"] = next((i for i in valid_intents if i in response), "CONCEPT")
 
-    elapsed = time.time() - start
-    logger.info(f"[intent_router] Classified as {intent_value} in {elapsed:.2f}s")
+    log_timing(logger, "intent_router", start, f"Classified as {intent_value}")
 
     return {**state, "intent": intent_value, "original_query": state["query"]}
 

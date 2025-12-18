@@ -11,6 +11,8 @@ from langchain_core.documents import Document
 
 logger = logging.getLogger(__name__)
 
+from ragchain.utils import log_with_prefix
+
 
 async def load_tiobe_languages(n: int = 50) -> List[str]:
     """Fetch top-n programming languages from TIOBE index.
@@ -29,7 +31,7 @@ async def load_tiobe_languages(n: int = 50) -> List[str]:
                 r.raise_for_status()
                 html = await r.text()
     except Exception as e:
-        logger.warning(f"Failed to fetch TIOBE index: {e}")
+        log_with_prefix(logger, logging.WARNING, "load_tiobe_languages", f"Failed to fetch TIOBE index: {e}")
         return []
 
     soup = BeautifulSoup(html, "html.parser")
@@ -73,7 +75,7 @@ def _load_single_page(lang: str) -> Document | None:
             pages[0].metadata["language"] = lang
             return pages[0]
     except Exception as e:
-        logger.warning(f"Failed to load Wikipedia page for {lang}: {e}")
+        log_with_prefix(logger, logging.WARNING, "load_wikipedia_page", f"Failed to load Wikipedia page for {lang}: {e}")
     return None
 
 
@@ -103,6 +105,6 @@ async def load_wikipedia_pages(language_names: List[str]) -> List[Document]:
             if isinstance(result, Document):
                 docs.append(result)
             elif isinstance(result, Exception):
-                logger.error(f"Error loading page: {result}")
+                log_with_prefix(logger, logging.ERROR, "load_wikipedia_pages", f"Error loading page: {result}")
 
     return docs

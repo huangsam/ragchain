@@ -17,6 +17,7 @@ src/ragchain/
 ├── rag.py                # LangChain RAG pipeline (embedding, chunking, retrieval, generation)
 ├── graph.py              # LangGraph intent-based adaptive RAG orchestration
 ├── router.py             # LLM prompts for intent routing and retrieval grading
+├── utils.py              # Utility functions for logging, timing, and other helpers
 └── __init__.py           # Package initialization
 ```
 
@@ -59,6 +60,10 @@ src/ragchain/
   - `/ask` — Intent-based adaptive RAG (uses `rag_graph`)
 
 - **`cli.py`** provides Click-based commands for ingest, search, query, and stack management
+
+- **`utils.py`** provides logger helpers to simplify the monitoring experience, including:
+  - `log_with_prefix()` — Logs messages with a consistent prefix for easier filtering
+  - `log_timing()` — Measures and logs the duration of operations
 
 - Supports both **local persistent Chroma** (`CHROMA_PERSIST_DIRECTORY`) and **remote HTTP Chroma** (`CHROMA_SERVER_URL`)
 - Uses **ensemble retrieval** with Reciprocal Rank Fusion (RRF) combining BM25 keyword search and semantic vector search

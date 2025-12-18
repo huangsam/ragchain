@@ -2,7 +2,6 @@
 
 import logging
 import time
-from typing import Dict
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
@@ -64,13 +63,13 @@ class AskRequest(BaseModel):
 
 
 @app.get("/health")
-async def health() -> Dict[str, str]:
+async def health():
     """Health check endpoint. Returns API status."""
     return {"status": "ok"}
 
 
 @app.post("/ingest")
-async def ingest(req: IngestRequest) -> dict:
+async def ingest(req: IngestRequest):
     """Ingest programming languages into vector store.
 
     Fetches Wikipedia articles and stores them in Chroma for semantic search.
@@ -97,7 +96,7 @@ async def ingest(req: IngestRequest) -> dict:
 
 
 @app.post("/search")
-async def search_endpoint(req: SearchRequest) -> dict:
+async def search_endpoint(req: SearchRequest):
     """Perform semantic search on ingested documents.
 
     Returns top-k most similar documents based on vector similarity.
@@ -110,7 +109,7 @@ async def search_endpoint(req: SearchRequest) -> dict:
 
 
 @app.post("/ask")
-async def ask(req: AskRequest) -> dict:
+async def ask(req: AskRequest):
     """Answer questions using intent-based adaptive RAG.
 
     Uses LangGraph to route queries by intent, adapting retrieval strategy

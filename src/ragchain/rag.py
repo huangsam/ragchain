@@ -2,8 +2,9 @@
 
 import os
 import time
+from collections import defaultdict
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 from langchain_chroma import Chroma
@@ -29,34 +30,44 @@ class EnsembleRetriever(BaseRetriever):
     bm25_weight: float = 0.4
     chroma_weight: float = 0.6
 
-    def _get_relevant_documents(self, query: str, *, run_manager: Optional[CallbackManagerForRetrieverRun] = None) -> List[Document]:
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: Optional[CallbackManagerForRetrieverRun] = None
+    ) -> List[Document]:
+        """Retrieve documents using Reciprocal Rank Fusion (RRF).
+
+        RRF combines rankings from multiple retrievers by assigning scores based on
+        document rank position: score = 1 / (rank + 60). This allows documents that
+        appear in both rankings to outrank those appearing in only one.
+        """
         # Get results from both retrievers
         bm25_docs = self.bm25_retriever.invoke(query)
         chroma_docs = self.chroma_retriever.invoke(query)
 
-        # Assign scores based on reciprocal rank with weights
-        scored_docs = []
+        # Compute RRF scores for each document
+        # RRF constant k=60 (standard value that prevents rank 1 from dominating)
+        rrf_k = 60
+        doc_scores: Dict[str, float] = defaultdict(float)
+        doc_map: Dict[str, Document] = {}
+
+        # Score BM25 results
         for rank, doc in enumerate(bm25_docs):
-            score = self.bm25_weight / (rank + 1)
-            scored_docs.append((doc, score))
-
-        for rank, doc in enumerate(chroma_docs):
-            score = self.chroma_weight / (rank + 1)
-            scored_docs.append((doc, score))
-
-        # Sort by score descending
-        scored_docs.sort(key=lambda x: x[1], reverse=True)
-
-        # Remove duplicates based on content, keep highest score
-        seen = set()
-        unique_docs = []
-        for doc, score in scored_docs:
             content = doc.page_content
-            if content not in seen:
-                seen.add(content)
-                unique_docs.append(doc)
+            rrf_score = 1.0 / (rank + rrf_k)
+            doc_scores[content] += rrf_score
+            doc_map[content] = doc
 
-        return unique_docs
+        # Score Chroma results
+        for rank, doc in enumerate(chroma_docs):
+            content = doc.page_content
+            rrf_score = 1.0 / (rank + rrf_k)
+            doc_scores[content] += rrf_score
+            doc_map[content] = doc
+
+        # Sort by combined RRF score descending
+        sorted_docs = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)
+
+        # Return documents in score order
+        return [doc_map[content] for content, _ in sorted_docs]
 
     def get_relevant_documents(self, query: str) -> List[Document]:
         return self._get_relevant_documents(query)

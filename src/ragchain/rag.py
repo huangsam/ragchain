@@ -3,11 +3,12 @@
 import os
 import time
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 from urllib.parse import urlparse
 
 from langchain_chroma import Chroma
 from langchain_community.retrievers import BM25Retriever
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.vectorstores import VectorStoreRetriever
@@ -28,7 +29,7 @@ class EnsembleRetriever(BaseRetriever):
     bm25_weight: float = 0.4
     chroma_weight: float = 0.6
 
-    def _get_relevant_documents(self, query: str) -> List[Document]:
+    def _get_relevant_documents(self, query: str, *, run_manager: Optional[CallbackManagerForRetrieverRun] = None) -> List[Document]:
         # Get results from both retrievers
         bm25_docs = self.bm25_retriever.invoke(query)
         chroma_docs = self.chroma_retriever.invoke(query)

@@ -23,7 +23,7 @@ src/ragchain/
   - `get_embedder()` — Creates OllamaEmbeddings with `qwen3-embedding` model for 4096-dimensional vectors
   - `get_vector_store()` — Returns Chroma (local persistent or remote HTTP) with LangChain integration
   - `ingest()` — Fetches documents → parses → chunks recursively → embeds → upserts to vector store
-  - `retrieve()` — Semantic search over the vector store using similarity
+  - `search()` — Ensemble retrieval using BM25 and Chroma vector search for improved relevance
   - `generate()` — LLM-powered answer generation using Ollama (configurable model)
 
 - **`loaders.py`** provides document loading utilities:
@@ -34,6 +34,7 @@ src/ragchain/
 - **`cli.py`** provides Click-based commands for ingest, search, query, and stack management
 
 - Supports both **local persistent Chroma** (`CHROMA_PERSIST_DIRECTORY`) and **remote HTTP Chroma** (`CHROMA_SERVER_URL`)
+- Uses **ensemble retrieval** combining BM25 keyword search and semantic vector search for better results
 - Tests use deterministic embeddings and mock external HTTP where possible (using `aioresponses`)
 
 ---

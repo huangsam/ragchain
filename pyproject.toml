@@ -17,6 +17,7 @@ dependencies = [
   "aiohttp>=3.8",
   "beautifulsoup4>=4.12",
   "wikipedia>=1.4",
+  "rank-bm25>=0.2.0",
 ]
 
 [dependency-groups]

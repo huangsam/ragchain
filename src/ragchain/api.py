@@ -107,10 +107,9 @@ async def ask(req: AskRequest):
         from langchain_core.prompts import ChatPromptTemplate
         from langchain_core.runnables import RunnablePassthrough
 
-        from ragchain.rag import OLLAMA_BASE_URL, get_vector_store
+        from ragchain.rag import OLLAMA_BASE_URL, get_ensemble_retriever
 
-        store = get_vector_store()
-        retriever = store.as_retriever(search_kwargs={"k": 8})
+        retriever = get_ensemble_retriever(k=8)
         llm = Ollama(model=req.model, base_url=OLLAMA_BASE_URL, temperature=0.7)
 
         # Build a simple RAG chain using LCEL

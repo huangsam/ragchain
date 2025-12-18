@@ -5,14 +5,18 @@ WORKDIR /app
 # Install build deps for optional packages (chroma may be optional)
 RUN apt-get update && apt-get install -y --no-install-recommends build-essential git ca-certificates curl && rm -rf /var/lib/apt/lists/*
 
-# Copy project and install in editable mode
+# Copy project metadata first for better caching
 COPY pyproject.toml .
+
+# Install development tools (changes less frequently)
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir uv
+
+# Copy source code
 COPY src ./src
 
-# Install package in editable mode and the 'uv' helper used in development
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -e . && \
-    pip install --no-cache-dir uv
+# Install package in editable mode (only runs when src changes)
+RUN pip install --no-cache-dir -e .
 
 # Default command is to start the API via the project's 'ragchain' CLI
 CMD ["ragchain", "serve", "--host", "0.0.0.0", "--port", "8000"]

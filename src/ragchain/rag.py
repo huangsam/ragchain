@@ -30,9 +30,7 @@ class EnsembleRetriever(BaseRetriever):
     bm25_weight: float = 0.4
     chroma_weight: float = 0.6
 
-    def _get_relevant_documents(
-        self, query: str, *, run_manager: Optional[CallbackManagerForRetrieverRun] = None
-    ) -> List[Document]:
+    def _get_relevant_documents(self, query: str, *, run_manager: Optional[CallbackManagerForRetrieverRun] = None) -> List[Document]:
         """Retrieve documents using Reciprocal Rank Fusion (RRF).
 
         RRF combines rankings from multiple retrievers by assigning scores based on

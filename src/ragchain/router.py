@@ -1,5 +1,14 @@
 """Router and grader prompts for intent-based adaptive RAG."""
 
+RAG_ANSWER_TEMPLATE = """Answer the question based on the following context:
+
+Context:
+{context}
+
+Question: {question}
+
+Answer:"""
+
 INTENT_ROUTER_PROMPT = """Classify this query into ONE category:
 
 FACT: Asks for a specific list, ranking, or enumerated facts

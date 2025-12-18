@@ -2,6 +2,7 @@
 
 import logging
 import time
+from typing import Dict
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
@@ -9,20 +10,17 @@ from pydantic import BaseModel, field_validator
 from ragchain.config import config
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.rag import ingest_documents, search
+from ragchain.router import RAG_ANSWER_TEMPLATE
 from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
 app = FastAPI()
 
-# RAG answer generation prompt template
-RAG_ANSWER_TEMPLATE = """Answer the question based on the following context:
 
-Context:
-{context}
-
-Question: {question}
-
-Answer:"""
+def _handle_endpoint_error(e: Exception, endpoint: str) -> None:
+    """Log and raise HTTP exception for endpoint errors."""
+    log_with_prefix(logger, logging.ERROR, endpoint, f"Error: {e}", exc_info=True)
+    raise HTTPException(status_code=500, detail=str(e))
 
 
 class IngestRequest(BaseModel):
@@ -66,13 +64,13 @@ class AskRequest(BaseModel):
 
 
 @app.get("/health")
-async def health():
+async def health() -> Dict[str, str]:
     """Health check endpoint. Returns API status."""
     return {"status": "ok"}
 
 
 @app.post("/ingest")
-async def ingest(req: IngestRequest):
+async def ingest(req: IngestRequest) -> dict:
     """Ingest programming languages into vector store.
 
     Fetches Wikipedia articles and stores them in Chroma for semantic search.
@@ -95,11 +93,11 @@ async def ingest(req: IngestRequest):
         result = await ingest_documents(docs)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _handle_endpoint_error(e, "/ingest")
 
 
 @app.post("/search")
-async def search_endpoint(req: SearchRequest):
+async def search_endpoint(req: SearchRequest) -> dict:
     """Perform semantic search on ingested documents.
 
     Returns top-k most similar documents based on vector similarity.
@@ -108,17 +106,16 @@ async def search_endpoint(req: SearchRequest):
         result = await search(req.query, k=req.k)
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        _handle_endpoint_error(e, "/search")
 
 
 @app.post("/ask")
-async def ask(req: AskRequest):
+async def ask(req: AskRequest) -> dict:
     """Answer questions using intent-based adaptive RAG.
 
     Uses LangGraph to route queries by intent, adapting retrieval strategy
     and grading results for quality. Retries with rewritten queries if needed.
     """
-    start = time.time()
     log_with_prefix(logger, logging.INFO, "/ask", f"Received query: {req.query[:50]}...")
 
     try:
@@ -154,9 +151,6 @@ async def ask(req: AskRequest):
         answer = llm.invoke(prompt.format(context=context, question=req.query))
         log_timing(logger, "/ask", gen_start, "Answer generated")
 
-        log_timing(logger, "/ask", start, "Completed")
-
         return {"query": req.query, "answer": answer}
     except Exception as e:
-        log_with_prefix(logger, logging.ERROR, "/ask", f"Error: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        _handle_endpoint_error(e, "/ask")

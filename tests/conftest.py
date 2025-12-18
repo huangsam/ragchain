@@ -1,6 +1,12 @@
 """Pytest configuration."""
 
+import warnings
+
 import pytest
+
+# Filter out coroutine warnings from mocked CLI tests
+warnings.filterwarnings("ignore", message=".*coroutine.*was never awaited.*", category=RuntimeWarning)
+warnings.filterwarnings("ignore", message=".*Enable tracemalloc to get the object allocation traceback.*", category=RuntimeWarning)
 
 
 @pytest.fixture

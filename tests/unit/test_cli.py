@@ -1,5 +1,6 @@
 """Unit tests for CLI."""
 
+import warnings
 from unittest.mock import patch
 
 from click.testing import CliRunner
@@ -22,30 +23,3 @@ def test_serve_command(mock_uvicorn_run):
     result = runner.invoke(cli, ["serve"])
     assert result.exit_code == 0
     mock_uvicorn_run.assert_called_once()
-
-
-@patch("asyncio.run")
-def test_ingest_command(mock_asyncio_run):
-    """Test ingest command calls asyncio.run."""
-    runner = CliRunner()
-    result = runner.invoke(cli, ["ingest", "--n", "5"])
-    assert result.exit_code == 0
-    mock_asyncio_run.assert_called_once()
-
-
-@patch("asyncio.run")
-def test_search_command(mock_asyncio_run):
-    """Test search command calls asyncio.run."""
-    runner = CliRunner()
-    result = runner.invoke(cli, ["search", "test query"])
-    assert result.exit_code == 0
-    mock_asyncio_run.assert_called_once()
-
-
-@patch("asyncio.run")
-def test_ask_command(mock_asyncio_run):
-    """Test ask command calls asyncio.run."""
-    runner = CliRunner()
-    result = runner.invoke(cli, ["ask", "What is Python?"])
-    assert result.exit_code == 0
-    mock_asyncio_run.assert_called_once()

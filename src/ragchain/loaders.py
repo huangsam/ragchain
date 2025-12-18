@@ -1,12 +1,15 @@
 """Custom document loaders for RAG pipeline."""
 
 import asyncio
+import logging
 from typing import List
 
 import aiohttp
 from aiohttp import ClientTimeout
 from bs4 import BeautifulSoup
 from langchain_core.documents import Document
+
+logger = logging.getLogger(__name__)
 
 
 async def load_tiobe_languages(n: int = 50) -> List[str]:
@@ -23,9 +26,10 @@ async def load_tiobe_languages(n: int = 50) -> List[str]:
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=ClientTimeout(total=15)) as r:
+                r.raise_for_status()
                 html = await r.text()
     except Exception as e:
-        print(f"Warning: failed to fetch TIOBE: {e}")
+        logger.warning(f"Failed to fetch TIOBE index: {e}")
         return []
 
     soup = BeautifulSoup(html, "html.parser")
@@ -69,7 +73,7 @@ def _load_single_page(lang: str) -> Document | None:
             pages[0].metadata["language"] = lang
             return pages[0]
     except Exception as e:
-        print(f"Warning: failed to load {lang}: {e}")
+        logger.warning(f"Failed to load Wikipedia page for {lang}: {e}")
     return None
 
 

@@ -4,6 +4,7 @@ import os
 import time
 from pathlib import Path
 from typing import List
+from urllib.parse import urlparse
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -43,9 +44,8 @@ def get_vector_store():
         # Remote Chroma server - use ChromaClient
         from chromadb import HttpClient
 
-        client = HttpClient(
-            host=CHROMA_SERVER_URL.replace("http://", "").split(":")[0], port=int(CHROMA_SERVER_URL.split(":")[-1]) if ":" in CHROMA_SERVER_URL else 8000
-        )
+        parsed = urlparse(CHROMA_SERVER_URL)
+        client = HttpClient(host=parsed.hostname or "localhost", port=parsed.port or 8000)
         return Chroma(
             collection_name="ragchain",
             embedding_function=embedder,
@@ -77,8 +77,8 @@ async def ingest_documents(docs: List[Document]) -> dict:
 
     start_time = time.perf_counter()
 
-    # Split documents into chunks
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    # Split documents into chunks (optimized for semantic quality)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=50)
     chunks = splitter.split_documents(docs)
 
     # Add to vector store (LangChain handles embedding internally)

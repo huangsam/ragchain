@@ -78,7 +78,9 @@ def search(query, k):
         result = await search_func(query, k=k)
         click.echo(f"Query: {result['query']}")
         for i, res in enumerate(result["results"], 1):
-            click.echo(f"\n{i}. {res['metadata'].get('title', 'Unknown')}")
+            metadata = res.get("metadata", {})
+            title = metadata.get("title", "Unknown") if isinstance(metadata, dict) else "Unknown"
+            click.echo(f"\n{i}. {title}")
             click.echo(f"   {res['content'][:200]}...")
 
     asyncio.run(_search())

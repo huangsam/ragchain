@@ -1,7 +1,7 @@
 """FastAPI application for RAG endpoints."""
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.rag import ingest_documents, search
@@ -18,12 +18,28 @@ class IngestRequest(BaseModel):
     languages: list[str] | None = None
     n_languages: int = 10
 
+    @field_validator("n_languages")
+    @classmethod
+    def validate_n_languages(cls, v: int) -> int:
+        """Validate n_languages is within acceptable range."""
+        if v <= 0 or v > 100:
+            raise ValueError("n_languages must be between 1 and 100")
+        return v
+
 
 class SearchRequest(BaseModel):
     """Request schema for semantic search endpoint."""
 
     query: str
     k: int = 8
+
+    @field_validator("k")
+    @classmethod
+    def validate_k(cls, v: int) -> int:
+        """Validate k is within acceptable range."""
+        if v <= 0 or v > 50:
+            raise ValueError("k must be between 1 and 50")
+        return v
 
 
 class AskRequest(BaseModel):

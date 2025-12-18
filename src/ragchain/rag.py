@@ -64,65 +64,33 @@ def get_vector_store():
 async def ingest_documents(docs: List[Document]) -> dict:
     """Process and store documents in vector store.
 
-    Pipeline: Split docs → Batch embed chunks → Store pre-embedded in Chroma.
-
-    Optimizations:
-    - Pre-compute all embeddings in one batch call to Ollama (much faster than individual calls)
-    - Add pre-embedded documents directly to Chroma (skips embedding overhead)
-    - Larger chunks (2500) reduce total chunks needed
+    Pipeline: Split docs → Embed chunks → Store in Chroma.
 
     Args:
         docs: List of LangChain Documents to ingest
 
     Returns:
-        dict with keys: status, count, message, elapsed_seconds, chunks_per_sec
+        dict with status, count, and message
     """
     if not docs:
-        return {"status": "ok", "count": 0, "message": "No documents to ingest", "elapsed_seconds": 0.0, "chunks_per_sec": 0.0}
+        return {"status": "ok", "count": 0, "message": "No documents to ingest"}
 
     start_time = time.perf_counter()
 
-    # Split documents with balanced chunk size for good retrieval granularity
-    # 2500 chars provides focused context without over-chunking
+    # Split documents into chunks
     splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=50)
     chunks = splitter.split_documents(docs)
-    split_time = time.perf_counter() - start_time
-    print(f"⏱️  Split time: {split_time:.2f}s")
 
-    # Pre-compute all embeddings in batch (much faster than individual calls)
-    embed_start = time.perf_counter()
-    embedder = get_embedder()
-    chunk_texts = [chunk.page_content for chunk in chunks]
-    embeddings = embedder.embed_documents(chunk_texts)  # Single batch call to Ollama
-    embed_time = time.perf_counter() - embed_start
-    print(f"⏱️  Embedding time: {embed_time:.2f}s for {len(chunks)} chunks")
-
-    # Add pre-embedded documents directly to Chroma collection (skips redundant embedding)
-    store_start = time.perf_counter()
+    # Add to vector store (LangChain handles embedding internally)
     store = get_vector_store()
-
-    # Generate unique IDs based on content hash + index to ensure no duplicates
-    import hashlib
-
-    ids = [f"{hashlib.md5(text.encode()).hexdigest()[:12]}_{i}" for i, text in enumerate(chunk_texts)]
-
-    store._collection.add(
-        ids=ids,
-        embeddings=embeddings,
-        documents=chunk_texts,
-        metadatas=[chunk.metadata for chunk in chunks],
-    )
-    store_time = time.perf_counter() - store_start
-    print(f"⏱️  Chroma add time: {store_time:.2f}s")
+    store.add_documents(chunks)
 
     elapsed = time.perf_counter() - start_time
-    chunks_per_sec = len(chunks) / elapsed if elapsed > 0 else 0
     return {
         "status": "ok",
         "count": len(chunks),
-        "message": f"Ingested {len(chunks)} chunks in {elapsed:.2f}s ({chunks_per_sec:.1f} chunks/sec)",
+        "message": f"Ingested {len(chunks)} chunks in {elapsed:.2f}s",
         "elapsed_seconds": elapsed,
-        "chunks_per_sec": chunks_per_sec,
     }
 
 

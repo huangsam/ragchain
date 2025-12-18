@@ -6,6 +6,7 @@ import time
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
 
+from ragchain.config import config
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.rag import ingest_documents, search
 
@@ -50,7 +51,7 @@ class AskRequest(BaseModel):
     """Request schema for RAG-based question answering endpoint."""
 
     query: str
-    model: str = "qwen3"
+    model: str = config.ollama_model
 
 
 @app.get("/health")
@@ -135,11 +136,10 @@ async def ask(req: AskRequest):
         logger.info(f"[/ask] Retrieved {len(retrieved_docs)} documents")
 
         # Generate answer from retrieved docs
-        from ragchain.rag import OLLAMA_BASE_URL
 
         logger.info("[/ask] Generating answer")
         gen_start = time.time()
-        llm = OllamaLLM(model=req.model, base_url=OLLAMA_BASE_URL, temperature=0.7)
+        llm = OllamaLLM(model=req.model, base_url=config.ollama_base_url, temperature=0.7)
 
         template = """Answer the question based on the following context:
 

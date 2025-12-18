@@ -1,7 +1,7 @@
 """RAG pipeline orchestration using LangChain."""
 
+import asyncio
 import logging
-import os
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -16,12 +16,9 @@ from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-logger = logging.getLogger(__name__)
+from ragchain.config import config
 
-CHROMA_PERSIST_DIR = os.environ.get("CHROMA_PERSIST_DIRECTORY", "./chroma_data")
-CHROMA_SERVER_URL = os.environ.get("CHROMA_SERVER_URL", "http://localhost:8000")
-OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "qwen3-embedding:0.6b")
+logger = logging.getLogger(__name__)
 
 
 class EnsembleRetriever(BaseRetriever):
@@ -102,7 +99,7 @@ def get_embedder():
     Returns:
         OllamaEmbeddings instance configured with model and base URL from env vars.
     """
-    return OllamaEmbeddings(model=OLLAMA_EMBED_MODEL, base_url=OLLAMA_BASE_URL, num_ctx=32768)
+    return OllamaEmbeddings(model=config.ollama_embed_model, base_url=config.ollama_base_url, num_ctx=32768)
 
 
 def get_vector_store():
@@ -116,11 +113,11 @@ def get_vector_store():
     """
     embedder = get_embedder()
 
-    if CHROMA_SERVER_URL:
+    if config.chroma_server_url:
         # Remote Chroma server - use ChromaClient
         from chromadb import HttpClient
 
-        parsed = urlparse(CHROMA_SERVER_URL)
+        parsed = urlparse(config.chroma_server_url)
         client = HttpClient(host=parsed.hostname or "localhost", port=parsed.port or 8000)
         return Chroma(
             collection_name="ragchain",
@@ -129,11 +126,11 @@ def get_vector_store():
         )
     else:
         # Persistent local Chroma
-        Path(CHROMA_PERSIST_DIR).mkdir(parents=True, exist_ok=True)
+        Path(config.chroma_persist_directory).mkdir(parents=True, exist_ok=True)
         return Chroma(
             collection_name="ragchain",
             embedding_function=embedder,
-            persist_directory=CHROMA_PERSIST_DIR,
+            persist_directory=config.chroma_persist_directory,
         )
 
 

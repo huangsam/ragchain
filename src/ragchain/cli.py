@@ -7,6 +7,7 @@ import os
 import click
 import httpx
 
+from ragchain.config import config
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.rag import ingest_documents
 
@@ -15,8 +16,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
-
-API_URL = os.environ.get("RAGCHAIN_API_URL", "http://localhost:8003")
 
 
 @click.group()
@@ -95,7 +94,7 @@ def search(query, k):
 
 @cli.command()
 @click.argument("query")
-@click.option("--model", default="qwen3")
+@click.option("--model", default=config.ollama_model)
 def ask(query, model):
     """Ask a question and get an answer using RAG + LLM.
 
@@ -103,14 +102,14 @@ def ask(query, model):
 
     Args:
         query: Question to ask (positional argument)
-        model: LLM model to use for generation (default: qwen3)
+        model: LLM model to use for generation (default: config.ollama_model)
     """
 
     async def _ask():
         # Increase timeout since LLM generation can take 30-60 seconds
         async with httpx.AsyncClient(timeout=120.0) as client:
             click.echo("Asking question (this may take a while for LLM generation)...")
-            resp = await client.post(f"{API_URL}/ask", json={"query": query, "model": model})
+            resp = await client.post(f"{config.ragchain_api_url}/ask", json={"query": query, "model": model})
             resp.raise_for_status()
             result = resp.json()
             click.echo(f"\nQ: {result['query']}")

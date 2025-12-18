@@ -1,7 +1,6 @@
 """LangGraph implementation for intent-based adaptive RAG."""
 
 import logging
-import os
 import time
 from typing import Literal
 
@@ -10,7 +9,8 @@ from langchain_ollama import OllamaLLM
 from langgraph.graph import END, StateGraph
 from typing_extensions import TypedDict
 
-from ragchain.rag import OLLAMA_BASE_URL, get_ensemble_retriever
+from ragchain.config import config
+from ragchain.rag import get_ensemble_retriever
 from ragchain.router import (
     INTENT_ROUTER_PROMPT,
     QUERY_REWRITER_PROMPT,
@@ -20,10 +20,6 @@ from ragchain.router import (
 logger = logging.getLogger(__name__)
 
 __all__ = ["IntentRoutingState", "rag_graph"]
-
-# Configuration flags
-ENABLE_GRADING = os.environ.get("ENABLE_GRADING", "false").lower() == "true"
-ENABLE_INTENT_ROUTING = os.environ.get("ENABLE_INTENT_ROUTING", "true").lower() == "true"
 
 
 class IntentRoutingState(TypedDict):
@@ -51,11 +47,11 @@ def intent_router(state: IntentRoutingState) -> IntentRoutingState:
     logger.info(f"[intent_router] Starting for query: {state['query'][:50]}...")
 
     # Fast-path: Skip LLM for simple queries if routing is disabled
-    if not ENABLE_INTENT_ROUTING or _is_simple_query(state["query"]):
+    if not config.enable_intent_routing or _is_simple_query(state["query"]):
         logger.info("[intent_router] Using fast-path, defaulting to CONCEPT")
         return {**state, "intent": "CONCEPT", "original_query": state["query"]}
 
-    llm = OllamaLLM(model="qwen3", base_url=OLLAMA_BASE_URL, temperature=0)
+    llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)
 
     prompt = INTENT_ROUTER_PROMPT.format(query=state["query"])
     response = llm.invoke(prompt).strip().upper()
@@ -104,7 +100,7 @@ def retrieval_grader(state: IntentRoutingState) -> IntentRoutingState:
     logger.info(f"[retrieval_grader] Starting with {len(state['retrieved_docs'])} documents")
 
     # Skip grading if disabled (fast-path)
-    if not ENABLE_GRADING:
+    if not config.enable_grading:
         logger.info("[retrieval_grader] Grading disabled, auto-accepting docs")
         return {**state, "retrieval_grade": "YES"}
 
@@ -118,7 +114,7 @@ def retrieval_grader(state: IntentRoutingState) -> IntentRoutingState:
         logger.info(f"[retrieval_grader] Already retried once, accepting docs to avoid infinite loop")
         return {**state, "retrieval_grade": "YES"}
 
-    llm = OllamaLLM(model="qwen3", base_url=OLLAMA_BASE_URL, temperature=0)
+    llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)
 
     formatted_docs = "\n\n".join([f"Doc {i}: {doc.page_content[:200]}" for i, doc in enumerate(state["retrieved_docs"])])
     prompt = RETRIEVAL_GRADER_PROMPT.format(query=state["query"], formatted_docs=formatted_docs)
@@ -140,7 +136,7 @@ def query_rewriter(state: IntentRoutingState) -> IntentRoutingState:
     start = time.time()
     logger.info(f"[query_rewriter] Rewriting query (attempt {state.get('retry_count', 0) + 1})")
 
-    llm = OllamaLLM(model="qwen3", base_url=OLLAMA_BASE_URL, temperature=0.5)
+    llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0.5)
 
     # Always rewrite from the original query
     original = state.get("original_query", state["query"])

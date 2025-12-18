@@ -29,7 +29,7 @@ class Config:
         self.ollama_model: str = os.environ.get("OLLAMA_MODEL", "deepseek-r1")
 
         # Performance optimization flags
-        self.enable_grading: bool = os.environ.get("ENABLE_GRADING", "false").lower() == "true"
+        self.enable_grading: bool = os.environ.get("ENABLE_GRADING", "true").lower() == "true"
         self.enable_intent_routing: bool = os.environ.get("ENABLE_INTENT_ROUTING", "true").lower() == "true"
 
         # CLI configuration

@@ -103,6 +103,6 @@ async def load_wikipedia_pages(language_names: List[str]) -> List[Document]:
             if isinstance(result, Document):
                 docs.append(result)
             elif isinstance(result, Exception):
-                print(f"Error loading page: {result}")
+                logger.error(f"Error loading page: {result}")
 
     return docs

@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import Literal
+from typing import List, Literal
 
 from langchain_core.documents import Document
 from langchain_ollama import OllamaLLM
@@ -94,39 +94,72 @@ def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
     return {**state, "retrieved_docs": docs}
 
 
+def _should_skip_grading(state: IntentRoutingState) -> bool:
+    """Determine if grading should be skipped.
+
+    Args:
+        state: Current graph state.
+
+    Returns:
+        True if grading should be skipped.
+    """
+    return not config.enable_grading
+
+
+def _should_accept_docs(state: IntentRoutingState) -> bool:
+    """Determine if documents should be auto-accepted.
+
+    Args:
+        state: Current graph state.
+
+    Returns:
+        True if docs should be accepted without grading.
+    """
+    return not state["retrieved_docs"] or state.get("retry_count", 0) > 0
+
+
+def _grade_with_llm(query: str, docs: List[Document]) -> Literal["YES", "NO"]:
+    """Grade document relevance using LLM.
+
+    Args:
+        query: The search query.
+        docs: Retrieved documents to grade.
+
+    Returns:
+        "YES" if relevant, "NO" if not.
+    """
+    llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)
+
+    formatted_docs = "\n\n".join([f"Doc {i}: {doc.page_content[:200]}" for i, doc in enumerate(docs)])
+    prompt = RETRIEVAL_GRADER_PROMPT.format(query=query, formatted_docs=formatted_docs)
+    response = llm.invoke(prompt).strip().upper()
+
+    # More lenient grading: only reject if explicitly negative
+    negative_indicators = ["NO", "NOT RELEVANT", "INSUFFICIENT", "IRRELEVANT", "DOES NOT"]
+    is_negative = any(indicator in response for indicator in negative_indicators)
+
+    return "NO" if is_negative else "YES"
+
+
 def retrieval_grader(state: IntentRoutingState) -> IntentRoutingState:
     """Grade if retrieved docs answer the query."""
     start = time.time()
     logger.info(f"[retrieval_grader] Starting with {len(state['retrieved_docs'])} documents")
 
     # Skip grading if disabled (fast-path)
-    if not config.enable_grading:
+    if _should_skip_grading(state):
         logger.info("[retrieval_grader] Grading disabled, auto-accepting docs")
         return {**state, "retrieval_grade": "YES"}
 
-    # If we have no docs, grade as NO
-    if not state["retrieved_docs"]:
-        logger.info("[retrieval_grader] No documents to grade, returning NO")
-        return {**state, "retrieval_grade": "NO"}
-
-    # If we've already retried once, accept the docs (avoid endless loop)
-    if state.get("retry_count", 0) > 0:
-        logger.info("[retrieval_grader] Already retried once, accepting docs to avoid infinite loop")
+    # Auto-accept if no docs or already retried
+    if _should_accept_docs(state):
+        reason = "No documents to grade" if not state["retrieved_docs"] else "Already retried once"
+        logger.info(f"[retrieval_grader] {reason}, accepting docs to avoid infinite loop")
         return {**state, "retrieval_grade": "YES"}
 
-    llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)
-
-    formatted_docs = "\n\n".join([f"Doc {i}: {doc.page_content[:200]}" for i, doc in enumerate(state["retrieved_docs"])])
-    prompt = RETRIEVAL_GRADER_PROMPT.format(query=state["query"], formatted_docs=formatted_docs)
-    response = llm.invoke(prompt).strip().upper()
-
-    # More lenient grading: only reject if explicitly negative
-    # Default to YES unless we see clear negative indicators
-    negative_indicators = ["NO", "NOT RELEVANT", "INSUFFICIENT", "IRRELEVANT", "DOES NOT"]
-    is_negative = any(indicator in response for indicator in negative_indicators)
-
-    grade_value: Literal["YES", "NO"] = "NO" if is_negative else "YES"
-    logger.info(f"[retrieval_grader] Grade: {grade_value} (response: {response[:50]}...) in {time.time() - start:.2f}s")
+    # Grade with LLM
+    grade_value = _grade_with_llm(state["query"], state["retrieved_docs"])
+    logger.info(f"[retrieval_grader] Grade: {grade_value} in {time.time() - start:.2f}s")
 
     return {**state, "retrieval_grade": grade_value}
 

@@ -1,5 +1,6 @@
 """Router and grader prompts for intent-based adaptive RAG."""
 
+# Helps with answering open-ended prompts
 RAG_ANSWER_TEMPLATE = """Answer the question based on the following context:
 
 Context:
@@ -9,6 +10,7 @@ Question: {question}
 
 Answer:"""
 
+# Helps with classification for one category
 INTENT_ROUTER_PROMPT = """Classify this query into ONE category:
 
 FACT: Asks for a specific list, ranking, or enumerated facts
@@ -24,6 +26,7 @@ Query: {query}
 
 Answer with only the category name (FACT, CONCEPT, or COMPARISON):"""
 
+# Helps with grading the relevance of retrieved documents
 RETRIEVAL_GRADER_PROMPT = """You are a grader for retrieval quality.
 
 Query: {query}
@@ -41,6 +44,7 @@ Be lenient - if documents are even partially on-topic, say YES.
 
 Answer with only YES or NO:"""
 
+# Helps with rewriting queries to be more explicit
 QUERY_REWRITER_PROMPT = """Your previous retrieval for this query didn't return relevant documents:
 Original Query: {query}
 

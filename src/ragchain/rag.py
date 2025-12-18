@@ -1,20 +1,22 @@
 """RAG pipeline orchestration using LangChain."""
 
+import logging
 import os
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 from urllib.parse import urlparse
 
 from langchain_chroma import Chroma
 from langchain_community.retrievers import BM25Retriever
-from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+logger = logging.getLogger(__name__)
 
 CHROMA_PERSIST_DIR = os.environ.get("CHROMA_PERSIST_DIRECTORY", "./chroma_data")
 CHROMA_SERVER_URL = os.environ.get("CHROMA_SERVER_URL", "http://localhost:8000")
@@ -30,16 +32,30 @@ class EnsembleRetriever(BaseRetriever):
     bm25_weight: float = 0.4
     chroma_weight: float = 0.6
 
-    def _get_relevant_documents(self, query: str, *, run_manager: Optional[CallbackManagerForRetrieverRun] = None) -> List[Document]:
+    def _get_relevant_documents(self, query: str) -> List[Document]:  # type: ignore[override]
         """Retrieve documents using Reciprocal Rank Fusion (RRF).
 
         RRF combines rankings from multiple retrievers by assigning scores based on
         document rank position: score = 1 / (rank + 60). This allows documents that
         appear in both rankings to outrank those appearing in only one.
+
+        Args:
+            query: The search query.
+
+        Returns:
+            List of retrieved documents sorted by RRF score.
         """
+        logger.debug(f"[EnsembleRetriever] Query: {query[:50]}...")
+        start = time.time()
+
         # Get results from both retrievers
+        bm25_start = time.time()
         bm25_docs = self.bm25_retriever.invoke(query)
+        logger.debug(f"[EnsembleRetriever] BM25 retrieved {len(bm25_docs)} docs in {time.time() - bm25_start:.2f}s")
+
+        chroma_start = time.time()
         chroma_docs = self.chroma_retriever.invoke(query)
+        logger.debug(f"[EnsembleRetriever] Chroma retrieved {len(chroma_docs)} docs in {time.time() - chroma_start:.2f}s")
 
         # Compute RRF scores for each document
         # RRF constant k=60 (standard value that prevents rank 1 from dominating)
@@ -47,22 +63,24 @@ class EnsembleRetriever(BaseRetriever):
         doc_scores: Dict[str, float] = defaultdict(float)
         doc_map: Dict[str, Document] = {}
 
-        # Score BM25 results
+        # Score BM25 results with weight
         for rank, doc in enumerate(bm25_docs):
             content = doc.page_content
-            rrf_score = 1.0 / (rank + rrf_k)
+            rrf_score = self.bm25_weight * (1.0 / (rank + rrf_k))
             doc_scores[content] += rrf_score
             doc_map[content] = doc
 
-        # Score Chroma results
+        # Score Chroma results with weight
         for rank, doc in enumerate(chroma_docs):
             content = doc.page_content
-            rrf_score = 1.0 / (rank + rrf_k)
+            rrf_score = self.chroma_weight * (1.0 / (rank + rrf_k))
             doc_scores[content] += rrf_score
             doc_map[content] = doc
 
         # Sort by combined RRF score descending
         sorted_docs = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)
+
+        logger.debug(f"[EnsembleRetriever] RRF combined {len(sorted_docs)} unique docs in {time.time() - start:.2f}s")
 
         # Return documents in score order
         return [doc_map[content] for content, _ in sorted_docs]
@@ -148,29 +166,52 @@ async def ingest_documents(docs: List[Document]) -> dict:
     }
 
 
-def get_ensemble_retriever(k: int = 8):
+def get_ensemble_retriever(k: int = 8, bm25_weight: float = 0.4, chroma_weight: float = 0.6) -> EnsembleRetriever:
     """Create an ensemble retriever combining BM25 and Chroma vector search.
 
     Args:
         k: Number of results per retriever
+        bm25_weight: Weight for BM25 results in RRF (default: 0.4)
+        chroma_weight: Weight for Chroma results in RRF (default: 0.6)
 
     Returns:
         EnsembleRetriever instance
     """
+    logger.debug(f"[get_ensemble_retriever] Creating with k={k}, bm25={bm25_weight}, chroma={chroma_weight}")
+    start = time.time()
+
     store = get_vector_store()
 
     # Get all documents from Chroma for BM25
     chroma_data = store.get()
-    docs = [Document(page_content=doc, metadata=meta) for doc, meta in zip(chroma_data["documents"], chroma_data["metadatas"])]
+
+    # Handle potential None values in metadatas
+    documents = chroma_data.get("documents", [])
+    metadatas = chroma_data.get("metadatas", [])
+
+    logger.debug(f"[get_ensemble_retriever] Loaded {len(documents)} documents from Chroma")
+
+    # Ensure metadatas has same length as documents, fill with empty dicts if needed
+    if len(metadatas) < len(documents):
+        metadatas.extend([{} for _ in range(len(documents) - len(metadatas))])
+
+    docs = [Document(page_content=doc, metadata=meta if meta else {}) for doc, meta in zip(documents, metadatas)]
 
     # Create BM25 retriever
-    bm25_retriever = BM25Retriever.from_documents(docs)
+    bm25_retriever = BM25Retriever.from_documents(docs, k=k)
+    logger.debug(f"[get_ensemble_retriever] BM25 initialized with k={k} over {len(docs)} docs")
 
     # Create Chroma retriever
     chroma_retriever = store.as_retriever(search_kwargs={"k": k})
 
-    # Create ensemble retriever with weights favoring vector search slightly
-    return EnsembleRetriever(bm25_retriever=bm25_retriever, chroma_retriever=chroma_retriever, bm25_weight=0.4, chroma_weight=0.6)
+    # Create ensemble retriever with specified weights
+    logger.debug(f"[get_ensemble_retriever] Ensemble created in {time.time() - start:.2f}s")
+    return EnsembleRetriever(
+        bm25_retriever=bm25_retriever,
+        chroma_retriever=chroma_retriever,
+        bm25_weight=bm25_weight,
+        chroma_weight=chroma_weight,
+    )
 
 
 async def search(query: str, k: int = 8) -> dict:

@@ -14,27 +14,53 @@ src/ragchain/
 ├── cli.py                # Click-based CLI (serve, ingest, search, ask)
 ├── loaders.py            # Document loaders for Wikipedia and other sources
 ├── rag.py                # LangChain RAG pipeline (embedding, chunking, retrieval, generation)
+├── graph.py              # LangGraph intent-based adaptive RAG orchestration
+├── router.py             # LLM prompts for intent routing and retrieval grading
 └── __init__.py           # Package initialization
 ```
 
 **Key architectural notes:**
 
-- **`rag.py`** is the core orchestrator using LangChain:
+- **`rag.py`** is the core retrieval layer:
   - `get_embedder()` — Creates OllamaEmbeddings with `qwen3-embedding` model for 4096-dimensional vectors
   - `get_vector_store()` — Returns Chroma (local persistent or remote HTTP) with LangChain integration
-  - `ingest()` — Fetches documents → parses → chunks recursively → embeds → upserts to vector store
-  - `search()` — Ensemble retrieval using BM25 and Chroma vector search for improved relevance
-  - `generate()` — LLM-powered answer generation using Ollama (configurable model)
+  - `ingest_documents()` — Fetches documents → parses → chunks recursively → embeds → upserts to vector store
+  - `search()` — Legacy ensemble retrieval (BM25 + Chroma with RRF)
+  - `EnsembleRetriever` — Custom retriever implementing Reciprocal Rank Fusion (RRF) with configurable weights
+  - `get_ensemble_retriever()` — Factory with intent-specific weight support
+
+- **`graph.py`** is the agentic orchestrator using LangGraph:
+  - `IntentRoutingState` — Typed state management for the RAG graph
+  - `intent_router()` — LLM-based query classification (FACT/CONCEPT/COMPARISON)
+  - `adaptive_retriever()` — Retrieves with intent-specific BM25/Chroma weights
+  - `retrieval_grader()` — LLM-based validation of document relevance
+  - `query_rewriter()` — Enhances queries on retrieval failure for automatic retry
+  - `rag_graph` — Compiled LangGraph with conditional retry logic
+
+- **`router.py`** contains LLM prompts:
+  - `INTENT_ROUTER_PROMPT` — Query classification
+  - `RETRIEVAL_GRADER_PROMPT` — Document relevance validation
+  - `QUERY_REWRITER_PROMPT` — Query enhancement
 
 - **`loaders.py`** provides document loading utilities:
   - Wikipedia article fetching (via built-in Wikipedia API or custom parsers)
   - Extensible for other sources (local files, APIs, etc.)
 
-- **`api.py`** exposes FastAPI endpoints for the full RAG pipeline
+- **`api.py`** exposes FastAPI endpoints:
+  - `/health` — Health check
+  - `/ingest` — Ingest documents
+  - `/search` — Legacy ensemble search
+  - `/ask` — Intent-based adaptive RAG (uses `rag_graph`)
+
 - **`cli.py`** provides Click-based commands for ingest, search, query, and stack management
 
 - Supports both **local persistent Chroma** (`CHROMA_PERSIST_DIRECTORY`) and **remote HTTP Chroma** (`CHROMA_SERVER_URL`)
-- Uses **ensemble retrieval** combining BM25 keyword search and semantic vector search for better results
+- Uses **ensemble retrieval** with Reciprocal Rank Fusion (RRF) combining BM25 keyword search and semantic vector search
+- Implements **intent-based adaptive RAG** via LangGraph:
+  - FACT queries: 0.8 BM25 / 0.2 Chroma (keyword-heavy for enumerations)
+  - CONCEPT queries: 0.4 BM25 / 0.6 Chroma (balanced)
+  - COMPARISON queries: 0.3 BM25 / 0.7 Chroma (semantic-heavy)
+- **Self-correcting**: Automatically rewrites and re-retrieves if grading fails (max 1 retry)
 - Tests use deterministic embeddings and mock external HTTP where possible (using `aioresponses`)
 
 ---
@@ -44,8 +70,10 @@ src/ragchain/
 **Runtime dependencies:**
 
 - **LangChain ecosystem** — LangChain, LangChain-Community, LangChain-Ollama, LangChain-Chroma for unified RAG orchestration
+- **LangGraph** — `langgraph` for agentic RAG orchestration with state management and conditional routing
 - **Ollama integration** — `langchain-ollama` for embedding (`qwen3-embedding`) and LLM generation
 - **Vector store** — `chromadb` for semantic search (supports local persistent and remote HTTP)
+- **BM25** — `rank-bm25` for keyword-based retrieval and ensemble ranking
 - **FastAPI & Uvicorn** — REST API server
 - **Click** — CLI framework for stack management and data operations
 - **Pydantic Settings** — Environment configuration management
@@ -105,9 +133,12 @@ ragchain down --profile test
 
 ## 🔧 Notes & Rationale
 
-- **LangChain integration** — Unified orchestration of embedding, chunking, retrieval, and generation stages
+- **LangGraph agentic RAG** — Intent-aware routing enables self-correcting retrieval that adapts to query type
+- **Reciprocal Rank Fusion** — Principled fusion of BM25 and semantic rankings (score = 1/(rank+60)) prevents rank 1 from dominating
+- **Intent classification** — Distinguishes FACT (exact lists), CONCEPT (explanation), and COMPARISON (contrast) queries for optimal retrieval
+- **Self-correcting** — Retrieval grader validates document relevance; rewrites queries on failure for automatic recovery
 - **qwen3-embedding model** — 4096-dimensional dense embeddings for superior semantic search (via Ollama)
 - **Flexible storage** — Supports both local persistent Chroma (`CHROMA_PERSIST_DIRECTORY`) and remote HTTP (`CHROMA_SERVER_URL`)
-- **Composable pipeline** — Easy to swap components (embedders, vector stores, LLM models) via environment configuration
+- **Composable pipeline** — Easy to swap components (embedders, vector stores, LLM models, intent weights) via environment configuration
 - **Deterministic testing** — Tests use mock HTTP (via `aioresponses`) and can run without Ollama/Chroma servers
 - **Docker Compose profiles** — `test` profile for CI, `demo` profile for full feature showcase

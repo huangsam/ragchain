@@ -3,30 +3,22 @@
 Your local RAG stack — no APIs, no cloud, full control.
 
 **Key Features:**
-- Analyze programming languages with TIOBE-ranked Wikipedia articles
-- Semantic search with qwen3-embedding (4096-dimensional vectors)
-- LLM-powered answer generation via local Ollama
-- Docker Compose demo stack
-- Full CLI for ingest/search/query workflows
-
-**Motivation:**
-- A minimal, self-contained RAG pipeline that runs entirely locally
-- Perfect for prototyping and teaching where reproducibility matters
+- Intent-based adaptive RAG with self-correcting retrieval (auto-retry on validation failure)
+- Ensemble search via Reciprocal Rank Fusion combining BM25 + semantic vectors
+- Local-only: Ollama for embeddings/LLM, Chroma for vector store, no external APIs
+- Analyze programming languages via Docker Compose demo stack
 
 ## Quick start
 
-Start the demo stack and interact with the RAG pipeline to analyze programming languages:
-
 ```bash
-# Start the demo stack (Chroma + ragchain API + demo-runner)
+# Start the demo stack
 docker compose --profile demo up --build -d
 
 # Search ingested programming language data
 ragchain search "functional programming paradigm" --k 4
 ragchain search "memory management" --k 5
 
-# Ask questions using RAG (requires local Ollama)
-# Ensure you have run `ollama pull qwen3` locally first
+# Try some queries (requires `ollama pull qwen3` locally)
 ragchain ask "What is Python used for?"
 ragchain ask "Compare Go and Rust for systems programming"
 ragchain ask "What are the key features of functional programming in Haskell?"
@@ -35,37 +27,33 @@ ragchain ask "What are the main differences between interpreted and compiled lan
 ragchain ask "Which languages are commonly used for machine learning?"
 ragchain ask "What are the top 10 most popular languages?"
 
-# Or manually ingest a different set of languages
-ragchain ingest --n 10  # Fetches top 10 from TIOBE
+# Ingest a different set of languages
+ragchain ingest --n 10
 
 # Stop the stack
 docker compose --profile demo down -v
 ```
 
-### What's running
+**What's running:**
+- **Chroma** (vector store) at http://localhost:8000
+- **ragchain API** at http://localhost:8003
+- **demo-runner** ingests top 20 TIOBE languages on startup
 
-- **Chroma** (vector store): http://localhost:8000 — persists programming language embeddings
-- **ragchain API**: http://localhost:8003 — REST endpoints for ingest, search, and ask
-- **demo-runner**: automatically fetches top 20 TIOBE languages and ingests Wikipedia articles on startup
+## Configuration
 
-**Demo Focus:** The current demo is tailored for **programming language analysis**. It:
-1. Fetches top languages from the TIOBE index
-2. Loads Wikipedia articles for each language
-3. Chunks and embeds them with qwen3-embedding (4096-dimensional vectors)
-4. Enables semantic search over language documentation
-5. Supports RAG queries via local Ollama
+- **Python 3.12** recommended (LangChain ecosystem has optimized wheels)
+- **OLLAMA_BASE_URL**: where Ollama is running (default: `http://localhost:11434`)
+- **OLLAMA_MODEL**: LLM model (ensure `ollama pull qwen3` locally)
+- **CHROMA_PERSIST_DIRECTORY** or **CHROMA_SERVER_URL**: vector store configuration
 
-## Notes
+## Intent-Based Retrieval
 
-- Python: **3.12** recommended (LangChain ecosystem has optimized wheels).
+The `/ask` endpoint adapts to query type:
 
-**Vector Store Configuration:**
-- **CHROMA_PERSIST_DIRECTORY**: use for on-disk in-process Chroma during local runs.
-- **CHROMA_SERVER_URL**: point ragchain at a running Chroma instance (e.g., from `ragchain up`).
+| Type | Example | BM25 Weight | Strategy |
+|---|---|---|---|
+| FACT | "Top 10 languages?" | 0.8 | Keyword-heavy for lists |
+| CONCEPT | "What is functional programming?" | 0.4 | Balanced search |
+| COMPARISON | "Compare Go and Rust" | 0.3 | Semantic-focused |
 
-**LLM Configuration:**
-- **OLLAMA_BASE_URL**: configure where Ollama is running (default: `http://localhost:11434`).
-- **OLLAMA_EMBED_MODEL**: embedding model (default: `qwen3-embedding`).
-- **OLLAMA_MODEL**: LLM model for generation (ensure pulled: `ollama pull qwen3`).
-
-See [AGENTS.md](AGENTS.md) for project layout, tooling, and architecture notes.
+See [AGENTS.md](AGENTS.md) for architecture. See [brainstorm/LANGGRAPH_IMPLEMENTATION.md](brainstorm/LANGGRAPH_IMPLEMENTATION.md) for details.

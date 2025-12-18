@@ -1,6 +1,7 @@
 """CLI for ragchain."""
 
 import asyncio
+import logging
 import os
 
 import click
@@ -8,6 +9,12 @@ import httpx
 
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.rag import ingest_documents
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
 
 API_URL = os.environ.get("RAGCHAIN_API_URL", "http://localhost:8003")
 

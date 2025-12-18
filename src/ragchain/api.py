@@ -1,11 +1,15 @@
 """FastAPI application for RAG endpoints."""
 
+import logging
+import time
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
 
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.rag import ingest_documents, search
 
+logger = logging.getLogger(__name__)
 app = FastAPI()
 
 
@@ -97,22 +101,46 @@ async def search_endpoint(req: SearchRequest):
 
 @app.post("/ask")
 async def ask(req: AskRequest):
-    """Answer questions using RAG (retrieval-augmented generation).
+    """Answer questions using intent-based adaptive RAG.
 
-    Retrieves relevant document context and generates answers using Ollama LLM.
-    Combines semantic search with LLM generation for informed responses.
+    Uses LangGraph to route queries by intent, adapting retrieval strategy
+    and grading results for quality. Retries with rewritten queries if needed.
     """
+    start = time.time()
+    logger.info(f"[/ask] Received query: {req.query[:50]}...")
+
     try:
-        from langchain_community.llms.ollama import Ollama
         from langchain_core.prompts import ChatPromptTemplate
-        from langchain_core.runnables import RunnablePassthrough
+        from langchain_ollama import OllamaLLM
 
-        from ragchain.rag import OLLAMA_BASE_URL, get_ensemble_retriever
+        from ragchain.graph import rag_graph
 
-        retriever = get_ensemble_retriever(k=8)
-        llm = Ollama(model=req.model, base_url=OLLAMA_BASE_URL, temperature=0.7)
+        # Initialize state dict
+        initial_state = {
+            "query": req.query,
+            "intent": "CONCEPT",
+            "retrieved_docs": [],
+            "retrieval_grade": "NO",
+            "rewritten_query": "",
+            "retry_count": 0,
+        }
 
-        # Build a simple RAG chain using LCEL
+        # Run the agentic RAG graph directly (sync)
+        logger.info("[/ask] Starting LangGraph pipeline")
+        graph_start = time.time()
+        final_state = rag_graph.invoke(initial_state)  # type: ignore[arg-type]
+        logger.info(f"[/ask] LangGraph completed in {time.time() - graph_start:.2f}s")
+
+        retrieved_docs = final_state["retrieved_docs"]
+        logger.info(f"[/ask] Retrieved {len(retrieved_docs)} documents")
+
+        # Generate answer from retrieved docs
+        from ragchain.rag import OLLAMA_BASE_URL
+
+        logger.info("[/ask] Generating answer")
+        gen_start = time.time()
+        llm = OllamaLLM(model=req.model, base_url=OLLAMA_BASE_URL, temperature=0.7)
+
         template = """Answer the question based on the following context:
 
 Context:
@@ -123,13 +151,14 @@ Question: {question}
 Answer:"""
         prompt = ChatPromptTemplate.from_template(template)
 
-        def format_docs(docs):
-            """Format retrieved documents as newline-separated text for LLM context."""
-            return "\n\n".join([d.page_content for d in docs])
+        context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+        answer = llm.invoke(prompt.format(context=context, question=req.query))
+        logger.info(f"[/ask] Answer generated in {time.time() - gen_start:.2f}s")
 
-        chain = {"context": retriever | format_docs, "question": RunnablePassthrough()} | prompt | llm
-        answer = chain.invoke(req.query)
+        total_elapsed = time.time() - start
+        logger.info(f"[/ask] Completed in {total_elapsed:.2f}s")
 
         return {"query": req.query, "answer": answer}
     except Exception as e:
+        logger.error(f"[/ask] Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

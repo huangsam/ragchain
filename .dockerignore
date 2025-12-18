@@ -1,0 +1,50 @@
+# Version control
+.git
+.gitignore
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Python cache and artifacts
+__pycache__/
+*.py[oc]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv
+venv/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Project-specific data and temp files
+brainstorm/
+chroma_data/
+wikipages/
+
+# Documentation (not needed in images)
+README.md
+AGENTS.md
+
+# Docker files (not needed in build context)
+docker-compose.yml
+Dockerfile.*
+.dockerignore
+
+# Development tools
+.python-version
+pyrightconfig.json
+
+# Test files (not needed in production images)
+tests/
+
+# Lock files (if using pyproject.toml, uv.lock might not be needed)
+uv.lock

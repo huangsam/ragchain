@@ -18,7 +18,7 @@ docker compose --profile demo up --build -d
 ragchain search "functional programming paradigm" --k 4
 ragchain search "memory management" --k 5
 
-# Try some queries (requires `qwen3` and `qwen3-embedding:0.6b` locally)
+# Try some queries (requires `qwen3:8b` and `qwen3-embedding:0.6b` locally)
 ragchain ask "What is Python used for?"
 ragchain ask "Compare Go and Rust for systems programming"
 ragchain ask "What are the key features of functional programming in Haskell?"

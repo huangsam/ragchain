@@ -12,6 +12,7 @@ A compact tree view of the repository layout:
 src/ragchain/
 ├── api.py                # FastAPI app (/health, /ingest, /search, /ask)
 ├── cli.py                # Click-based CLI (serve, ingest, search, ask)
+├── config.py             # Centralized configuration management (singleton)
 ├── loaders.py            # Document loaders for Wikipedia and other sources
 ├── rag.py                # LangChain RAG pipeline (embedding, chunking, retrieval, generation)
 ├── graph.py              # LangGraph intent-based adaptive RAG orchestration
@@ -20,6 +21,11 @@ src/ragchain/
 ```
 
 **Key architectural notes:**
+
+- **`config.py`** provides centralized configuration management:
+  - Singleton `Config` class for environment variable handling
+  - Typed attributes for Ollama models, Chroma settings, and feature flags
+  - Used throughout the codebase for consistent configuration access
 
 - **`rag.py`** is the core retrieval layer:
   - `get_embedder()` — Creates OllamaEmbeddings with `qwen3-embedding:0.6b` model for 1024-dimensional vectors with 32k context
@@ -133,12 +139,10 @@ ragchain down --profile test
 
 ## 🔧 Notes & Rationale
 
-- **LangGraph agentic RAG** — Intent-aware routing enables self-correcting retrieval that adapts to query type
-- **Reciprocal Rank Fusion** — Principled fusion of BM25 and semantic rankings (score = 1/(rank+60)) prevents rank 1 from dominating
-- **Intent classification** — Distinguishes FACT (exact lists), CONCEPT (explanation), and COMPARISON (contrast) queries for optimal retrieval
-- **Self-correcting** — Retrieval grader validates document relevance; rewrites queries on failure for automatic recovery
+- **LangGraph agentic RAG** — Intent-aware routing adapts retrieval weights for FACT/CONCEPT/COMPARISON queries
+- **Reciprocal Rank Fusion** — Principled ensemble ranking (score = 1/(rank+60)) combining BM25 keyword and semantic search
+- **Self-correcting** — Automatic query rewriting on retrieval failure (max 1 retry) with LLM-based relevance grading
+- **Performance optimized** — Parallel retrieval (ThreadPoolExecutor), retriever caching, optional grading, and fast-path routing
 - **qwen3-embedding:0.6b model** — 1024-dimensional embeddings with 32k context window for superior semantic search (via Ollama)
-- **Flexible storage** — Supports both local persistent Chroma (`CHROMA_PERSIST_DIRECTORY`) and remote HTTP (`CHROMA_SERVER_URL`)
-- **Composable pipeline** — Easy to swap components (embedders, vector stores, LLM models, intent weights) via environment configuration
-- **Deterministic testing** — Tests use mock HTTP (via `aioresponses`) and can run without Ollama/Chroma servers
-- **Docker Compose profiles** — `test` profile for CI, `demo` profile for full feature showcase
+- **Flexible & composable** — Supports local/remote Chroma storage; easily swappable embedders, vector stores, and LLM models via config
+- **Deterministic testing** — Mock HTTP (aioresponses) enables testing without Ollama/Chroma servers; Docker profiles for CI/demo

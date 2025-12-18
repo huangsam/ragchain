@@ -18,7 +18,7 @@ docker compose --profile demo up --build -d
 ragchain search "functional programming paradigm" --k 4
 ragchain search "memory management" --k 5
 
-# Try some queries (requires `ollama pull qwen3` locally)
+# Try some queries (requires `qwen3` and `qwen3-embedding:0.6b` locally)
 ragchain ask "What is Python used for?"
 ragchain ask "Compare Go and Rust for systems programming"
 ragchain ask "What are the key features of functional programming in Haskell?"
@@ -44,6 +44,7 @@ docker compose --profile demo down -v
 - **Python 3.12** recommended (LangChain ecosystem has optimized wheels)
 - **OLLAMA_BASE_URL**: where Ollama is running (default: `http://localhost:11434`)
 - **OLLAMA_MODEL**: LLM model (ensure `ollama pull qwen3` locally)
+- **OLLAMA_EMBED_MODEL**: Embedding model (default: qwen3-embedding:0.6b with 32k context)
 - **CHROMA_PERSIST_DIRECTORY** or **CHROMA_SERVER_URL**: vector store configuration
 
 ## Intent-Based Retrieval

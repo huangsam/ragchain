@@ -41,10 +41,7 @@ class IntentRoutingState(TypedDict):
 def _is_simple_query(query: str) -> bool:
     """Fast heuristic to detect simple queries that can skip intent routing."""
     query_lower = query.lower()
-    simple_patterns = [
-        "what is", "define", "explain", "who is", "when was",
-        "where is", "how does", "why is"
-    ]
+    simple_patterns = ["what is", "define", "explain", "who is", "when was", "where is", "how does", "why is"]
     return any(pattern in query_lower for pattern in simple_patterns) and len(query.split()) <= 8
 
 

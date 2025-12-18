@@ -27,6 +27,9 @@ services:
       - OLLAMA_EMBED_MODEL=qwen3-embedding
       # Default model to use for generation (ensure you have pulled it: `ollama pull qwen3`)
       - OLLAMA_MODEL=qwen3
+      # Performance optimization flags
+      - ENABLE_GRADING=false
+      - ENABLE_INTENT_ROUTING=true
       # Cache HuggingFace models to a volume so we don't re-download on every restart
       - HUGGINGFACE_HUB_CACHE=/data/hf_cache
     volumes:

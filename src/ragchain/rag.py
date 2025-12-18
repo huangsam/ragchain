@@ -33,11 +33,11 @@ class EnsembleRetriever(BaseRetriever):
     chroma_weight: float = 0.6
 
     def _get_relevant_documents(self, query: str) -> List[Document]:  # type: ignore[override]
-        """Retrieve documents using Reciprocal Rank Fusion (RRF).
+        """Retrieve documents using Reciprocal Rank Fusion (RRF) with parallel execution.
 
-        RRF combines rankings from multiple retrievers by assigning scores based on
-        document rank position: score = 1 / (rank + 60). This allows documents that
-        appear in both rankings to outrank those appearing in only one.
+        Fetches BM25 and Chroma results in parallel threads, then combines rankings
+        using RRF: score = weight / (rank + 60). This allows documents that appear
+        in both rankings to outrank those appearing in only one.
 
         Args:
             query: The search query.
@@ -45,17 +45,20 @@ class EnsembleRetriever(BaseRetriever):
         Returns:
             List of retrieved documents sorted by RRF score.
         """
+        import concurrent.futures
+
         logger.debug(f"[EnsembleRetriever] Query: {query[:50]}...")
         start = time.time()
 
-        # Get results from both retrievers
-        bm25_start = time.time()
-        bm25_docs = self.bm25_retriever.invoke(query)
-        logger.debug(f"[EnsembleRetriever] BM25 retrieved {len(bm25_docs)} docs in {time.time() - bm25_start:.2f}s")
+        # Fetch from both retrievers in parallel threads
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            bm25_future = executor.submit(self.bm25_retriever.invoke, query)
+            chroma_future = executor.submit(self.chroma_retriever.invoke, query)
 
-        chroma_start = time.time()
-        chroma_docs = self.chroma_retriever.invoke(query)
-        logger.debug(f"[EnsembleRetriever] Chroma retrieved {len(chroma_docs)} docs in {time.time() - chroma_start:.2f}s")
+            bm25_docs = bm25_future.result()
+            chroma_docs = chroma_future.result()
+
+        logger.debug(f"[EnsembleRetriever] Parallel retrieval: BM25={len(bm25_docs)}, Chroma={len(chroma_docs)} in {time.time() - start:.2f}s")
 
         # Compute RRF scores for each document
         # RRF constant k=60 (standard value that prevents rank 1 from dominating)
@@ -86,6 +89,7 @@ class EnsembleRetriever(BaseRetriever):
         return [doc_map[content] for content, _ in sorted_docs]
 
     def get_relevant_documents(self, query: str) -> List[Document]:
+        """Get relevant documents using parallel retrieval (default behavior)."""
         return self._get_relevant_documents(query)
 
 
@@ -157,6 +161,9 @@ async def ingest_documents(docs: List[Document]) -> dict:
     store = get_vector_store()
     store.add_documents(chunks)
 
+    # Clear retriever cache to pick up new documents
+    clear_retriever_cache()
+
     elapsed = time.perf_counter() - start_time
     return {
         "status": "ok",
@@ -166,8 +173,22 @@ async def ingest_documents(docs: List[Document]) -> dict:
     }
 
 
+# Global retriever cache to avoid rebuilding BM25 index on every request
+_retriever_cache: Dict[tuple, EnsembleRetriever] = {}
+
+
+def clear_retriever_cache():
+    """Clear the retriever cache. Call after ingesting new documents."""
+    global _retriever_cache
+    _retriever_cache.clear()
+    logger.info("[get_ensemble_retriever] Cache cleared")
+
+
 def get_ensemble_retriever(k: int = 8, bm25_weight: float = 0.4, chroma_weight: float = 0.6) -> EnsembleRetriever:
     """Create an ensemble retriever combining BM25 and Chroma vector search.
+
+    Uses a cache to avoid rebuilding the BM25 index on every request.
+    Cache is keyed by (k, bm25_weight, chroma_weight).
 
     Args:
         k: Number of results per retriever
@@ -175,9 +196,15 @@ def get_ensemble_retriever(k: int = 8, bm25_weight: float = 0.4, chroma_weight: 
         chroma_weight: Weight for Chroma results in RRF (default: 0.6)
 
     Returns:
-        EnsembleRetriever instance
+        EnsembleRetriever instance (cached if available)
     """
-    logger.debug(f"[get_ensemble_retriever] Creating with k={k}, bm25={bm25_weight}, chroma={chroma_weight}")
+    cache_key = (k, bm25_weight, chroma_weight)
+
+    if cache_key in _retriever_cache:
+        logger.debug(f"[get_ensemble_retriever] Cache hit for k={k}, weights=({bm25_weight}, {chroma_weight})")
+        return _retriever_cache[cache_key]
+
+    logger.debug(f"[get_ensemble_retriever] Cache miss, creating new retriever with k={k}, bm25={bm25_weight}, chroma={chroma_weight}")
     start = time.time()
 
     store = get_vector_store()
@@ -205,13 +232,18 @@ def get_ensemble_retriever(k: int = 8, bm25_weight: float = 0.4, chroma_weight: 
     chroma_retriever = store.as_retriever(search_kwargs={"k": k})
 
     # Create ensemble retriever with specified weights
-    logger.debug(f"[get_ensemble_retriever] Ensemble created in {time.time() - start:.2f}s")
-    return EnsembleRetriever(
+    retriever = EnsembleRetriever(
         bm25_retriever=bm25_retriever,
         chroma_retriever=chroma_retriever,
         bm25_weight=bm25_weight,
         chroma_weight=chroma_weight,
     )
+
+    # Cache the retriever
+    _retriever_cache[cache_key] = retriever
+    logger.debug(f"[get_ensemble_retriever] Ensemble created and cached in {time.time() - start:.2f}s")
+
+    return retriever
 
 
 async def search(query: str, k: int = 8) -> dict:

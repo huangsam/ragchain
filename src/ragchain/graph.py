@@ -1,6 +1,7 @@
 """LangGraph implementation for intent-based adaptive RAG."""
 
 import logging
+import os
 import time
 from typing import Literal
 
@@ -20,6 +21,10 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["IntentRoutingState", "rag_graph"]
 
+# Configuration flags
+ENABLE_GRADING = os.environ.get("ENABLE_GRADING", "false").lower() == "true"
+ENABLE_INTENT_ROUTING = os.environ.get("ENABLE_INTENT_ROUTING", "true").lower() == "true"
+
 
 class IntentRoutingState(TypedDict):
     """State for the intent routing RAG graph."""
@@ -33,10 +38,25 @@ class IntentRoutingState(TypedDict):
     retry_count: int
 
 
+def _is_simple_query(query: str) -> bool:
+    """Fast heuristic to detect simple queries that can skip intent routing."""
+    query_lower = query.lower()
+    simple_patterns = [
+        "what is", "define", "explain", "who is", "when was",
+        "where is", "how does", "why is"
+    ]
+    return any(pattern in query_lower for pattern in simple_patterns) and len(query.split()) <= 8
+
+
 def intent_router(state: IntentRoutingState) -> IntentRoutingState:
     """Route query to intent category."""
     start = time.time()
     logger.info(f"[intent_router] Starting for query: {state['query'][:50]}...")
+
+    # Fast-path: Skip LLM for simple queries if routing is disabled
+    if not ENABLE_INTENT_ROUTING or _is_simple_query(state["query"]):
+        logger.info("[intent_router] Using fast-path, defaulting to CONCEPT")
+        return {**state, "intent": "CONCEPT", "original_query": state["query"]}
 
     llm = OllamaLLM(model="qwen3", base_url=OLLAMA_BASE_URL, temperature=0)
 
@@ -54,7 +74,7 @@ def intent_router(state: IntentRoutingState) -> IntentRoutingState:
 
 
 def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
-    """Retrieve with intent-specific weights."""
+    """Retrieve with intent-specific weights using parallel execution."""
     start = time.time()
     logger.info(f"[adaptive_retriever] Starting for intent: {state['intent']}")
 
@@ -69,7 +89,7 @@ def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
     bm25_weight, chroma_weight = weights.get(state["intent"], (0.5, 0.5))
     logger.info(f"[adaptive_retriever] Using weights: BM25={bm25_weight}, Chroma={chroma_weight}")
 
-    # Get ensemble retriever with intent-specific weights
+    # Get ensemble retriever with intent-specific weights (uses parallel retrieval by default)
     try:
         retriever = get_ensemble_retriever(k=8, bm25_weight=bm25_weight, chroma_weight=chroma_weight)
         docs = retriever.get_relevant_documents(query)
@@ -85,6 +105,11 @@ def retrieval_grader(state: IntentRoutingState) -> IntentRoutingState:
     """Grade if retrieved docs answer the query."""
     start = time.time()
     logger.info(f"[retrieval_grader] Starting with {len(state['retrieved_docs'])} documents")
+
+    # Skip grading if disabled (fast-path)
+    if not ENABLE_GRADING:
+        logger.info("[retrieval_grader] Grading disabled, auto-accepting docs")
+        return {**state, "retrieval_grade": "YES"}
 
     # If we have no docs, grade as NO
     if not state["retrieved_docs"]:

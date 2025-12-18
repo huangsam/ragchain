@@ -13,6 +13,16 @@ from ragchain.rag import ingest_documents, search
 logger = logging.getLogger(__name__)
 app = FastAPI()
 
+# RAG answer generation prompt template
+RAG_ANSWER_TEMPLATE = """Answer the question based on the following context:
+
+Context:
+{context}
+
+Question: {question}
+
+Answer:"""
+
 
 class IngestRequest(BaseModel):
     """Request schema for document ingestion endpoint.
@@ -141,15 +151,7 @@ async def ask(req: AskRequest):
         gen_start = time.time()
         llm = OllamaLLM(model=req.model, base_url=config.ollama_base_url, temperature=0.7)
 
-        template = """Answer the question based on the following context:
-
-Context:
-{context}
-
-Question: {question}
-
-Answer:"""
-        prompt = ChatPromptTemplate.from_template(template)
+        prompt = ChatPromptTemplate.from_template(RAG_ANSWER_TEMPLATE)
 
         context = "\n\n".join([doc.page_content for doc in retrieved_docs])
         answer = llm.invoke(prompt.format(context=context, question=req.query))

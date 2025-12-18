@@ -54,7 +54,7 @@ services:
       - RAGCHAIN_API_URL=http://ragchain:8000
       - CHROMA_SERVER_URL=http://chroma:8000
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
-    entrypoint: ["ragchain", "ingest", "--n", "30"]
+    entrypoint: ["ragchain", "ingest", "--n", "50"]
 
 volumes:
   chroma_demo_data:

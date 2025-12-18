@@ -78,7 +78,7 @@ async def ingest_documents(docs: List[Document]) -> dict:
     start_time = time.perf_counter()
 
     # Split documents into chunks (optimized for semantic quality)
-    splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=50)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=100)
     chunks = splitter.split_documents(docs)
 
     # Add to vector store (LangChain handles embedding internally)

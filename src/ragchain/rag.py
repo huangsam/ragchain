@@ -25,7 +25,7 @@ def get_embedder():
     Returns:
         OllamaEmbeddings instance configured with model and base URL from env vars.
     """
-    return OllamaEmbeddings(model=OLLAMA_EMBED_MODEL, base_url=OLLAMA_BASE_URL)
+    return OllamaEmbeddings(model=OLLAMA_EMBED_MODEL, base_url=OLLAMA_BASE_URL, num_ctx=40960)
 
 
 def get_vector_store():
@@ -78,7 +78,7 @@ async def ingest_documents(docs: List[Document]) -> dict:
     start_time = time.perf_counter()
 
     # Split documents into chunks
-    splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=50)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
     chunks = splitter.split_documents(docs)
 
     # Add to vector store (LangChain handles embedding internally)

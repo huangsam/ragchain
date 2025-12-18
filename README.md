@@ -57,4 +57,4 @@ The `/ask` endpoint adapts to query type:
 | CONCEPT | "What is functional programming?" | 0.3 | Balanced search |
 | COMPARISON | "Compare Go and Rust" | 0.4 | Semantic-focused |
 
-See [AGENTS.md](AGENTS.md) for architecture. See [brainstorm/LANGGRAPH_IMPLEMENTATION.md](brainstorm/LANGGRAPH_IMPLEMENTATION.md) for details.
+See [AGENTS.md](AGENTS.md) for architecture.

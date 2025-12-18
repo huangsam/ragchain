@@ -22,7 +22,7 @@ src/ragchain/
 **Key architectural notes:**
 
 - **`rag.py`** is the core retrieval layer:
-  - `get_embedder()` — Creates OllamaEmbeddings with `qwen3-embedding` model for 4096-dimensional vectors
+  - `get_embedder()` — Creates OllamaEmbeddings with `bge-m3` model for 1024-dimensional vectors with 8k context
   - `get_vector_store()` — Returns Chroma (local persistent or remote HTTP) with LangChain integration
   - `ingest_documents()` — Fetches documents → parses → chunks recursively → embeds → upserts to vector store
   - `search()` — Legacy ensemble retrieval (BM25 + Chroma with RRF)
@@ -71,7 +71,7 @@ src/ragchain/
 
 - **LangChain ecosystem** — LangChain, LangChain-Community, LangChain-Ollama, LangChain-Chroma for unified RAG orchestration
 - **LangGraph** — `langgraph` for agentic RAG orchestration with state management and conditional routing
-- **Ollama integration** — `langchain-ollama` for embedding (`qwen3-embedding`) and LLM generation
+- **Ollama integration** — `langchain-ollama` for embedding (`bge-m3`) and LLM generation
 - **Vector store** — `chromadb` for semantic search (supports local persistent and remote HTTP)
 - **BM25** — `rank-bm25` for keyword-based retrieval and ensemble ranking
 - **FastAPI & Uvicorn** — REST API server
@@ -137,7 +137,7 @@ ragchain down --profile test
 - **Reciprocal Rank Fusion** — Principled fusion of BM25 and semantic rankings (score = 1/(rank+60)) prevents rank 1 from dominating
 - **Intent classification** — Distinguishes FACT (exact lists), CONCEPT (explanation), and COMPARISON (contrast) queries for optimal retrieval
 - **Self-correcting** — Retrieval grader validates document relevance; rewrites queries on failure for automatic recovery
-- **qwen3-embedding model** — 4096-dimensional dense embeddings for superior semantic search (via Ollama)
+- **bge-m3 model** — 1024-dimensional multilingual embeddings with 8k context window for superior semantic search (via Ollama)
 - **Flexible storage** — Supports both local persistent Chroma (`CHROMA_PERSIST_DIRECTORY`) and remote HTTP (`CHROMA_SERVER_URL`)
 - **Composable pipeline** — Easy to swap components (embedders, vector stores, LLM models, intent weights) via environment configuration
 - **Deterministic testing** — Tests use mock HTTP (via `aioresponses`) and can run without Ollama/Chroma servers

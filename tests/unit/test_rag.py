@@ -20,11 +20,11 @@ async def test_ingest_empty():
 async def test_ingest_and_search():
     """Test ingesting and searching documents using mock embeddings."""
     # Mock OllamaEmbeddings to avoid requiring Ollama server
-    # Use 4096 dimensions to match qwen3-embedding
+    # Use 1024 dimensions to match bge-m3
     with patch("ragchain.rag.OllamaEmbeddings") as MockEmbeddings, patch("ragchain.rag.CHROMA_SERVER_URL", None):  # Force local Chroma for testing
         mock_embed = MagicMock()
-        mock_embed.embed_documents.return_value = [[0.1] * 4096 for _ in range(2)]
-        mock_embed.embed_query.return_value = [0.1] * 4096
+        mock_embed.embed_documents.return_value = [[0.1] * 1024 for _ in range(2)]
+        mock_embed.embed_query.return_value = [0.1] * 1024
         MockEmbeddings.return_value = mock_embed
 
         # Create sample docs

@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 CHROMA_PERSIST_DIR = os.environ.get("CHROMA_PERSIST_DIRECTORY", "./chroma_data")
 CHROMA_SERVER_URL = os.environ.get("CHROMA_SERVER_URL", "http://localhost:8000")
 OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "qwen3-embedding")
+OLLAMA_EMBED_MODEL = os.environ.get("OLLAMA_EMBED_MODEL", "bge-m3")
 
 
 class EnsembleRetriever(BaseRetriever):
@@ -96,13 +96,13 @@ class EnsembleRetriever(BaseRetriever):
 def get_embedder():
     """Create Ollama embedding function.
 
-    Returns OllamaEmbeddings configured with qwen3-embedding model.
-    Uses 4096-dimensional vector embeddings for rich semantic representation.
+    Returns OllamaEmbeddings configured with bge-m3 model.
+    Uses 1024-dimensional vector embeddings with 8k token context window.
 
     Returns:
         OllamaEmbeddings instance configured with model and base URL from env vars.
     """
-    return OllamaEmbeddings(model=OLLAMA_EMBED_MODEL, base_url=OLLAMA_BASE_URL, num_ctx=40960)
+    return OllamaEmbeddings(model=OLLAMA_EMBED_MODEL, base_url=OLLAMA_BASE_URL, num_ctx=8192)
 
 
 def get_vector_store():

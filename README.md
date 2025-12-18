@@ -53,8 +53,8 @@ The `/ask` endpoint adapts to query type:
 
 | Type | Example | BM25 Weight | Strategy |
 |---|---|---|---|
-| FACT | "Top 10 languages?" | 0.8 | Keyword-heavy for lists |
-| CONCEPT | "What is functional programming?" | 0.4 | Balanced search |
-| COMPARISON | "Compare Go and Rust" | 0.3 | Semantic-focused |
+| FACT | "Top 10 languages?" | 0.7 | Keyword-heavy for lists |
+| CONCEPT | "What is functional programming?" | 0.3 | Balanced search |
+| COMPARISON | "Compare Go and Rust" | 0.4 | Semantic-focused |
 
 See [AGENTS.md](AGENTS.md) for architecture. See [brainstorm/LANGGRAPH_IMPLEMENTATION.md](brainstorm/LANGGRAPH_IMPLEMENTATION.md) for details.

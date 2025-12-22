@@ -40,15 +40,7 @@ docker compose --profile demo down -v
 **What's running:**
 - **Chroma** (vector store) at http://localhost:8000
 - **ragchain API** at http://localhost:8003
-- **demo-runner** ingests top 20 TIOBE languages on startup
-
-## Configuration
-
-- **Python 3.12** recommended (LangChain ecosystem has optimized wheels)
-- **OLLAMA_BASE_URL**: where Ollama is running (default: `http://localhost:11434`)
-- **OLLAMA_MODEL**: LLM model (ensure `ollama pull deepseek-r1` locally)
-- **OLLAMA_EMBED_MODEL**: Embedding model (default: bge-m3 with 8k context)
-- **CHROMA_PERSIST_DIRECTORY** or **CHROMA_SERVER_URL**: vector store configuration
+- **demo-runner** ingests top 50 TIOBE languages on startup
 
 ## Intent-Based Retrieval
 

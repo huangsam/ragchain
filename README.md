@@ -1,5 +1,8 @@
 # RAGchain
 
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/huangsam/ragchain/ci.yml)](https://github.com/huangsam/ragchain/actions)
+[![License](https://img.shields.io/github/license/huangsam/ragchain)](https://github.com/huangsam/ragchain/blob/main/LICENSE)
+
 Your local RAG stack — no APIs, no cloud, full control.
 
 **Key Features:**

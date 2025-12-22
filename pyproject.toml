@@ -44,7 +44,7 @@ ragchain = "ragchain.cli:cli"
 line-length = 160
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "C", "Q"]
+select = ["E", "F", "W", "I", "C", "Q"]
 extend-ignore = ["E203"]
 
 [tool.mypy]

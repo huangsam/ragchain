@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  python-build:
+    name: Python
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v7
+
+    - name: Install package
+      run: uv sync --editable
+
+    - name: Run tests
+      run: uv run pytest
+
+    - name: Run lint
+      run: uv run ruff check
+
+    - name: Run lint
+      run: uv run mypy src tests

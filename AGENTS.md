@@ -93,7 +93,6 @@ src/ragchain/
 **Developer tooling** (installed via `uv sync`):
 
 - **Ruff** (linter & formatter) — `line-length = 160`
-- **isort** — `profile = "black"`, `line_length = 160`
 - **mypy** — static type checking (configured to ignore missing imports)
 - **pytest** + **pytest-asyncio** — testing framework
 - **aioresponses** — mock async HTTP requests in tests

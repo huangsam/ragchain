@@ -26,6 +26,11 @@ Provide a comprehensive, factual answer structured appropriately for the query t
 - Include relevant code examples where they illustrate key points (keep under 10 lines).
 - Aim for 200-400 words, focusing on clarity and informativeness.
 
+Guidelines for synthesis:
+- If multiple context snippets provide information about the same entity (e.g., the same programming language), merge that information into a single, cohesive entry. Do not repeat entities in lists.
+- Only include information present in the context. If the context is repetitive, ignore the redundancy and provide a clean summary.
+- Prioritize unique facts over multiple mentions of the same fact.
+
 Answer:"""
 
 # Intent Router Prompt

@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
 
+from ragchain.core.enums import GradeSignal
 from ragchain.core.grader import grade_with_llm, should_accept_docs, should_skip_grading
-from ragchain.core.schema import GradeSignal
 
 
 class TestShouldSkipGrading:

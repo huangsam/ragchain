@@ -6,10 +6,10 @@ import time
 from langchain_ollama import OllamaLLM
 from langgraph.graph import END, StateGraph
 
+from ragchain.core.enums import GradeSignal, Intent, IntentRoutingState, Node
 from ragchain.core.grader import grade_with_llm, should_accept_docs, should_skip_grading
 from ragchain.core.rag import get_ensemble_retriever
 from ragchain.core.router import intent_router
-from ragchain.core.schema import GradeSignal, Intent, IntentRoutingState, Node
 from ragchain.data.config import config
 from ragchain.prompts import QUERY_REWRITER_PROMPT
 

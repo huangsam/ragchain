@@ -5,7 +5,7 @@ import time
 
 from langchain_ollama import OllamaLLM
 
-from ragchain.core.schema import Intent, IntentRoutingState
+from ragchain.core.enums import Intent, IntentRoutingState
 from ragchain.data.config import config
 from ragchain.data.utils import log_timing, log_with_prefix
 from ragchain.prompts import INTENT_ROUTER_PROMPT

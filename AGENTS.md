@@ -18,7 +18,7 @@ src/ragchain/
 │   ├── graph.py          # LangGraph intent-based adaptive RAG orchestration
 │   ├── router.py         # Intent routing logic
 │   ├── grader.py         # Document relevance grading
-│   └── schema.py         # Shared enums and TypedDicts
+│   └── enums.py          # Shared enums and TypedDicts
 ├── data/                 # Data handling and configuration
 │   ├── config.py         # Centralized configuration management (singleton)
 │   ├── loaders.py        # Document loaders for Wikipedia and other sources

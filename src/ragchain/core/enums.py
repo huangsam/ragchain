@@ -1,4 +1,4 @@
-"""Shared schemas and enums for the RAG pipeline."""
+"""Shared enums and types for the RAG pipeline."""
 
 from enum import Enum
 

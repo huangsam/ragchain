@@ -30,10 +30,6 @@ services:
       # Performance optimization flags
       - ENABLE_GRADING=true
       - ENABLE_INTENT_ROUTING=true
-      # Cache HuggingFace models to a volume so we don't re-download on every restart
-      - HUGGINGFACE_HUB_CACHE=/data/hf_cache
-    volumes:
-      - hf_cache:/data/hf_cache
     # Map to a different host port to avoid conflicts with local dev servers
     ports:
       - "8003:8000"
@@ -61,4 +57,3 @@ services:
 
 volumes:
   chroma_demo_data:
-  hf_cache:

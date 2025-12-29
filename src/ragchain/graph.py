@@ -20,7 +20,7 @@ from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["IntentRoutingState", "Intent", "GradeSignal", "rag_graph"]
+__all__ = ["IntentRoutingState", "Intent", "Node", "GradeSignal", "rag_graph"]
 
 
 class Intent(str, Enum):
@@ -29,6 +29,15 @@ class Intent(str, Enum):
     FACT = "FACT"
     CONCEPT = "CONCEPT"
     COMPARISON = "COMPARISON"
+
+
+class Node(str, Enum):
+    """Graph node names."""
+
+    INTENT_ROUTER = "intent_router"
+    ADAPTIVE_RETRIEVER = "adaptive_retriever"
+    RETRIEVAL_GRADER = "retrieval_grader"
+    QUERY_REWRITER = "query_rewriter"
 
 
 class IntentRoutingState(TypedDict):
@@ -151,17 +160,17 @@ def should_retry(state: IntentRoutingState) -> bool:
 workflow = StateGraph(IntentRoutingState)
 
 # Add nodes
-workflow.add_node("intent_router", intent_router)
-workflow.add_node("adaptive_retriever", adaptive_retriever)
-workflow.add_node("retrieval_grader", retrieval_grader)
-workflow.add_node("query_rewriter", query_rewriter)
+workflow.add_node(Node.INTENT_ROUTER, intent_router)
+workflow.add_node(Node.ADAPTIVE_RETRIEVER, adaptive_retriever)
+workflow.add_node(Node.RETRIEVAL_GRADER, retrieval_grader)
+workflow.add_node(Node.QUERY_REWRITER, query_rewriter)
 
 # Set entry point
-workflow.set_entry_point("intent_router")
+workflow.set_entry_point(Node.INTENT_ROUTER)
 
 # Add edges
-workflow.add_edge("intent_router", "adaptive_retriever")
-workflow.add_edge("adaptive_retriever", "retrieval_grader")
+workflow.add_edge(Node.INTENT_ROUTER, Node.ADAPTIVE_RETRIEVER)
+workflow.add_edge(Node.ADAPTIVE_RETRIEVER, Node.RETRIEVAL_GRADER)
 
 
 # Conditional edge: if grade is YES or max retries reached, end; otherwise rewrite and retry
@@ -181,13 +190,13 @@ def should_rewrite(state: IntentRoutingState) -> str:
 
 
 workflow.add_conditional_edges(
-    "retrieval_grader",
+    Node.RETRIEVAL_GRADER,
     should_rewrite,
-    {"END": END, "query_rewriter": "query_rewriter"},
+    {"END": END, Node.QUERY_REWRITER: Node.QUERY_REWRITER},
 )
 
 # After rewrite, retrieve again, then grade again
-workflow.add_edge("query_rewriter", "adaptive_retriever")
+workflow.add_edge(Node.QUERY_REWRITER, Node.ADAPTIVE_RETRIEVER)
 
 # Compile the graph
 rag_graph = workflow.compile()

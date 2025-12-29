@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
 
-from ragchain.graph import _is_simple_query, intent_router
+from ragchain.graph import Intent, Node, _is_simple_query, intent_router
 
 
 def test_is_simple_query():
@@ -20,10 +20,10 @@ def test_intent_router_fast_path(mock_config):
     """Test intent router fast path for simple queries."""
     mock_config.enable_intent_routing = False
 
-    state = {"query": "What is Python?", "intent": "CONCEPT"}
+    state = {"query": "What is Python?", "intent": Intent.CONCEPT}
     result = intent_router(state)
 
-    assert result["intent"] == "CONCEPT"
+    assert result["intent"] == Intent.CONCEPT
     assert "original_query" in result
 
 
@@ -39,10 +39,10 @@ def test_intent_router_with_llm(mock_llm_class, mock_config):
     mock_llm.invoke.return_value = "FACT"
     mock_llm_class.return_value = mock_llm
 
-    state = {"query": "What are the top 10 languages?", "intent": "CONCEPT"}
+    state = {"query": "What are the top 10 languages?", "intent": Intent.CONCEPT}
     result = intent_router(state)
 
-    assert result["intent"] == "FACT"
+    assert result["intent"] == Intent.FACT
     assert result["original_query"] == "What are the top 10 languages?"
     mock_llm.invoke.assert_called_once()
 
@@ -57,14 +57,22 @@ def test_adaptive_retriever(mock_get_retriever):
     from ragchain.graph import adaptive_retriever
 
     # Test FACT intent
-    state = {"query": "What are top languages?", "intent": "FACT", "retrieved_docs": []}
+    state = {"query": "What are top languages?", "intent": Intent.FACT, "retrieved_docs": []}
     result = adaptive_retriever(state)
 
     assert len(result["retrieved_docs"]) == 1
     mock_get_retriever.assert_called_with(k=8, bm25_weight=0.7, chroma_weight=0.3)
 
     # Test CONCEPT intent
-    state["intent"] = "CONCEPT"
+    state["intent"] = Intent.CONCEPT
     result = adaptive_retriever(state)
 
     mock_get_retriever.assert_called_with(k=8, bm25_weight=0.3, chroma_weight=0.7)
+
+
+def test_node_enum():
+    """Test Node enum values."""
+    assert Node.INTENT_ROUTER == "intent_router"
+    assert Node.ADAPTIVE_RETRIEVER == "adaptive_retriever"
+    assert Node.RETRIEVAL_GRADER == "retrieval_grader"
+    assert Node.QUERY_REWRITER == "query_rewriter"

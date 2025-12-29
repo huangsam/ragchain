@@ -114,20 +114,20 @@ def should_rewrite(state: IntentRoutingState) -> str:
     # If retrieval passed, we're done
     if state["retrieval_grade"] == GradeSignal.YES:
         logger.info("[graph] Retrieval passed, ending")
-        return "END"
+        return END
     # If we've already retried once, accept the current docs and end
     if state.get("retry_count", 0) >= 1:
         logger.info(f"[graph] Max retries reached ({state.get('retry_count', 0)}), ending")
-        return "END"
+        return END
     # Otherwise, try rewriting
     logger.info("[graph] Retrieval failed, will rewrite query")
-    return "query_rewriter"
+    return Node.QUERY_REWRITER
 
 
 workflow.add_conditional_edges(
     Node.RETRIEVAL_GRADER,
     should_rewrite,
-    {"END": END, Node.QUERY_REWRITER: Node.QUERY_REWRITER},
+    {END: END, Node.QUERY_REWRITER: Node.QUERY_REWRITER},
 )
 
 # After rewrite, retrieve again, then grade again

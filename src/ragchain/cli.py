@@ -1,7 +1,6 @@
 """CLI for ragchain."""
 
 import asyncio
-import logging
 
 import click
 import httpx
@@ -9,12 +8,6 @@ import httpx
 from ragchain.core.rag import ingest_documents
 from ragchain.data.config import config
 from ragchain.data.loaders import load_tiobe_languages, load_wikipedia_pages
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
 
 
 @click.group()

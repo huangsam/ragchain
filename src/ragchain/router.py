@@ -27,22 +27,21 @@ Query: {query}
 Answer with only the category name (FACT, CONCEPT, or COMPARISON):"""
 
 # Helps with grading the relevance of retrieved documents
-RETRIEVAL_GRADER_PROMPT = """You are a grader for retrieval quality.
+RETRIEVAL_GRADER_PROMPT = """You are a grader for retrieval quality. Judge if these documents are relevant to the query.
 
 Query: {query}
 
 Retrieved Documents:
 {formatted_docs}
 
-Are these documents relevant to the query? They don't need to fully answer it, just be on-topic.
+GRADING RULES:
+1. If ANY document mentions the query topic → ANSWER: YES
+2. If ANY document contains information related to the query → ANSWER: YES
+3. Only answer NO if ALL documents are completely unrelated to the query topic
 
-If the query asks about a programming language or technology, documents about that topic are relevant.
-If the query asks for a list, documents mentioning any items from that domain are relevant.
-If the query asks for comparison, documents about either subject are relevant.
+INSTRUCTION: This is a lenient grading. Most queries should receive YES unless the documents are obviously wrong.
 
-Be lenient - if documents are even partially on-topic, say YES.
-
-Answer with only YES or NO:"""
+Answer with ONLY the word YES or NO, nothing else:"""
 
 # Helps with rewriting queries to be more explicit
 QUERY_REWRITER_PROMPT = """Your previous retrieval for this query didn't return relevant documents:

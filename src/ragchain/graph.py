@@ -2,7 +2,7 @@
 
 import logging
 import time
-from typing import List, Literal
+from enum import Enum
 
 from langchain_core.documents import Document
 from langchain_ollama import OllamaLLM
@@ -10,17 +10,25 @@ from langgraph.graph import END, StateGraph
 from typing_extensions import TypedDict
 
 from ragchain.config import config
+from ragchain.grader import GradeSignal, grade_with_llm, should_accept_docs, should_skip_grading
 from ragchain.rag import get_ensemble_retriever
 from ragchain.router import (
     INTENT_ROUTER_PROMPT,
     QUERY_REWRITER_PROMPT,
-    RETRIEVAL_GRADER_PROMPT,
 )
 from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["IntentRoutingState", "rag_graph"]
+__all__ = ["IntentRoutingState", "Intent", "GradeSignal", "rag_graph"]
+
+
+class Intent(str, Enum):
+    """Query intent classification."""
+
+    FACT = "FACT"
+    CONCEPT = "CONCEPT"
+    COMPARISON = "COMPARISON"
 
 
 class IntentRoutingState(TypedDict):
@@ -28,9 +36,9 @@ class IntentRoutingState(TypedDict):
 
     query: str
     original_query: str  # Preserve original query for rewriting
-    intent: Literal["FACT", "CONCEPT", "COMPARISON"]
+    intent: Intent
     retrieved_docs: list[Document]
-    retrieval_grade: Literal["YES", "NO"]
+    retrieval_grade: GradeSignal
     rewritten_query: str
     retry_count: int
 
@@ -50,7 +58,7 @@ def intent_router(state: IntentRoutingState) -> IntentRoutingState:
     # Fast-path: Skip LLM for simple queries if routing is disabled
     if not config.enable_intent_routing or _is_simple_query(state["query"]):
         log_with_prefix(logger, logging.INFO, "intent_router", "Using fast-path, defaulting to CONCEPT")
-        return {**state, "intent": "CONCEPT", "original_query": state["query"]}
+        return {**state, "intent": Intent.CONCEPT, "original_query": state["query"]}
 
     llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)
 
@@ -58,8 +66,8 @@ def intent_router(state: IntentRoutingState) -> IntentRoutingState:
     response = llm.invoke(prompt).strip().upper()
 
     # Extract first valid intent
-    valid_intents: list[Literal["FACT", "CONCEPT", "COMPARISON"]] = ["FACT", "CONCEPT", "COMPARISON"]
-    intent_value: Literal["FACT", "CONCEPT", "COMPARISON"] = next((i for i in valid_intents if i in response), "CONCEPT")
+    valid_intents: list[Intent] = [Intent.FACT, Intent.CONCEPT, Intent.COMPARISON]
+    intent_value: Intent = next((i for i in valid_intents if i.value in response), Intent.CONCEPT)
 
     log_timing(logger, "intent_router", start, f"Classified as {intent_value}")
 
@@ -74,9 +82,9 @@ def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
     query = state.get("rewritten_query") or state["query"]
 
     weights = {
-        "FACT": (0.7, 0.3),  # Keyword-heavy for lists/rankings
-        "CONCEPT": (0.3, 0.7),  # Semantic-heavy for natural questions
-        "COMPARISON": (0.4, 0.6),  # Semantic-leaning for comparing entities
+        Intent.FACT: (0.7, 0.3),  # Keyword-heavy for lists/rankings
+        Intent.CONCEPT: (0.3, 0.7),  # Semantic-heavy for natural questions
+        Intent.COMPARISON: (0.4, 0.6),  # Semantic-leaning for comparing entities
     }
     bm25_weight, chroma_weight = weights.get(state["intent"], (0.5, 0.5))
     logger.info(f"[adaptive_retriever] Using weights: BM25={bm25_weight}, Chroma={chroma_weight}")
@@ -92,71 +100,24 @@ def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
     return {**state, "retrieved_docs": docs}
 
 
-def _should_skip_grading(state: IntentRoutingState) -> bool:
-    """Determine if grading should be skipped.
-
-    Args:
-        state: Current graph state.
-
-    Returns:
-        True if grading should be skipped.
-    """
-    return not config.enable_grading
-
-
-def _should_accept_docs(state: IntentRoutingState) -> bool:
-    """Determine if documents should be auto-accepted.
-
-    Args:
-        state: Current graph state.
-
-    Returns:
-        True if docs should be accepted without grading.
-    """
-    return not state["retrieved_docs"] or state.get("retry_count", 0) > 0
-
-
-def _grade_with_llm(query: str, docs: List[Document]) -> Literal["YES", "NO"]:
-    """Grade document relevance using LLM.
-
-    Args:
-        query: The search query.
-        docs: Retrieved documents to grade.
-
-    Returns:
-        "YES" if relevant, "NO" if not.
-    """
-    llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)
-
-    formatted_docs = "\n\n".join([f"Doc {i}: {doc.page_content[:200]}" for i, doc in enumerate(docs)])
-    prompt = RETRIEVAL_GRADER_PROMPT.format(query=query, formatted_docs=formatted_docs)
-    response = llm.invoke(prompt).strip().upper()
-
-    # More lenient grading: only reject if explicitly negative
-    negative_indicators = ["NO", "NOT RELEVANT", "INSUFFICIENT", "IRRELEVANT", "DOES NOT"]
-    is_negative = any(indicator in response for indicator in negative_indicators)
-
-    return "NO" if is_negative else "YES"
-
-
 def retrieval_grader(state: IntentRoutingState) -> IntentRoutingState:
     """Grade if retrieved docs answer the query."""
     start = time.time()
     logger.info(f"[retrieval_grader] Starting with {len(state['retrieved_docs'])} documents")
 
     # Skip grading if disabled (fast-path)
-    if _should_skip_grading(state):
+    if should_skip_grading(config.enable_grading):
         logger.info("[retrieval_grader] Grading disabled, auto-accepting docs")
-        return {**state, "retrieval_grade": "YES"}
+        return {**state, "retrieval_grade": GradeSignal.YES}
 
     # Auto-accept if no docs or already retried
-    if _should_accept_docs(state):
+    if should_accept_docs(state["retrieved_docs"], state.get("retry_count", 0)):
         reason = "No documents to grade" if not state["retrieved_docs"] else "Already retried once"
         logger.info(f"[retrieval_grader] {reason}, accepting docs to avoid infinite loop")
-        return {**state, "retrieval_grade": "YES"}
+        return {**state, "retrieval_grade": GradeSignal.YES}
 
     # Grade with LLM
-    grade_value = _grade_with_llm(state["query"], state["retrieved_docs"])
+    grade_value = grade_with_llm(state["query"], state["retrieved_docs"])
     logger.info(f"[retrieval_grader] Grade: {grade_value} in {time.time() - start:.2f}s")
 
     return {**state, "retrieval_grade": grade_value}
@@ -183,7 +144,7 @@ def query_rewriter(state: IntentRoutingState) -> IntentRoutingState:
 
 def should_retry(state: IntentRoutingState) -> bool:
     """Decide if we should retry retrieval."""
-    return state["retrieval_grade"] == "NO" and state.get("retry_count", 0) < 1
+    return state["retrieval_grade"] == GradeSignal.NO and state.get("retry_count", 0) < 1
 
 
 # Build the graph
@@ -207,7 +168,7 @@ workflow.add_edge("adaptive_retriever", "retrieval_grader")
 def should_rewrite(state: IntentRoutingState) -> str:
     """Determine if we should continue retrying or end."""
     # If retrieval passed, we're done
-    if state["retrieval_grade"] == "YES":
+    if state["retrieval_grade"] == GradeSignal.YES:
         logger.info("[graph] Retrieval passed, ending")
         return "END"
     # If we've already retried once, accept the current docs and end

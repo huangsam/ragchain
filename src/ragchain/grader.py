@@ -66,6 +66,8 @@ def grade_with_llm(query: str, docs: List[Document]) -> GradeSignal:
 
         # Extract first word to be robust to extra text
         first_word = response.split()[0] if response else ""
+        # Clean punctuation from the first word
+        first_word = "".join(c for c in first_word if c.isalnum())
 
         logger.debug(f"[grade_with_llm] Raw response: {response!r}")
         result = GradeSignal.YES if first_word == GradeSignal.YES.value else GradeSignal.NO

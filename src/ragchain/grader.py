@@ -1,23 +1,15 @@
 """Document relevance grading for RAG pipeline."""
 
 import logging
-from enum import Enum
 from typing import List
 
 from langchain_core.documents import Document
 from langchain_ollama import OllamaLLM
 
 from ragchain.config import config
-from ragchain.router import RETRIEVAL_GRADER_PROMPT
+from ragchain.router import RETRIEVAL_GRADER_PROMPT, GradeSignal
 
 logger = logging.getLogger(__name__)
-
-
-class GradeSignal(str, Enum):
-    """Relevance grading signal for retrieved documents."""
-
-    YES = "YES"
-    NO = "NO"
 
 
 def should_skip_grading(enable_grading: bool) -> bool:

@@ -1,5 +1,58 @@
 """Router and grader prompts for intent-based adaptive RAG."""
 
+import logging
+import time
+from enum import Enum
+
+from langchain_core.documents import Document
+from langchain_ollama import OllamaLLM
+from typing_extensions import TypedDict
+
+from ragchain.config import config
+from ragchain.utils import log_timing, log_with_prefix
+
+logger = logging.getLogger(__name__)
+
+__all__ = [
+    "RAG_ANSWER_TEMPLATE",
+    "INTENT_ROUTER_PROMPT",
+    "RETRIEVAL_GRADER_PROMPT",
+    "QUERY_REWRITER_PROMPT",
+    "Intent",
+    "IntentRoutingState",
+    "GradeSignal",
+    "intent_router",
+    "_is_simple_query",
+]
+
+
+class Intent(str, Enum):
+    """Query intent classification."""
+
+    FACT = "FACT"
+    CONCEPT = "CONCEPT"
+    COMPARISON = "COMPARISON"
+
+
+class GradeSignal(str, Enum):
+    """Relevance grading signal for retrieved documents."""
+
+    YES = "YES"
+    NO = "NO"
+
+
+class IntentRoutingState(TypedDict):
+    """State for the intent routing RAG graph."""
+
+    query: str
+    original_query: str  # Preserve original query for rewriting
+    intent: Intent
+    retrieved_docs: list[Document]  # Wait, Document is not imported here
+    retrieval_grade: GradeSignal  # Not imported
+    rewritten_query: str
+    retry_count: int
+
+
 # Helps with answering open-ended prompts
 RAG_ANSWER_TEMPLATE = """Answer the question based on the following context:
 
@@ -54,3 +107,34 @@ Examples:
 - "Compare Go and Rust" → "Go versus Rust comparison features differences systems programming"
 
 Rewritten Query:"""
+
+
+def _is_simple_query(query: str) -> bool:
+    """Fast heuristic to detect simple queries that can skip intent routing."""
+    query_lower = query.lower()
+    simple_patterns = ["what is", "define", "explain", "who is", "when was", "where is", "how does", "why is"]
+    return any(pattern in query_lower for pattern in simple_patterns) and len(query.split()) <= 8
+
+
+def intent_router(state: IntentRoutingState) -> IntentRoutingState:
+    """Route query to intent category."""
+    start = time.time()
+    log_with_prefix(logger, logging.INFO, "intent_router", f"Starting for query: {state['query'][:50]}...")
+
+    # Fast-path: Skip LLM for simple queries if routing is disabled
+    if not config.enable_intent_routing or _is_simple_query(state["query"]):
+        log_with_prefix(logger, logging.INFO, "intent_router", "Using fast-path, defaulting to CONCEPT")
+        return {**state, "intent": Intent.CONCEPT, "original_query": state["query"]}
+
+    llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)
+
+    prompt = INTENT_ROUTER_PROMPT.format(query=state["query"])
+    response = llm.invoke(prompt).strip().upper()
+
+    # Extract first valid intent
+    valid_intents: list[Intent] = [Intent.FACT, Intent.CONCEPT, Intent.COMPARISON]
+    intent_value: Intent = next((i for i in valid_intents if i.value in response), Intent.CONCEPT)
+
+    log_timing(logger, "intent_router", start, f"Classified as {intent_value}")
+
+    return {**state, "intent": intent_value, "original_query": state["query"]}

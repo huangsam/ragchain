@@ -17,7 +17,6 @@ __all__ = [
     "RETRIEVAL_GRADER_PROMPT",
     "QUERY_REWRITER_PROMPT",
     "intent_router",
-    "_is_simple_query",
 ]
 
 
@@ -77,20 +76,17 @@ Examples:
 Rewritten Query:"""
 
 
-def _is_simple_query(query: str) -> bool:
-    """Fast heuristic to detect simple queries that can skip intent routing."""
-    query_lower = query.lower()
-    simple_patterns = ["what is", "define", "explain", "who is", "when was", "where is", "how does", "why is"]
-    return any(pattern in query_lower for pattern in simple_patterns) and len(query.split()) <= 8
-
-
 def intent_router(state: IntentRoutingState) -> IntentRoutingState:
     """Route query to intent category."""
     start = time.time()
     log_with_prefix(logger, logging.INFO, "intent_router", f"Starting for query: {state['query'][:50]}...")
 
     # Fast-path: Skip LLM for simple queries if routing is disabled
-    if not config.enable_intent_routing or _is_simple_query(state["query"]):
+    query_lower = state["query"].lower()
+    simple_patterns = ["what is", "define", "explain", "who is", "when was", "where is", "how does", "why is"]
+    is_simple = any(pattern in query_lower for pattern in simple_patterns) and len(state["query"].split()) <= 8
+
+    if not config.enable_intent_routing or is_simple:
         log_with_prefix(logger, logging.INFO, "intent_router", "Using fast-path, defaulting to CONCEPT")
         return {**state, "intent": Intent.CONCEPT, "original_query": state["query"]}
 

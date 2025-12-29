@@ -2,16 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-from ragchain.router import _is_simple_query, intent_router
+from ragchain.router import intent_router
 from ragchain.schema import Intent
-
-
-def test_is_simple_query():
-    """Test simple query detection."""
-    assert _is_simple_query("What is Python?") is True
-    assert _is_simple_query("Explain recursion") is True
-    assert _is_simple_query("Compare Python and Java") is False  # Too long
-    assert _is_simple_query("List programming languages") is False  # Not simple pattern
 
 
 @patch("ragchain.router.config")

@@ -8,7 +8,10 @@ __all__ = [
 ]
 
 
-# Helps with answering open-ended prompts
+# RAG Answer Template
+# Purpose: Generate natural language answers from retrieved context
+# Usage: Used in the API endpoint to provide final answers to user queries
+# Parameters: {context} - retrieved documents, {question} - user query
 RAG_ANSWER_TEMPLATE = """Answer the question based on the following context:
 
 Context:
@@ -18,7 +21,11 @@ Question: {question}
 
 Answer:"""
 
-# Helps with classification for one category
+# Intent Router Prompt
+# Purpose: Classify user queries into intent categories for adaptive retrieval
+# Usage: Used in intent_router() to determine BM25/Chroma weight ratios
+# Categories: FACT (keyword-heavy), CONCEPT (balanced), COMPARISON (semantic-heavy)
+# Parameters: {query} - user query to classify
 INTENT_ROUTER_PROMPT = """Classify this query into ONE category:
 
 FACT: Asks for a specific list, ranking, or enumerated facts
@@ -34,7 +41,11 @@ Query: {query}
 
 Answer with only the category name (FACT, CONCEPT, or COMPARISON):"""
 
-# Helps with grading the relevance of retrieved documents
+# Retrieval Grader Prompt
+# Purpose: Evaluate if retrieved documents are relevant to the query
+# Usage: Used in retrieval_grader() to decide whether to proceed or rewrite query
+# Logic: Lenient grading - YES if any document mentions topic, NO only if all unrelated
+# Parameters: {query} - user query, {formatted_docs} - retrieved documents as formatted text
 RETRIEVAL_GRADER_PROMPT = """You are a grader for retrieval quality. Judge if these documents are relevant to the query.
 
 Query: {query}
@@ -51,7 +62,11 @@ INSTRUCTION: This is a lenient grading. Most queries should receive YES unless t
 
 Answer with ONLY the word YES or NO, nothing else:"""
 
-# Helps with rewriting queries to be more explicit
+# Query Rewriter Prompt
+# Purpose: Enhance queries that failed retrieval to improve document matching
+# Usage: Used in query_rewriter() when retrieval_grader() returns NO
+# Strategy: Add specific keywords and context to make queries more searchable
+# Parameters: {query} - original query that failed retrieval
 QUERY_REWRITER_PROMPT = """Your previous retrieval for this query didn't return relevant documents:
 Original Query: {query}
 

@@ -6,9 +6,9 @@ import logging
 import click
 import httpx
 
-from ragchain.config import config
-from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
-from ragchain.rag import ingest_documents
+from ragchain.core.rag import ingest_documents
+from ragchain.data.config import config
+from ragchain.data.loaders import load_tiobe_languages, load_wikipedia_pages
 
 # Configure logging
 logging.basicConfig(
@@ -78,7 +78,7 @@ def search(query, k):
     """
 
     async def _search():
-        from ragchain.rag import search as search_func
+        from ragchain.core.rag import search as search_func
 
         result = await search_func(query, k=k)
         click.echo(f"Query: {result['query']}")

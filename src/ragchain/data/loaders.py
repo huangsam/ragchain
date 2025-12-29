@@ -9,7 +9,7 @@ from aiohttp import ClientTimeout
 from bs4 import BeautifulSoup
 from langchain_core.documents import Document
 
-from ragchain.utils import log_with_prefix
+from ragchain.data.utils import log_with_prefix
 
 logger = logging.getLogger(__name__)
 

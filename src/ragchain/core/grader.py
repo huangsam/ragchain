@@ -6,9 +6,9 @@ from typing import List
 from langchain_core.documents import Document
 from langchain_ollama import OllamaLLM
 
-from ragchain.config import config
+from ragchain.core.schema import GradeSignal
+from ragchain.data.config import config
 from ragchain.prompts import RETRIEVAL_GRADER_PROMPT
-from ragchain.schema import GradeSignal
 
 logger = logging.getLogger(__name__)
 

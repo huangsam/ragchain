@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
 
-from ragchain.grader import grade_with_llm, should_accept_docs, should_skip_grading
-from ragchain.schema import GradeSignal
+from ragchain.core.grader import grade_with_llm, should_accept_docs, should_skip_grading
+from ragchain.core.schema import GradeSignal
 
 
 class TestShouldSkipGrading:
@@ -41,7 +41,7 @@ class TestShouldAcceptDocs:
 class TestGradeWithLLM:
     """Test grade_with_llm function."""
 
-    @patch("ragchain.grader.OllamaLLM")
+    @patch("ragchain.core.grader.OllamaLLM")
     def test_grade_yes_response(self, mock_llm_class):
         """Test grading returns YES for relevant response."""
         # Mock LLM to return YES
@@ -55,7 +55,7 @@ class TestGradeWithLLM:
         assert result == GradeSignal.YES
         mock_llm.invoke.assert_called_once()
 
-    @patch("ragchain.grader.OllamaLLM")
+    @patch("ragchain.core.grader.OllamaLLM")
     def test_grade_no_response(self, mock_llm_class):
         """Test grading returns NO for irrelevant response."""
         # Mock LLM to return NO
@@ -69,7 +69,7 @@ class TestGradeWithLLM:
         assert result == GradeSignal.NO
         mock_llm.invoke.assert_called_once()
 
-    @patch("ragchain.grader.OllamaLLM")
+    @patch("ragchain.core.grader.OllamaLLM")
     def test_grade_yes_with_extra_text(self, mock_llm_class):
         """Test grading extracts YES from response with extra text."""
         # Mock LLM to return YES with extra text
@@ -82,7 +82,7 @@ class TestGradeWithLLM:
 
         assert result == GradeSignal.YES
 
-    @patch("ragchain.grader.OllamaLLM")
+    @patch("ragchain.core.grader.OllamaLLM")
     def test_grade_no_with_extra_text(self, mock_llm_class):
         """Test grading extracts NO from response with extra text."""
         # Mock LLM to return NO with extra text
@@ -95,7 +95,7 @@ class TestGradeWithLLM:
 
         assert result == GradeSignal.NO
 
-    @patch("ragchain.grader.OllamaLLM")
+    @patch("ragchain.core.grader.OllamaLLM")
     def test_grade_handles_exception(self, mock_llm_class):
         """Test grading returns NO on LLM exception."""
         # Mock LLM to raise exception
@@ -108,7 +108,7 @@ class TestGradeWithLLM:
 
         assert result == GradeSignal.NO
 
-    @patch("ragchain.grader.OllamaLLM")
+    @patch("ragchain.core.grader.OllamaLLM")
     def test_grade_empty_response(self, mock_llm_class):
         """Test grading handles empty LLM response."""
         # Mock LLM to return empty string
@@ -121,7 +121,7 @@ class TestGradeWithLLM:
 
         assert result == GradeSignal.NO
 
-    @patch("ragchain.grader.OllamaLLM")
+    @patch("ragchain.core.grader.OllamaLLM")
     def test_grade_multiple_docs(self, mock_llm_class):
         """Test grading with multiple documents."""
         # Mock LLM to return YES
@@ -143,7 +143,7 @@ class TestGradeWithLLM:
         assert "Doc 1:" in call_args
         assert "Doc 2:" in call_args
 
-    @patch("ragchain.grader.OllamaLLM")
+    @patch("ragchain.core.grader.OllamaLLM")
     def test_grade_long_doc_content_truncated(self, mock_llm_class):
         """Test that long document content is truncated in prompt."""
         # Mock LLM to return YES

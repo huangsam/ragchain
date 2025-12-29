@@ -2,7 +2,7 @@
 
 import pytest
 
-from ragchain.loaders import load_tiobe_languages
+from ragchain.data.loaders import load_tiobe_languages
 
 
 @pytest.mark.asyncio

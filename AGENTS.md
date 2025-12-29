@@ -12,24 +12,28 @@ A compact tree view of the repository layout:
 src/ragchain/
 ├── api.py                # FastAPI app (/health, /ingest, /search, /ask)
 ├── cli.py                # Click-based CLI (serve, ingest, search, ask)
-├── config.py             # Centralized configuration management (singleton)
-├── loaders.py            # Document loaders for Wikipedia and other sources
-├── rag.py                # LangChain RAG pipeline (embedding, chunking, retrieval, generation)
-├── graph.py              # LangGraph intent-based adaptive RAG orchestration
-├── router.py             # Intent routing logic
 ├── prompts.py            # LLM prompt templates
-├── utils.py              # Utility functions for logging, timing, and other helpers
+├── core/                 # Core RAG functionality
+│   ├── rag.py            # LangChain RAG pipeline (embedding, chunking, retrieval, generation)
+│   ├── graph.py          # LangGraph intent-based adaptive RAG orchestration
+│   ├── router.py         # Intent routing logic
+│   ├── grader.py         # Document relevance grading
+│   └── schema.py         # Shared enums and TypedDicts
+├── data/                 # Data handling and configuration
+│   ├── config.py         # Centralized configuration management (singleton)
+│   ├── loaders.py        # Document loaders for Wikipedia and other sources
+│   └── utils.py          # Utility functions for logging, timing, and other helpers
 └── __init__.py           # Package initialization
 ```
 
 **Key architectural notes:**
 
-- **`config.py`** provides centralized configuration management:
+- **`data/config.py`** provides centralized configuration management:
   - Singleton `Config` class for environment variable handling
   - Typed attributes for Ollama models, Chroma settings, and feature flags
   - Used throughout the codebase for consistent configuration access
 
-- **`rag.py`** is the core retrieval layer:
+- **`core/rag.py`** is the core retrieval layer:
   - `get_embedder()` — Creates OllamaEmbeddings with `bge-m3` model for 1024-dimensional vectors with 8k context
   - `get_vector_store()` — Returns Chroma (local persistent or remote HTTP) with LangChain integration
   - `ingest_documents()` — Fetches documents → parses → chunks recursively → embeds → upserts to vector store
@@ -37,7 +41,7 @@ src/ragchain/
   - `EnsembleRetriever` — Custom retriever implementing Reciprocal Rank Fusion (RRF) with configurable weights
   - `get_ensemble_retriever()` — Factory with intent-specific weight support
 
-- **`graph.py`** is the agentic orchestrator using LangGraph:
+- **`core/graph.py`** is the agentic orchestrator using LangGraph:
   - `IntentRoutingState` — Typed state management for the RAG graph
   - `intent_router()` — LLM-based query classification (FACT/CONCEPT/COMPARISON)
   - `adaptive_retriever()` — Retrieves with intent-specific BM25/Chroma weights
@@ -51,7 +55,7 @@ src/ragchain/
   - `RETRIEVAL_GRADER_PROMPT` — Document relevance validation
   - `QUERY_REWRITER_PROMPT` — Query enhancement
 
-- **`loaders.py`** provides document loading utilities:
+- **`data/loaders.py`** provides document loading utilities:
   - Wikipedia article fetching (via built-in Wikipedia API or custom parsers)
   - Extensible for other sources (local files, APIs, etc.)
 
@@ -63,7 +67,7 @@ src/ragchain/
 
 - **`cli.py`** provides Click-based commands for ingest, search, query, and stack management
 
-- **`utils.py`** provides logger helpers to simplify the monitoring experience, including:
+- **`data/utils.py`** provides logger helpers to simplify the monitoring experience, including:
   - `log_with_prefix()` — Logs messages with a consistent prefix for easier filtering
   - `log_timing()` — Measures and logs the duration of operations
 

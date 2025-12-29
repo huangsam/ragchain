@@ -2,11 +2,11 @@
 
 from unittest.mock import MagicMock, patch
 
-from ragchain.router import intent_router
-from ragchain.schema import Intent
+from ragchain.core.router import intent_router
+from ragchain.core.schema import Intent
 
 
-@patch("ragchain.router.config")
+@patch("ragchain.core.router.config")
 def test_intent_router_fast_path(mock_config):
     """Test intent router fast path for simple queries."""
     mock_config.enable_intent_routing = False
@@ -18,8 +18,8 @@ def test_intent_router_fast_path(mock_config):
     assert "original_query" in result
 
 
-@patch("ragchain.router.config")
-@patch("ragchain.router.OllamaLLM")
+@patch("ragchain.core.router.config")
+@patch("ragchain.core.router.OllamaLLM")
 def test_intent_router_with_llm(mock_llm_class, mock_config):
     """Test intent router with LLM classification."""
     mock_config.enable_intent_routing = True

@@ -16,8 +16,8 @@ from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from ragchain.config import config
-from ragchain.utils import log_timing, log_with_prefix
+from ragchain.data.config import config
+from ragchain.data.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
 

@@ -8,11 +8,9 @@ from langgraph.graph import END, StateGraph
 
 from ragchain.config import config
 from ragchain.grader import grade_with_llm, should_accept_docs, should_skip_grading
+from ragchain.prompts import QUERY_REWRITER_PROMPT
 from ragchain.rag import get_ensemble_retriever
-from ragchain.router import (
-    QUERY_REWRITER_PROMPT,
-    intent_router,
-)
+from ragchain.router import intent_router
 from ragchain.schema import GradeSignal, Intent, IntentRoutingState, Node
 
 logger = logging.getLogger(__name__)

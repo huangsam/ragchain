@@ -8,8 +8,8 @@ from pydantic import BaseModel, field_validator
 
 from ragchain.config import config
 from ragchain.loaders import load_tiobe_languages, load_wikipedia_pages
+from ragchain.prompts import RAG_ANSWER_TEMPLATE
 from ragchain.rag import ingest_documents, search
-from ragchain.router import RAG_ANSWER_TEMPLATE
 from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)

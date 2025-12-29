@@ -16,7 +16,8 @@ src/ragchain/
 ├── loaders.py            # Document loaders for Wikipedia and other sources
 ├── rag.py                # LangChain RAG pipeline (embedding, chunking, retrieval, generation)
 ├── graph.py              # LangGraph intent-based adaptive RAG orchestration
-├── router.py             # LLM prompts for intent routing and retrieval grading
+├── router.py             # Intent routing logic
+├── prompts.py            # LLM prompt templates
 ├── utils.py              # Utility functions for logging, timing, and other helpers
 └── __init__.py           # Package initialization
 ```
@@ -44,7 +45,8 @@ src/ragchain/
   - `query_rewriter()` — Enhances queries on retrieval failure for automatic retry
   - `rag_graph` — Compiled LangGraph with conditional retry logic
 
-- **`router.py`** contains LLM prompts:
+- **`prompts.py`** contains prompt templates:
+  - `RAG_ANSWER_TEMPLATE` — Answer generation from context
   - `INTENT_ROUTER_PROMPT` — Query classification
   - `RETRIEVAL_GRADER_PROMPT` — Document relevance validation
   - `QUERY_REWRITER_PROMPT` — Query enhancement

@@ -12,9 +12,7 @@ from ragchain.prompts import INTENT_ROUTER_PROMPT
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "intent_router",
-]
+__all__ = ["intent_router"]
 
 
 def intent_router(state: IntentRoutingState) -> IntentRoutingState:

@@ -2,7 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-from ragchain.router import Intent, _is_simple_query, intent_router
+from ragchain.router import _is_simple_query, intent_router
+from ragchain.schema import Intent
 
 
 def test_is_simple_query():

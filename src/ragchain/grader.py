@@ -7,7 +7,8 @@ from langchain_core.documents import Document
 from langchain_ollama import OllamaLLM
 
 from ragchain.config import config
-from ragchain.router import RETRIEVAL_GRADER_PROMPT, GradeSignal
+from ragchain.router import RETRIEVAL_GRADER_PROMPT
+from ragchain.schema import GradeSignal
 
 logger = logging.getLogger(__name__)
 

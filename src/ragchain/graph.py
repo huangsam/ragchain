@@ -2,7 +2,6 @@
 
 import logging
 import time
-from enum import Enum
 
 from langchain_ollama import OllamaLLM
 from langgraph.graph import END, StateGraph
@@ -12,24 +11,13 @@ from ragchain.grader import grade_with_llm, should_accept_docs, should_skip_grad
 from ragchain.rag import get_ensemble_retriever
 from ragchain.router import (
     QUERY_REWRITER_PROMPT,
-    GradeSignal,
-    Intent,
-    IntentRoutingState,
     intent_router,
 )
+from ragchain.schema import GradeSignal, Intent, IntentRoutingState, Node
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["Node", "GradeSignal", "rag_graph"]
-
-
-class Node(str, Enum):
-    """Graph node names."""
-
-    INTENT_ROUTER = "intent_router"
-    ADAPTIVE_RETRIEVER = "adaptive_retriever"
-    RETRIEVAL_GRADER = "retrieval_grader"
-    QUERY_REWRITER = "query_rewriter"
+__all__ = ["rag_graph"]
 
 
 def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:

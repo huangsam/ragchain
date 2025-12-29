@@ -2,13 +2,11 @@
 
 import logging
 import time
-from enum import Enum
 
-from langchain_core.documents import Document
 from langchain_ollama import OllamaLLM
-from typing_extensions import TypedDict
 
 from ragchain.config import config
+from ragchain.schema import Intent, IntentRoutingState
 from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
@@ -18,39 +16,9 @@ __all__ = [
     "INTENT_ROUTER_PROMPT",
     "RETRIEVAL_GRADER_PROMPT",
     "QUERY_REWRITER_PROMPT",
-    "Intent",
-    "IntentRoutingState",
-    "GradeSignal",
     "intent_router",
     "_is_simple_query",
 ]
-
-
-class Intent(str, Enum):
-    """Query intent classification."""
-
-    FACT = "FACT"
-    CONCEPT = "CONCEPT"
-    COMPARISON = "COMPARISON"
-
-
-class GradeSignal(str, Enum):
-    """Relevance grading signal for retrieved documents."""
-
-    YES = "YES"
-    NO = "NO"
-
-
-class IntentRoutingState(TypedDict):
-    """State for the intent routing RAG graph."""
-
-    query: str
-    original_query: str  # Preserve original query for rewriting
-    intent: Intent
-    retrieved_docs: list[Document]  # Wait, Document is not imported here
-    retrieval_grade: GradeSignal  # Not imported
-    rewritten_query: str
-    retry_count: int
 
 
 # Helps with answering open-ended prompts

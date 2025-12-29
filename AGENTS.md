@@ -61,7 +61,6 @@ src/ragchain/
 
 - **`api.py`** exposes FastAPI endpoints:
   - `/health` — Health check
-  - `/ingest` — Ingest documents
   - `/search` — Legacy ensemble search
   - `/ask` — Intent-based adaptive RAG (uses `rag_graph`)
 

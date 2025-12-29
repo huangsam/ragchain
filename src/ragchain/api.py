@@ -6,9 +6,8 @@ import time
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, field_validator
 
-from ragchain.core.rag import ingest_documents, search
+from ragchain.core.rag import search
 from ragchain.data.config import config
-from ragchain.data.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.data.utils import log_timing, log_with_prefix
 from ragchain.prompts import RAG_ANSWER_TEMPLATE
 
@@ -20,24 +19,6 @@ def _handle_endpoint_error(e: Exception, endpoint: str) -> None:
     """Log and raise HTTP exception for endpoint errors."""
     log_with_prefix(logger, logging.ERROR, endpoint, f"Error: {e}", exc_info=True)
     raise HTTPException(status_code=500, detail=str(e))
-
-
-class IngestRequest(BaseModel):
-    """Request schema for document ingestion endpoint.
-
-    Either specify languages list or n_languages to fetch from TIOBE.
-    """
-
-    languages: list[str] | None = None
-    n_languages: int = 10
-
-    @field_validator("n_languages")
-    @classmethod
-    def validate_n_languages(cls, v: int) -> int:
-        """Validate n_languages is within acceptable range."""
-        if v <= 0 or v > 100:
-            raise ValueError("n_languages must be between 1 and 100")
-        return v
 
 
 class SearchRequest(BaseModel):
@@ -66,33 +47,6 @@ class AskRequest(BaseModel):
 async def health():
     """Health check endpoint. Returns API status."""
     return {"status": "ok"}
-
-
-@app.post("/ingest")
-async def ingest(req: IngestRequest):
-    """Ingest programming languages into vector store.
-
-    Fetches Wikipedia articles and stores them in Chroma for semantic search.
-    Returns ingestion result with chunk count.
-    """
-    try:
-        if req.languages:
-            langs = req.languages
-        else:
-            langs = await load_tiobe_languages(req.n_languages)
-
-        if not langs:
-            return {"status": "error", "message": "No languages fetched"}
-
-        docs = await load_wikipedia_pages(langs)
-
-        if not docs:
-            return {"status": "error", "message": "No documents loaded"}
-
-        result = await ingest_documents(docs)
-        return result
-    except Exception as e:
-        _handle_endpoint_error(e, "/ingest")
 
 
 @app.post("/search")

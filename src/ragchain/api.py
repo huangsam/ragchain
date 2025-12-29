@@ -96,7 +96,7 @@ async def ask(req: AskRequest):
 
         log_with_prefix(logger, logging.INFO, "/ask", "Generating answer")
         gen_start = time.time()
-        llm = OllamaLLM(model=req.model, base_url=config.ollama_base_url, temperature=0.7)
+        llm = OllamaLLM(model=req.model, base_url=config.ollama_base_url, temperature=0.3)
 
         prompt = ChatPromptTemplate.from_template(RAG_ANSWER_TEMPLATE)
 

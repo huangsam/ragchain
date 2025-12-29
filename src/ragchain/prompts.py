@@ -19,7 +19,14 @@ Context:
 
 Question: {question}
 
-Answer with a comprehensive response using relevant details and key points:"""
+Provide a comprehensive, factual answer structured appropriately for the query type:
+- For FACT queries (e.g., lists, rankings): Use numbered or bulleted lists with key details.
+- For CONCEPT queries (e.g., explanations): Use sections with headings, definitions, and examples.
+- For COMPARISON queries (e.g., differences): Use side-by-side comparisons, tables if suitable, or structured pros/cons.
+- Include relevant code examples where they illustrate key points (keep under 10 lines).
+- Aim for 200-400 words, focusing on clarity and informativeness.
+
+Answer:"""
 
 # Intent Router Prompt
 # Purpose: Classify user queries into intent categories for adaptive retrieval

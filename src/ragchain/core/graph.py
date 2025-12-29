@@ -50,7 +50,7 @@ def retrieval_grader(state: IntentRoutingState) -> IntentRoutingState:
     logger.info(f"[retrieval_grader] Starting with {len(state['retrieved_docs'])} documents")
 
     # Skip grading if disabled (fast-path)
-    if should_skip_grading(config.enable_grading):
+    if should_skip_grading():
         logger.info("[retrieval_grader] Grading disabled, auto-accepting docs")
         return {**state, "retrieval_grade": GradeSignal.YES}
 

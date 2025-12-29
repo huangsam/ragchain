@@ -13,16 +13,13 @@ from ragchain.prompts import RETRIEVAL_GRADER_PROMPT
 logger = logging.getLogger(__name__)
 
 
-def should_skip_grading(enable_grading: bool) -> bool:
+def should_skip_grading() -> bool:
     """Determine if grading should be skipped.
-
-    Args:
-        enable_grading: Whether grading is enabled in config.
 
     Returns:
         True if grading should be skipped.
     """
-    return not enable_grading
+    return not config.enable_grading
 
 
 def should_accept_docs(retrieved_docs: list[Document], retry_count: int) -> bool:

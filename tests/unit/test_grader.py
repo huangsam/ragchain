@@ -11,13 +11,15 @@ from ragchain.core.grader import grade_with_llm, should_accept_docs, should_skip
 class TestShouldSkipGrading:
     """Test should_skip_grading function."""
 
+    @patch("ragchain.core.grader.config.enable_grading", False)
     def test_should_skip_when_disabled(self):
         """Test that grading is skipped when disabled."""
-        assert should_skip_grading(False) is True
+        assert should_skip_grading() is True
 
+    @patch("ragchain.core.grader.config.enable_grading", True)
     def test_should_not_skip_when_enabled(self):
         """Test that grading is not skipped when enabled."""
-        assert should_skip_grading(True) is False
+        assert should_skip_grading() is False
 
 
 class TestShouldAcceptDocs:

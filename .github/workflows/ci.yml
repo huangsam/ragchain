@@ -26,5 +26,5 @@ jobs:
     - name: Run lint
       run: uv run ruff check
 
-    - name: Run lint
+    - name: Run type hints
       run: uv run mypy src tests

@@ -19,7 +19,7 @@ Context:
 
 Question: {question}
 
-Answer:"""
+Answer with a comprehensive response using relevant details and key points:"""
 
 # Intent Router Prompt
 # Purpose: Classify user queries into intent categories for adaptive retrieval

@@ -30,9 +30,6 @@ ragchain ask "What are the main differences between interpreted and compiled lan
 ragchain ask "Which languages are commonly used for machine learning?"
 ragchain ask "What are the top 10 most popular languages?"
 
-# Ingest a different set of languages
-ragchain ingest --n 10
-
 # Stop the stack
 docker compose --profile demo down -v
 ```

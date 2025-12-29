@@ -5,9 +5,10 @@ services:
       - "8000:8000"
     volumes:
       - chroma_demo_data:/data
-    profiles: ["test", "demo"]
+    profiles: ["test", "demo", "prod"]
     healthcheck:
-      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8000; echo -e \"GET /api/v2/heartbeat HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3; cat <&3 | grep \"200 OK\"'"]
+      # https://cookbook.chromadb.dev/running/health-checks/#docker-compose
+      test: [ "CMD", "/bin/bash", "-c", "cat < /dev/null > /dev/tcp/localhost/8000" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -18,7 +19,7 @@ services:
       dockerfile: Dockerfile.demo
     depends_on:
       - chroma
-    profiles: ["demo"]
+    profiles: ["demo", "prod"]
     environment:
       - CHROMA_SERVER_URL=http://chroma:8000
       # Point to host's Ollama instance

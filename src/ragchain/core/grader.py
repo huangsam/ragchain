@@ -1,7 +1,6 @@
 """Document relevance grading for RAG pipeline."""
 
 import logging
-from typing import List
 
 from langchain_core.documents import Document
 from langchain_ollama import OllamaLLM
@@ -35,7 +34,7 @@ def should_accept_docs(retrieved_docs: list[Document], retry_count: int) -> bool
     return not retrieved_docs or retry_count > 0
 
 
-def grade_with_llm(query: str, docs: List[Document]) -> GradeSignal:
+def grade_with_llm(query: str, docs: list[Document]) -> GradeSignal:
     """Grade document relevance using LLM.
 
     Args:

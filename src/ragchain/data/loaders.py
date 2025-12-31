@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from typing import List
 
 import aiohttp
 from aiohttp import ClientTimeout
@@ -14,7 +13,7 @@ from ragchain.data.utils import log_with_prefix
 logger = logging.getLogger(__name__)
 
 
-async def load_tiobe_languages(n: int = 50) -> List[str]:
+async def load_tiobe_languages(n: int = 50) -> list[str]:
     """Fetch top-n programming languages from TIOBE index.
 
     Args:
@@ -79,7 +78,7 @@ def _load_single_page(lang: str) -> Document | None:
     return None
 
 
-async def load_wikipedia_pages(language_names: List[str]) -> List[Document]:
+async def load_wikipedia_pages(language_names: list[str]) -> list[Document]:
     """Fetch Wikipedia pages for programming languages concurrently.
 
     Loads Wikipedia articles for given languages using concurrent ThreadPoolExecutor.

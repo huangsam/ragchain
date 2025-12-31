@@ -5,7 +5,6 @@ import time
 from collections import defaultdict
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List
 from urllib.parse import urlparse
 
 from langchain_chroma import Chroma
@@ -30,7 +29,7 @@ class EnsembleRetriever(BaseRetriever):
     bm25_weight: float = 0.4
     chroma_weight: float = 0.6
 
-    def _parallel_retrieve(self, query: str) -> tuple[List[Document], List[Document]]:
+    def _parallel_retrieve(self, query: str) -> tuple[list[Document], list[Document]]:
         """Retrieve documents from both retrievers in parallel.
 
         Args:
@@ -46,7 +45,7 @@ class EnsembleRetriever(BaseRetriever):
             chroma_future = executor.submit(self.chroma_retriever.invoke, query)
             return bm25_future.result(), chroma_future.result()
 
-    def _compute_rrf_scores(self, bm25_docs: List[Document], chroma_docs: List[Document]) -> List[Document]:
+    def _compute_rrf_scores(self, bm25_docs: list[Document], chroma_docs: list[Document]) -> list[Document]:
         """Compute Reciprocal Rank Fusion scores and return sorted documents.
 
         Args:
@@ -58,8 +57,8 @@ class EnsembleRetriever(BaseRetriever):
         """
         # RRF constant k=60 (standard value that prevents rank 1 from dominating)
         rrf_k = 60
-        doc_scores: Dict[str, float] = defaultdict(float)
-        doc_map: Dict[str, Document] = {}
+        doc_scores: dict[str, float] = defaultdict(float)
+        doc_map: dict[str, Document] = {}
 
         for rank, doc in enumerate(bm25_docs):
             content = doc.page_content
@@ -76,7 +75,7 @@ class EnsembleRetriever(BaseRetriever):
         sorted_docs = sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)
         return [doc_map[content] for content, _ in sorted_docs]
 
-    def _get_relevant_documents(self, query: str) -> List[Document]:  # type: ignore[override]
+    def _get_relevant_documents(self, query: str) -> list[Document]:  # type: ignore[override]
         """Retrieve documents using Reciprocal Rank Fusion (RRF) with parallel execution.
 
         Fetches BM25 and Chroma results in parallel threads, then combines rankings
@@ -100,7 +99,7 @@ class EnsembleRetriever(BaseRetriever):
 
         return sorted_docs
 
-    def get_relevant_documents(self, query: str) -> List[Document]:
+    def get_relevant_documents(self, query: str) -> list[Document]:
         """Get relevant documents using parallel retrieval (default behavior)."""
         return self._get_relevant_documents(query)
 
@@ -147,7 +146,7 @@ def get_vector_store():
         )
 
 
-async def ingest_documents(docs: List[Document]) -> dict:
+async def ingest_documents(docs: list[Document]) -> dict:
     """Process and store documents in vector store.
 
     Pipeline: Split docs → Embed chunks → Store in Chroma.
@@ -180,7 +179,7 @@ async def ingest_documents(docs: List[Document]) -> dict:
     }
 
 
-def _load_documents_from_chroma(store: Chroma) -> List[Document]:
+def _load_documents_from_chroma(store: Chroma) -> list[Document]:
     """Load all documents from Chroma vector store.
 
     Args:
@@ -197,10 +196,10 @@ def _load_documents_from_chroma(store: Chroma) -> List[Document]:
     if len(metadatas) < len(documents):
         metadatas.extend([{} for _ in range(len(documents) - len(metadatas))])
 
-    return [Document(page_content=doc, metadata=meta if meta else {}) for doc, meta in zip(documents, metadatas)]
+    return [Document(page_content=doc, metadata=meta if meta else {}) for doc, meta in zip(documents, metadatas, strict=True)]
 
 
-def _create_bm25_retriever(docs: List[Document], k: int) -> BM25Retriever:
+def _create_bm25_retriever(docs: list[Document], k: int) -> BM25Retriever:
     """Create BM25 retriever from documents.
 
     Args:

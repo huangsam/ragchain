@@ -305,11 +305,19 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
 
     from ragchain.prompts import JUDGE_PROMPT
 
+    # Truncate context to avoid very long inference times (keep first ~4000 chars)
+    max_context_chars = 4000
+    if len(context) > max_context_chars:
+        truncated_context = context[:max_context_chars] + "\n\n[...context truncated for evaluation...]"
+        log_with_prefix(logger, logging.INFO, "judge_answer", f"Truncated context from {len(context)} to {max_context_chars} chars")
+    else:
+        truncated_context = context
+
     llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.0)
 
     prompt = ChatPromptTemplate.from_template(JUDGE_PROMPT)
 
-    judge_input = prompt.format(question=question, context=context, answer=answer)
+    judge_input = prompt.format(question=question, context=truncated_context, answer=answer)
 
     log_with_prefix(logger, logging.INFO, "judge_answer", f"Judging answer for question: {question[:50]}...")
 
@@ -348,20 +356,27 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
     # Try direct parsing first
     try:
         evaluation = json.loads(raw_response.strip())
-        return evaluation
     except json.JSONDecodeError:
-        pass
+        # Try to extract JSON object with proper brace matching
+        evaluation = extract_json_object(raw_response)
+        if evaluation and "correctness" in evaluation:
+            log_with_prefix(logger, logging.INFO, "judge_answer", "Successfully extracted JSON from wrapped response")
+        else:
+            # Log the raw response for debugging
+            log_with_prefix(logger, logging.ERROR, "judge_answer", f"Failed to parse judge response. Raw response: {raw_response[:500]}")
+            return {
+                "correctness": {"score": 0, "explanation": "Failed to parse response"},
+                "relevance": {"score": 0, "explanation": "Failed to parse response"},
+                "faithfulness": {"score": 0, "explanation": "Failed to parse response"},
+            }
 
-    # Try to extract JSON object with proper brace matching
-    evaluation = extract_json_object(raw_response)
-    if evaluation and "correctness" in evaluation:
-        log_with_prefix(logger, logging.INFO, "judge_answer", "Successfully extracted JSON from wrapped response")
-        return evaluation
+    # Validate and fix scores - ensure they're in 1-5 range
+    for criterion in ["correctness", "relevance", "faithfulness"]:
+        if criterion in evaluation and isinstance(evaluation[criterion], dict):
+            score = evaluation[criterion].get("score", 0)
+            if not isinstance(score, int) or score < 1 or score > 5:
+                log_with_prefix(logger, logging.WARNING, "judge_answer", f"Invalid {criterion} score {score}, marking as parse error")
+                evaluation[criterion]["score"] = 0
+                evaluation[criterion]["explanation"] = f"Invalid score: {score}. " + evaluation[criterion].get("explanation", "")
 
-    # Log the raw response for debugging
-    log_with_prefix(logger, logging.ERROR, "judge_answer", f"Failed to parse judge response. Raw response: {raw_response[:500]}")
-    return {
-        "correctness": {"score": 0, "explanation": "Failed to parse response"},
-        "relevance": {"score": 0, "explanation": "Failed to parse response"},
-        "faithfulness": {"score": 0, "explanation": "Failed to parse response"},
-    }
+    return evaluation

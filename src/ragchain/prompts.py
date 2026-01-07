@@ -101,18 +101,18 @@ Rewritten Query:"""
 # Purpose: Evaluate RAG answers for correctness, relevance, and faithfulness
 # Usage: Used in evaluate CLI command to score generated answers
 # Parameters: {question} - user query, {context} - retrieved documents, {answer} - generated answer
-JUDGE_PROMPT = """OUTPUT FORMAT: You must respond with ONLY a JSON object. No text before or after.
+JUDGE_PROMPT = """Evaluate this AI answer. Output ONLY JSON with scores 1-5.
 
-Evaluate this RAG answer on a 1-5 scale for:
-- correctness: Is it factually accurate?
-- relevance: Does it address the question?
-- faithfulness: Is it grounded in the context (no hallucination)?
+QUESTION: {question}
 
-Question: {question}
+CONTEXT: {context}
 
-Context: {context}
+ANSWER: {answer}
 
-Answer: {answer}
+SCORING GUIDE:
+- correctness: 5=fully accurate, 4=minor issues, 3=some errors, 2=major errors, 1=wrong
+- relevance: 5=directly answers question, 4=mostly relevant, 3=partially relevant, 2=barely relevant, 1=off-topic
+- faithfulness: 5=only uses context, 4=mostly grounded, 3=some external info, 2=much external info, 1=ignores context
 
-Respond with ONLY this JSON (replace values):
-{{"correctness": {{"score": 0, "explanation": ""}}, "relevance": {{"score": 0, "explanation": ""}}, "faithfulness": {{"score": 0, "explanation": ""}}}}"""
+JSON only (replace X with your 1-5 scores):
+{{"correctness":{{"score":X,"explanation":"brief reason"}},"relevance":{{"score":X,"explanation":"brief reason"}},"faithfulness":{{"score":X,"explanation":"brief reason"}}}}"""

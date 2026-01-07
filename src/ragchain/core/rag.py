@@ -86,7 +86,7 @@ class EnsembleRetriever(BaseRetriever):
             query: The search query.
 
         Returns:
-            List of retrieved documents sorted by RRF score.
+            List of top 10 retrieved documents sorted by RRF score.
         """
         log_with_prefix(logger, logging.DEBUG, "EnsembleRetriever", f"Query: {query[:50]}...")
         start = time.time()
@@ -95,9 +95,12 @@ class EnsembleRetriever(BaseRetriever):
         log_timing(logger, "EnsembleRetriever", start, f"Parallel retrieval: BM25={len(bm25_docs)}, Chroma={len(chroma_docs)}")
 
         sorted_docs = self._compute_rrf_scores(bm25_docs, chroma_docs)
-        log_timing(logger, "EnsembleRetriever", start, f"RRF combined {len(sorted_docs)} unique docs")
 
-        return sorted_docs
+        # Limit to top 10 results to keep context manageable (~8k tokens)
+        top_docs = sorted_docs[:10]
+        log_timing(logger, "EnsembleRetriever", start, f"RRF combined {len(sorted_docs)} docs, returning top {len(top_docs)}")
+
+        return top_docs
 
     def get_relevant_documents(self, query: str) -> list[Document]:
         """Get relevant documents using parallel retrieval (default behavior)."""

@@ -131,62 +131,18 @@ def evaluate(model):
         "What are the top 10 most popular languages?",
     ]
 
-    click.echo(f"Evaluating {len(questions)} questions: {questions}")
+    click.echo(f"Evaluating {len(questions)} questions...")
 
     async def _evaluate():
-        from langchain_core.prompts import ChatPromptTemplate
-        from langchain_ollama import OllamaLLM
+        from ragchain.core.judge import evaluate_questions
 
-        from ragchain.core.graph import rag_graph
-        from ragchain.core.rag import judge_answer
-        from ragchain.prompts import RAG_ANSWER_TEMPLATE
-
-        llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1)
-
-        evaluations = []
-
+        # Run evaluations
         for i, question in enumerate(questions, 1):
-            click.echo(f"\n--- Evaluating Question {i}/{len(questions)} ---")
-            click.echo(f"Q: {question}")
+            click.echo(f"\n[{i}/{len(questions)}] {question}")
 
-            # Run RAG pipeline
-            initial_state = {
-                "query": question,
-                "intent": "CONCEPT",
-                "retrieved_docs": [],
-                "retrieval_grade": "NO",
-                "rewritten_query": "",
-                "retry_count": 0,
-            }
+        evaluations = await evaluate_questions(questions, model)
 
-            click.echo("Running RAG pipeline...")
-            final_state = rag_graph.invoke(initial_state)
-            retrieved_docs = final_state["retrieved_docs"]
-
-            if not retrieved_docs:
-                click.echo("No documents retrieved, skipping...")
-                continue
-
-            # Generate answer
-            click.echo("Generating answer...")
-            prompt = ChatPromptTemplate.from_template(RAG_ANSWER_TEMPLATE)
-            context = "\n\n".join([doc.page_content for doc in retrieved_docs])
-            answer = llm.invoke(prompt.format(context=context, question=question))
-
-            click.echo(f"A: {answer[:200]}...")
-
-            # Judge the answer
-            click.echo("Judging answer...")
-            evaluation = await judge_answer(question, context, answer, model)
-
-            evaluations.append({"question": question, "answer": answer, "evaluation": evaluation})
-
-            # Print scores
-            click.echo("Scores:")
-            for criterion, details in evaluation.items():
-                click.echo(f"  {criterion.capitalize()}: {details['score']}/5 - {details['explanation']}")
-
-        # Summary
+        # Display results
         click.echo(f"\n{'=' * 50}")
         click.echo("EVALUATION SUMMARY")
         click.echo(f"{'=' * 50}")
@@ -208,6 +164,7 @@ def evaluate(model):
 
             click.echo(f"\nQ{i}: {eval_data['question'][:50]}...")
             click.echo(f"  Correctness: {correctness}/5, Relevance: {relevance}/5, Faithfulness: {faithfulness}/5")
+            click.echo(f"  Answer: {eval_data['answer'][:100]}...")
 
         if count > 0:
             avg_correctness = total_correctness / count

@@ -26,16 +26,16 @@ def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
     query = state.get("rewritten_query") or state["query"]
 
     weights = {
-        Intent.FACT: (0.7, 0.3),  # Keyword-heavy for lists/rankings
-        Intent.CONCEPT: (0.3, 0.7),  # Semantic-heavy for natural questions
-        Intent.COMPARISON: (0.4, 0.6),  # Semantic-leaning for comparing entities
+        Intent.FACT: (0.8, 0.2),  # Keyword-heavy for lists/rankings
+        Intent.CONCEPT: (0.4, 0.6),  # Semantic-heavy for natural questions
+        Intent.COMPARISON: (0.5, 0.5),  # Semantic-leaning for comparing entities
     }
     bm25_weight, chroma_weight = weights.get(state["intent"], (0.5, 0.5))
     logger.info(f"[adaptive_retriever] Using weights: BM25={bm25_weight}, Chroma={chroma_weight}")
 
     try:
-        # Increased k from 8 to 12 to improve recall for synthesis/comparison queries
-        retriever = get_ensemble_retriever(k=12, bm25_weight=bm25_weight, chroma_weight=chroma_weight)
+        # Reduce from 12 to 6 to fit context window constraints
+        retriever = get_ensemble_retriever(k=6, bm25_weight=bm25_weight, chroma_weight=chroma_weight)
         docs = retriever.get_relevant_documents(query)
         logger.info(f"[adaptive_retriever] Retrieved {len(docs)} documents in {time.time() - start:.2f}s")
     except Exception as e:

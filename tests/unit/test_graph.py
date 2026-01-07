@@ -22,13 +22,13 @@ def test_adaptive_retriever(mock_get_retriever):
     result = adaptive_retriever(state)
 
     assert len(result["retrieved_docs"]) == 1
-    mock_get_retriever.assert_called_with(k=12, bm25_weight=0.7, chroma_weight=0.3)
+    mock_get_retriever.assert_called_with(k=6, bm25_weight=0.8, chroma_weight=0.2)
 
     # Test CONCEPT intent
     state["intent"] = Intent.CONCEPT
     result = adaptive_retriever(state)
 
-    mock_get_retriever.assert_called_with(k=12, bm25_weight=0.3, chroma_weight=0.7)
+    mock_get_retriever.assert_called_with(k=6, bm25_weight=0.4, chroma_weight=0.6)
 
 
 def test_node_enum():

@@ -130,7 +130,7 @@ async def evaluate_questions(questions: list[str], model: str = config.ollama_mo
             "retry_count": 0,
         }
 
-        final_state = rag_graph.invoke(initial_state)
+        final_state = rag_graph.invoke(initial_state)  # type: ignore[arg-type]
         retrieved_docs = final_state["retrieved_docs"]
 
         if not retrieved_docs:

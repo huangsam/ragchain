@@ -1,11 +1,11 @@
 """Unit tests for document relevance grading."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from langchain_core.documents import Document
 
 from ragchain.core.enums import GradeSignal
-from ragchain.core.grader import grade_with_statistics, should_accept_docs, should_skip_grading
+from ragchain.core.grader import extract_keywords, grade_with_statistics, should_accept_docs, should_skip_grading
 
 
 class TestShouldSkipGrading:
@@ -40,125 +40,103 @@ class TestShouldAcceptDocs:
         assert should_accept_docs(docs, 0) is False
 
 
-class TestGradeWithLLM:
-    """Test grade_with_llm function."""
+class TestGradeWithStatistics:
+    """Test grade_with_statistics function (statistical keyword-based grading)."""
 
-    @patch("ragchain.core.grader.OllamaLLM")
-    def test_grade_yes_response(self, mock_llm_class):
-        """Test grading returns YES for relevant response."""
-        # Mock LLM to return YES
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = "YES"
-        mock_llm_class.return_value = mock_llm
-
-        docs = [Document(page_content="Python is a programming language.")]
-        result = grade_with_statistics("What is Python?", docs)
-
-        assert result == GradeSignal.YES
-        mock_llm.invoke.assert_called_once()
-
-    @patch("ragchain.core.grader.OllamaLLM")
-    def test_grade_no_response(self, mock_llm_class):
-        """Test grading returns NO for irrelevant response."""
-        # Mock LLM to return NO
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = "NO"
-        mock_llm_class.return_value = mock_llm
-
-        docs = [Document(page_content="Java is a programming language.")]
-        result = grade_with_statistics("What is Python?", docs)
-
-        assert result == GradeSignal.NO
-        mock_llm.invoke.assert_called_once()
-
-    @patch("ragchain.core.grader.OllamaLLM")
-    def test_grade_yes_with_extra_text(self, mock_llm_class):
-        """Test grading extracts YES from response with extra text."""
-        # Mock LLM to return YES with extra text
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = "YES, these documents are relevant."
-        mock_llm_class.return_value = mock_llm
-
-        docs = [Document(page_content="Python programming language info.")]
-        result = grade_with_statistics("Python info", docs)
+    def test_grade_yes_for_relevant_docs(self):
+        """Test grading returns YES for documents with keyword overlap."""
+        docs = [Document(page_content="Python is a programming language used for web development and data science.")]
+        result = grade_with_statistics("What is Python programming?", docs)
 
         assert result == GradeSignal.YES
 
-    @patch("ragchain.core.grader.OllamaLLM")
-    def test_grade_no_with_extra_text(self, mock_llm_class):
-        """Test grading extracts NO from response with extra text."""
-        # Mock LLM to return NO with extra text
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = "NO, completely unrelated."
-        mock_llm_class.return_value = mock_llm
-
-        docs = [Document(page_content="Unrelated content.")]
-        result = grade_with_statistics("Python programming", docs)
+    def test_grade_no_for_irrelevant_docs(self):
+        """Test grading returns NO for documents without keyword overlap."""
+        docs = [Document(page_content="The weather today is sunny and warm.")]
+        result = grade_with_statistics("What is Python programming?", docs)
 
         assert result == GradeSignal.NO
 
-    @patch("ragchain.core.grader.OllamaLLM")
-    def test_grade_handles_exception(self, mock_llm_class):
-        """Test grading returns NO on LLM exception."""
-        # Mock LLM to raise exception
-        mock_llm = MagicMock()
-        mock_llm.invoke.side_effect = Exception("LLM error")
-        mock_llm_class.return_value = mock_llm
+    def test_grade_yes_with_partial_overlap(self):
+        """Test grading returns YES with partial keyword overlap meeting threshold."""
+        docs = [Document(page_content="Python programming is powerful for data analysis.")]
+        result = grade_with_statistics("Python programming language features", docs)
 
-        docs = [Document(page_content="Some content.")]
-        result = grade_with_statistics("Test query", docs)
+        assert result == GradeSignal.YES
 
-        assert result == GradeSignal.NO
-
-    @patch("ragchain.core.grader.OllamaLLM")
-    def test_grade_empty_response(self, mock_llm_class):
-        """Test grading handles empty LLM response."""
-        # Mock LLM to return empty string
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = ""
-        mock_llm_class.return_value = mock_llm
-
-        docs = [Document(page_content="Content.")]
-        result = grade_with_statistics("Query", docs)
-
-        assert result == GradeSignal.NO
-
-    @patch("ragchain.core.grader.OllamaLLM")
-    def test_grade_multiple_docs(self, mock_llm_class):
-        """Test grading with multiple documents."""
-        # Mock LLM to return YES
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = "YES"
-        mock_llm_class.return_value = mock_llm
-
+    def test_grade_multiple_docs_finds_relevant(self):
+        """Test grading finds relevant doc among multiple documents."""
         docs = [
-            Document(page_content="First document about Python."),
-            Document(page_content="Second document about programming."),
-            Document(page_content="Third document with more info."),
+            Document(page_content="Unrelated content about cooking recipes."),
+            Document(page_content="Python is a high-level programming language."),
+            Document(page_content="More unrelated content about sports."),
         ]
         result = grade_with_statistics("Python programming", docs)
 
         assert result == GradeSignal.YES
-        # Verify the prompt was formatted with all docs
-        call_args = mock_llm.invoke.call_args[0][0]
-        assert "Doc 0:" in call_args
-        assert "Doc 1:" in call_args
-        assert "Doc 2:" in call_args
 
-    @patch("ragchain.core.grader.OllamaLLM")
-    def test_grade_long_doc_content_truncated(self, mock_llm_class):
-        """Test that long document content is truncated in prompt."""
-        # Mock LLM to return YES
-        mock_llm = MagicMock()
-        mock_llm.invoke.return_value = "YES"
-        mock_llm_class.return_value = mock_llm
-
-        # Create a document with content longer than 200 chars
-        long_content = "A" * 300
-        docs = [Document(page_content=long_content)]
-        result = grade_with_statistics("Test query", docs)
+    def test_grade_empty_query_keywords_accepts(self):
+        """Test that empty query keywords (all stop words) auto-accepts docs."""
+        docs = [Document(page_content="Some content here.")]
+        # Query with only stop words
+        result = grade_with_statistics("the and is", docs)
 
         assert result == GradeSignal.YES
-        # Verify content was truncated to 200 chars
-        call_args = mock_llm.invoke.call_args[0][0]
-        assert "Doc 0: " in call_args
+
+    def test_grade_handles_empty_docs(self):
+        """Test grading handles empty document list."""
+        result = grade_with_statistics("Python query", [])
+
+        assert result == GradeSignal.NO
+
+    def test_grade_term_frequency_bonus(self):
+        """Test that term frequency contributes to score."""
+        # Doc with repeated keywords should score higher
+        docs = [Document(page_content="Python Python Python programming programming language")]
+        result = grade_with_statistics("Python programming", docs)
+
+        assert result == GradeSignal.YES
+
+    def test_grade_top_k_ranking(self):
+        """Test that only top-3 documents are considered for hit rate."""
+        # First 3 docs are irrelevant, 4th is relevant - should return NO
+        docs = [
+            Document(page_content="Cooking recipes for dinner."),
+            Document(page_content="Sports news and updates."),
+            Document(page_content="Weather forecast for tomorrow."),
+            Document(page_content="Python programming language guide."),  # This won't be in top-3 by score
+        ]
+        result = grade_with_statistics("Python programming", docs)
+
+        # The relevant doc should still be found because scoring puts it first
+        assert result == GradeSignal.YES
+
+
+class TestExtractKeywords:
+    """Test extract_keywords helper function."""
+
+    def test_extracts_meaningful_words(self):
+        """Test that meaningful words are extracted."""
+        keywords = extract_keywords("Python is a programming language")
+        assert "python" in keywords
+        assert "programming" in keywords
+        assert "language" in keywords
+
+    def test_filters_stop_words(self):
+        """Test that stop words are filtered out."""
+        keywords = extract_keywords("What is the Python programming language?")
+        assert "what" not in keywords
+        assert "the" not in keywords
+        assert "python" in keywords
+
+    def test_filters_short_words(self):
+        """Test that words shorter than 3 chars are filtered."""
+        keywords = extract_keywords("Go is a language")
+        assert "go" not in keywords  # Too short
+        assert "language" in keywords
+
+    def test_lowercase_normalization(self):
+        """Test that keywords are lowercased."""
+        keywords = extract_keywords("PYTHON Programming LANGUAGE")
+        assert "python" in keywords
+        assert "PYTHON" not in keywords

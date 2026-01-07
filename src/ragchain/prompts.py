@@ -22,21 +22,22 @@ Question: {question}
 
 CRITICAL RULES:
 1. ONLY use information explicitly stated in the context above. Do NOT add any external knowledge.
-2. If the context does not contain enough information to fully answer the question, say so explicitly.
+2. If the context does not contain enough information to fully answer the question, say "Based on the provided context, I cannot find specific information about [topic]."
 3. Every claim in your answer MUST be directly supported by text in the context.
 4. Do NOT infer, assume, or extrapolate beyond what is written in the context.
 5. If you're unsure whether something is in the context, do NOT include it.
+6. NEVER use your training knowledge to fill gaps. If the context doesn't say it, don't say it.
 
 Formatting guidelines:
 - For lists/rankings: Use numbered or bulleted lists.
 - For explanations: Use clear sections with the key points from the context.
 - For comparisons: Structure as side-by-side points from the context.
-- Keep answers focused (150-300 words) and cite context directly where possible.
+- Keep answers focused (150-300 words) and quote context directly where possible.
 
 Synthesis rules:
 - Merge information about the same entity from multiple context snippets.
 - Only include information present in the context. Ignore redundancy.
-- If the context is insufficient, state: "Based on the provided context, I can only confirm that..."
+- Prefer direct quotes or close paraphrases over summaries.
 
 Answer (grounded strictly in the context above):"""
 
@@ -85,15 +86,23 @@ Answer with ONLY the word YES or NO, nothing else:"""
 # Purpose: Enhance queries that failed retrieval to improve document matching
 # Usage: Used in query_rewriter() when retrieval_grader() returns NO
 # Strategy: Add specific keywords and context to make queries more searchable
+# Also handles synthesis queries by expanding into multiple search terms
 # Parameters: {query} - original query that failed retrieval
 QUERY_REWRITER_PROMPT = """Your previous retrieval for this query didn't return relevant documents:
 Original Query: {query}
 
-Rewrite this query to be more explicit, adding keywords that might be in a list or ranking.
+Rewrite this query to be more explicit. For comparisons or synthesis questions, include BOTH concepts as separate searchable terms.
 
 Examples:
 - "What are the top 10 languages?" → "TIOBE index top 10 most popular programming languages ranking list"
-- "Compare Go and Rust" → "Go versus Rust comparison features differences systems programming"
+- "Compare Go and Rust" → "Go programming language features performance Rust programming language features comparison"
+- "differences between interpreted and compiled" → "interpreted languages definition characteristics compiled languages definition advantages disadvantages"
+- "What is C# used for?" → "C# programming language applications use cases .NET framework"
+
+Tips:
+- Include synonyms and related terms
+- For comparison queries, mention BOTH items being compared
+- Add domain-specific keywords (e.g., "programming language", "framework")
 
 Rewritten Query:"""
 
@@ -112,7 +121,9 @@ ANSWER: {answer}
 SCORING GUIDE:
 - correctness: 5=fully accurate, 4=minor issues, 3=some errors, 2=major errors, 1=wrong
 - relevance: 5=directly answers question, 4=mostly relevant, 3=partially relevant, 2=barely relevant, 1=off-topic
-- faithfulness: 5=only uses context, 4=mostly grounded, 3=some external info, 2=much external info, 1=ignores context
+- faithfulness: 5=every claim appears in context, 4=1 minor addition, 3=some facts not in context, 2=many facts not in context, 1=mostly external knowledge
+
+FAITHFULNESS CHECK: Compare each claim in the ANSWER to the CONTEXT. If a claim cannot be traced to specific text in the context, reduce the faithfulness score.
 
 JSON only (replace X with your 1-5 scores):
 {{"correctness":{{"score":X,"explanation":"brief reason"}},"relevance":{{"score":X,"explanation":"brief reason"}},"faithfulness":{{"score":X,"explanation":"brief reason"}}}}"""

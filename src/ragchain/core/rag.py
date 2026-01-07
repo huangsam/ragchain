@@ -162,10 +162,13 @@ async def ingest_documents(docs: list[Document]) -> dict:
 
     start_time = time.perf_counter()
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=100)
+    # Increased overlap to 500 chars (20%) to fix "Missing Paragraph" issues where key context
+    # spans across chunk boundaries (e.g., Comparing interpreted vs compiled languages).
+    splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=500)
     chunks = splitter.split_documents(docs)
 
     store = get_vector_store()
+
     store.add_documents(chunks)
 
     get_ensemble_retriever.cache_clear()
@@ -226,14 +229,14 @@ def _create_chroma_retriever(store: Chroma, k: int) -> VectorStoreRetriever:
 
 
 @lru_cache(maxsize=32)
-def get_ensemble_retriever(k: int = 8, bm25_weight: float = 0.4, chroma_weight: float = 0.6) -> EnsembleRetriever:
+def get_ensemble_retriever(k: int = 12, bm25_weight: float = 0.4, chroma_weight: float = 0.6) -> EnsembleRetriever:
     """Create an ensemble retriever combining BM25 and Chroma vector search.
 
     Uses LRU cache to avoid rebuilding the BM25 index on every request.
     Cache is keyed by (k, bm25_weight, chroma_weight).
 
     Args:
-        k: Number of results per retriever
+        k: Number of results per retriever (Default bumped to 12 to improve recall)
         bm25_weight: Weight for BM25 results in RRF (default: 0.4)
         chroma_weight: Weight for Chroma results in RRF (default: 0.6)
 
@@ -264,12 +267,12 @@ def get_ensemble_retriever(k: int = 8, bm25_weight: float = 0.4, chroma_weight: 
     return retriever
 
 
-async def search(query: str, k: int = 8) -> dict:
+async def search(query: str, k: int = 12) -> dict:
     """Perform ensemble retrieval using BM25 and Chroma vector search.
 
     Args:
         query: Search query text (e.g., 'Python machine learning')
-        k: Number of results to return (default: 8)
+        k: Number of results to return (default: 12)
 
     Returns:
         dict with 'query' and 'results' list of {content, metadata, distance}

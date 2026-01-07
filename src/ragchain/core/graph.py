@@ -34,7 +34,8 @@ def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
     logger.info(f"[adaptive_retriever] Using weights: BM25={bm25_weight}, Chroma={chroma_weight}")
 
     try:
-        retriever = get_ensemble_retriever(k=8, bm25_weight=bm25_weight, chroma_weight=chroma_weight)
+        # Increased k from 8 to 12 to improve recall for synthesis/comparison queries
+        retriever = get_ensemble_retriever(k=12, bm25_weight=bm25_weight, chroma_weight=chroma_weight)
         docs = retriever.get_relevant_documents(query)
         logger.info(f"[adaptive_retriever] Retrieved {len(docs)} documents in {time.time() - start:.2f}s")
     except Exception as e:

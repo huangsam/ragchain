@@ -132,7 +132,7 @@ def evaluate(model):
         model: LLM model to use for generation and judging (default: config.ollama_model)
     """
     questions = [
-        # --- Original 7 ---
+        # --- Original 7 for demo purposes ---
         "What is Python used for?",
         "Compare Go and Rust for systems programming",
         "What are the key features of functional programming in Haskell?",
@@ -140,7 +140,7 @@ def evaluate(model):
         "What are the main differences between interpreted and compiled languages?",
         "Which languages are commonly used for machine learning?",
         "What are the top 10 most popular languages?",
-        # --- New Additions for more niche languages and topics ---
+        # --- New additions for thorough coverage ---
         "How does TypeScript differ from JavaScript?",
         "What is the primary purpose of C# and the .NET framework?",
         "Why is C still preferred over C++ for embedded systems?",

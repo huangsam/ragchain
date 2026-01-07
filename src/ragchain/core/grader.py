@@ -44,15 +44,55 @@ def extract_keywords(text: str) -> set[str]:
     """
     # Simple stop words list
     stop_words = {
-        "a", "an", "and", "are", "as", "at", "be", "by", "for", "from",
-        "has", "he", "in", "is", "it", "its", "of", "on", "that", "the",
-        "to", "was", "will", "with", "what", "which", "who", "how", "when",
-        "where", "why", "this", "these", "those", "can", "could", "should",
-        "would", "do", "does", "did", "have", "had", "been", "being"
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "for",
+        "from",
+        "has",
+        "he",
+        "in",
+        "is",
+        "it",
+        "its",
+        "of",
+        "on",
+        "that",
+        "the",
+        "to",
+        "was",
+        "will",
+        "with",
+        "what",
+        "which",
+        "who",
+        "how",
+        "when",
+        "where",
+        "why",
+        "this",
+        "these",
+        "those",
+        "can",
+        "could",
+        "should",
+        "would",
+        "do",
+        "does",
+        "did",
+        "have",
+        "had",
+        "been",
+        "being",
     }
 
     # Extract words, lowercase, filter stop words and short words
-    words = re.findall(r'\b[a-z]{3,}\b', text.lower())
+    words = re.findall(r"\b[a-z]{3,}\b", text.lower())
     return {w for w in words if w not in stop_words}
 
 
@@ -96,10 +136,7 @@ def grade_with_statistics(query: str, docs: list[Document]) -> GradeSignal:
             score = 0.7 * overlap_ratio + 0.3 * min(tf_score, 1.0)
 
             doc_scores.append((i, score, overlap_ratio))
-            logger.debug(
-                f"[grade_with_statistics] Doc {i}: score={score:.3f} "
-                f"(overlap={overlap_ratio:.2%}, tf={tf_score:.2f})"
-            )
+            logger.debug(f"[grade_with_statistics] Doc {i}: score={score:.3f} (overlap={overlap_ratio:.2%}, tf={tf_score:.2f})")
 
         # Sort by score descending (best documents first)
         doc_scores.sort(key=lambda x: x[1], reverse=True)
@@ -113,19 +150,13 @@ def grade_with_statistics(query: str, docs: list[Document]) -> GradeSignal:
         for rank, (doc_idx, score, _) in enumerate(doc_scores[:top_k], 1):
             if score >= relevance_threshold:
                 reciprocal_rank = 1.0 / rank
-                logger.info(
-                    f"[grade_with_statistics] Grade result: YES "
-                    f"(doc {doc_idx} at rank {rank}, score={score:.3f}, MRR={reciprocal_rank:.3f})"
-                )
+                logger.info(f"[grade_with_statistics] Grade result: YES (doc {doc_idx} at rank {rank}, score={score:.3f}, MRR={reciprocal_rank:.3f})")
                 return GradeSignal.YES
 
         # Log the best score for debugging
         if doc_scores:
             best_doc, best_score, best_overlap = doc_scores[0]
-            logger.info(
-                f"[grade_with_statistics] Grade result: NO "
-                f"(best doc {best_doc} score={best_score:.3f} < threshold {relevance_threshold})"
-            )
+            logger.info(f"[grade_with_statistics] Grade result: NO (best doc {best_doc} score={best_score:.3f} < threshold {relevance_threshold})")
         else:
             logger.info("[grade_with_statistics] Grade result: NO (no documents to score)")
 

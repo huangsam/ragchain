@@ -38,7 +38,6 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
         model=model,
         base_url=config.ollama_base_url,
         temperature=0.0,
-        num_predict=200,
     )
 
     prompt = ChatPromptTemplate.from_template(JUDGE_PROMPT)

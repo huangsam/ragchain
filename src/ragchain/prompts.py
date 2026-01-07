@@ -5,6 +5,7 @@ __all__ = [
     "INTENT_ROUTER_PROMPT",
     "RETRIEVAL_GRADER_PROMPT",
     "QUERY_REWRITER_PROMPT",
+    "JUDGE_PROMPT",
 ]
 
 
@@ -12,26 +13,32 @@ __all__ = [
 # Purpose: Generate natural language answers from retrieved context
 # Usage: Used in the API endpoint to provide final answers to user queries
 # Parameters: {context} - retrieved documents, {question} - user query
-RAG_ANSWER_TEMPLATE = """Answer the question based on the following context:
+RAG_ANSWER_TEMPLATE = """You are a helpful assistant that answers questions STRICTLY based on the provided context.
 
 Context:
 {context}
 
 Question: {question}
 
-Provide a comprehensive, factual answer structured appropriately for the query type:
-- For FACT queries (e.g., lists, rankings): Use numbered or bulleted lists with key details.
-- For CONCEPT queries (e.g., explanations): Use sections with headings, definitions, and examples.
-- For COMPARISON queries (e.g., differences): Use side-by-side comparisons, tables if suitable, or structured pros/cons.
-- Include relevant code examples where they illustrate key points (keep under 10 lines).
-- Aim for 200-400 words, focusing on clarity and informativeness.
+CRITICAL RULES:
+1. ONLY use information explicitly stated in the context above. Do NOT add any external knowledge.
+2. If the context does not contain enough information to fully answer the question, say so explicitly.
+3. Every claim in your answer MUST be directly supported by text in the context.
+4. Do NOT infer, assume, or extrapolate beyond what is written in the context.
+5. If you're unsure whether something is in the context, do NOT include it.
 
-Guidelines for synthesis:
-- If multiple context snippets provide information about the same entity (e.g., the same programming language), merge that information into a single, cohesive entry. Do not repeat entities in lists.
-- Only include information present in the context. If the context is repetitive, ignore the redundancy and provide a clean summary.
-- Prioritize unique facts over multiple mentions of the same fact.
+Formatting guidelines:
+- For lists/rankings: Use numbered or bulleted lists.
+- For explanations: Use clear sections with the key points from the context.
+- For comparisons: Structure as side-by-side points from the context.
+- Keep answers focused (150-300 words) and cite context directly where possible.
 
-Answer:"""
+Synthesis rules:
+- Merge information about the same entity from multiple context snippets.
+- Only include information present in the context. Ignore redundancy.
+- If the context is insufficient, state: "Based on the provided context, I can only confirm that..."
+
+Answer (grounded strictly in the context above):"""
 
 # Intent Router Prompt
 # Purpose: Classify user queries into intent categories for adaptive retrieval
@@ -89,3 +96,23 @@ Examples:
 - "Compare Go and Rust" → "Go versus Rust comparison features differences systems programming"
 
 Rewritten Query:"""
+
+# Judge Prompt
+# Purpose: Evaluate RAG answers for correctness, relevance, and faithfulness
+# Usage: Used in evaluate CLI command to score generated answers
+# Parameters: {question} - user query, {context} - retrieved documents, {answer} - generated answer
+JUDGE_PROMPT = """OUTPUT FORMAT: You must respond with ONLY a JSON object. No text before or after.
+
+Evaluate this RAG answer on a 1-5 scale for:
+- correctness: Is it factually accurate?
+- relevance: Does it address the question?
+- faithfulness: Is it grounded in the context (no hallucination)?
+
+Question: {question}
+
+Context: {context}
+
+Answer: {answer}
+
+Respond with ONLY this JSON (replace values):
+{{"correctness": {{"score": 0, "explanation": ""}}, "relevance": {{"score": 0, "explanation": ""}}, "faithfulness": {{"score": 0, "explanation": ""}}}}"""

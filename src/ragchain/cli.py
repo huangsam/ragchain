@@ -110,5 +110,117 @@ def ask(query, model):
     asyncio.run(_ask())
 
 
+@cli.command()
+@click.option("--model", default=config.ollama_model, help="LLM model to use for generation and judging")
+def evaluate(model):
+    """Evaluate RAG answers for example questions using LLM-as-judge.
+
+    Runs through example questions, generates answers using the RAG pipeline,
+    and evaluates correctness, relevance, and faithfulness using an LLM judge.
+
+    Args:
+        model: LLM model to use for generation and judging (default: config.ollama_model)
+    """
+    questions = [
+        "What is Python used for?",
+        "Compare Go and Rust for systems programming",
+        "What are the key features of functional programming in Haskell?",
+        "How has Java evolved since its release?",
+        "What are the main differences between interpreted and compiled languages?",
+        "Which languages are commonly used for machine learning?",
+        "What are the top 10 most popular languages?",
+    ]
+
+    click.echo(f"Evaluating {len(questions)} questions: {questions}")
+
+    async def _evaluate():
+        from langchain_core.prompts import ChatPromptTemplate
+        from langchain_ollama import OllamaLLM
+
+        from ragchain.core.graph import rag_graph
+        from ragchain.core.rag import judge_answer
+        from ragchain.prompts import RAG_ANSWER_TEMPLATE
+
+        llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1)
+
+        evaluations = []
+
+        for i, question in enumerate(questions, 1):
+            click.echo(f"\n--- Evaluating Question {i}/{len(questions)} ---")
+            click.echo(f"Q: {question}")
+
+            # Run RAG pipeline
+            initial_state = {
+                "query": question,
+                "intent": "CONCEPT",
+                "retrieved_docs": [],
+                "retrieval_grade": "NO",
+                "rewritten_query": "",
+                "retry_count": 0,
+            }
+
+            click.echo("Running RAG pipeline...")
+            final_state = rag_graph.invoke(initial_state)
+            retrieved_docs = final_state["retrieved_docs"]
+
+            if not retrieved_docs:
+                click.echo("No documents retrieved, skipping...")
+                continue
+
+            # Generate answer
+            click.echo("Generating answer...")
+            prompt = ChatPromptTemplate.from_template(RAG_ANSWER_TEMPLATE)
+            context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+            answer = llm.invoke(prompt.format(context=context, question=question))
+
+            click.echo(f"A: {answer[:200]}...")
+
+            # Judge the answer
+            click.echo("Judging answer...")
+            evaluation = await judge_answer(question, context, answer, model)
+
+            evaluations.append({"question": question, "answer": answer, "evaluation": evaluation})
+
+            # Print scores
+            click.echo("Scores:")
+            for criterion, details in evaluation.items():
+                click.echo(f"  {criterion.capitalize()}: {details['score']}/5 - {details['explanation']}")
+
+        # Summary
+        click.echo(f"\n{'=' * 50}")
+        click.echo("EVALUATION SUMMARY")
+        click.echo(f"{'=' * 50}")
+
+        total_correctness = 0
+        total_relevance = 0
+        total_faithfulness = 0
+        count = len(evaluations)
+
+        for i, eval_data in enumerate(evaluations, 1):
+            eval_scores = eval_data["evaluation"]
+            correctness = eval_scores["correctness"]["score"]
+            relevance = eval_scores["relevance"]["score"]
+            faithfulness = eval_scores["faithfulness"]["score"]
+
+            total_correctness += correctness
+            total_relevance += relevance
+            total_faithfulness += faithfulness
+
+            click.echo(f"\nQ{i}: {eval_data['question'][:50]}...")
+            click.echo(f"  Correctness: {correctness}/5, Relevance: {relevance}/5, Faithfulness: {faithfulness}/5")
+
+        if count > 0:
+            avg_correctness = total_correctness / count
+            avg_relevance = total_relevance / count
+            avg_faithfulness = total_faithfulness / count
+
+            click.echo("\nAverage Scores:")
+            click.echo(f"  Correctness: {avg_correctness:.2f}/5")
+            click.echo(f"  Relevance: {avg_relevance:.2f}/5")
+            click.echo(f"  Faithfulness: {avg_faithfulness:.2f}/5")
+
+    asyncio.run(_evaluate())
+
+
 if __name__ == "__main__":
     cli()

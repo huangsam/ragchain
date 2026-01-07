@@ -284,3 +284,84 @@ async def search(query: str, k: int = 8) -> dict:
         "query": query,
         "results": [{"content": r.page_content, "metadata": r.metadata, "distance": 0.0} for r in results],
     }
+
+
+async def judge_answer(question: str, context: str, answer: str, model: str = config.ollama_model) -> dict:
+    """Evaluate a RAG answer using LLM-as-judge for correctness, relevance, and faithfulness.
+
+    Args:
+        question: The original question
+        context: The retrieved context documents as concatenated text
+        answer: The generated answer to evaluate
+        model: Ollama model to use for judging
+
+    Returns:
+        dict with evaluation scores and explanations
+    """
+    import json
+
+    from langchain_core.prompts import ChatPromptTemplate
+    from langchain_ollama import OllamaLLM
+
+    from ragchain.prompts import JUDGE_PROMPT
+
+    llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.0)
+
+    prompt = ChatPromptTemplate.from_template(JUDGE_PROMPT)
+
+    judge_input = prompt.format(question=question, context=context, answer=answer)
+
+    log_with_prefix(logger, logging.INFO, "judge_answer", f"Judging answer for question: {question[:50]}...")
+
+    start = time.time()
+    raw_response = llm.invoke(judge_input)
+    log_timing(logger, "judge_answer", start, "LLM judgment completed")
+
+    # Parse JSON response - extract JSON from potential markdown or text wrapper
+    def extract_json_object(text: str) -> dict | None:
+        """Extract JSON object handling nested braces properly."""
+        # Find the first { and match to the corresponding }
+        start_idx = text.find("{")
+        if start_idx == -1:
+            return None
+
+        brace_count = 0
+        end_idx = start_idx
+        for i, char in enumerate(text[start_idx:], start_idx):
+            if char == "{":
+                brace_count += 1
+            elif char == "}":
+                brace_count -= 1
+                if brace_count == 0:
+                    end_idx = i
+                    break
+
+        if brace_count != 0:
+            return None
+
+        json_str = text[start_idx : end_idx + 1]
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            return None
+
+    # Try direct parsing first
+    try:
+        evaluation = json.loads(raw_response.strip())
+        return evaluation
+    except json.JSONDecodeError:
+        pass
+
+    # Try to extract JSON object with proper brace matching
+    evaluation = extract_json_object(raw_response)
+    if evaluation and "correctness" in evaluation:
+        log_with_prefix(logger, logging.INFO, "judge_answer", "Successfully extracted JSON from wrapped response")
+        return evaluation
+
+    # Log the raw response for debugging
+    log_with_prefix(logger, logging.ERROR, "judge_answer", f"Failed to parse judge response. Raw response: {raw_response[:500]}")
+    return {
+        "correctness": {"score": 0, "explanation": "Failed to parse response"},
+        "relevance": {"score": 0, "explanation": "Failed to parse response"},
+        "faithfulness": {"score": 0, "explanation": "Failed to parse response"},
+    }

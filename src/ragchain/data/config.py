@@ -27,7 +27,7 @@ class Config:
         self.ollama_base_url: str = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
         self.ollama_embed_model: str = os.environ.get("OLLAMA_EMBED_MODEL", "bge-m3")
         self.ollama_model: str = os.environ.get("OLLAMA_MODEL", "deepseek-r1")
-        self.ollama_num_ctx: int = int(os.environ.get("OLLAMA_NUM_CTX", "2048"))
+        self.ollama_num_ctx: int = int(os.environ.get("OLLAMA_NUM_CTX", "4096"))
 
         # Performance optimization flags
         self.enable_grading: bool = os.environ.get("ENABLE_GRADING", "true").lower() == "true"

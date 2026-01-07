@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from langchain_core.documents import Document
 
 from ragchain.core.enums import GradeSignal
-from ragchain.core.grader import grade_with_llm, should_accept_docs, should_skip_grading
+from ragchain.core.grader import grade_with_statistics, should_accept_docs, should_skip_grading
 
 
 class TestShouldSkipGrading:
@@ -52,7 +52,7 @@ class TestGradeWithLLM:
         mock_llm_class.return_value = mock_llm
 
         docs = [Document(page_content="Python is a programming language.")]
-        result = grade_with_llm("What is Python?", docs)
+        result = grade_with_statistics("What is Python?", docs)
 
         assert result == GradeSignal.YES
         mock_llm.invoke.assert_called_once()
@@ -66,7 +66,7 @@ class TestGradeWithLLM:
         mock_llm_class.return_value = mock_llm
 
         docs = [Document(page_content="Java is a programming language.")]
-        result = grade_with_llm("What is Python?", docs)
+        result = grade_with_statistics("What is Python?", docs)
 
         assert result == GradeSignal.NO
         mock_llm.invoke.assert_called_once()
@@ -80,7 +80,7 @@ class TestGradeWithLLM:
         mock_llm_class.return_value = mock_llm
 
         docs = [Document(page_content="Python programming language info.")]
-        result = grade_with_llm("Python info", docs)
+        result = grade_with_statistics("Python info", docs)
 
         assert result == GradeSignal.YES
 
@@ -93,7 +93,7 @@ class TestGradeWithLLM:
         mock_llm_class.return_value = mock_llm
 
         docs = [Document(page_content="Unrelated content.")]
-        result = grade_with_llm("Python programming", docs)
+        result = grade_with_statistics("Python programming", docs)
 
         assert result == GradeSignal.NO
 
@@ -106,7 +106,7 @@ class TestGradeWithLLM:
         mock_llm_class.return_value = mock_llm
 
         docs = [Document(page_content="Some content.")]
-        result = grade_with_llm("Test query", docs)
+        result = grade_with_statistics("Test query", docs)
 
         assert result == GradeSignal.NO
 
@@ -119,7 +119,7 @@ class TestGradeWithLLM:
         mock_llm_class.return_value = mock_llm
 
         docs = [Document(page_content="Content.")]
-        result = grade_with_llm("Query", docs)
+        result = grade_with_statistics("Query", docs)
 
         assert result == GradeSignal.NO
 
@@ -136,7 +136,7 @@ class TestGradeWithLLM:
             Document(page_content="Second document about programming."),
             Document(page_content="Third document with more info."),
         ]
-        result = grade_with_llm("Python programming", docs)
+        result = grade_with_statistics("Python programming", docs)
 
         assert result == GradeSignal.YES
         # Verify the prompt was formatted with all docs
@@ -156,7 +156,7 @@ class TestGradeWithLLM:
         # Create a document with content longer than 200 chars
         long_content = "A" * 300
         docs = [Document(page_content=long_content)]
-        result = grade_with_llm("Test query", docs)
+        result = grade_with_statistics("Test query", docs)
 
         assert result == GradeSignal.YES
         # Verify content was truncated to 200 chars

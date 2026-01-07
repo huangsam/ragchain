@@ -7,7 +7,7 @@ from langchain_ollama import OllamaLLM
 from langgraph.graph import END, StateGraph
 
 from ragchain.core.enums import GradeSignal, Intent, IntentRoutingState, Node
-from ragchain.core.grader import grade_with_llm, should_accept_docs, should_skip_grading
+from ragchain.core.grader import grade_with_statistics, should_accept_docs, should_skip_grading
 from ragchain.core.rag import get_ensemble_retriever
 from ragchain.core.router import intent_router
 from ragchain.data.config import config
@@ -61,7 +61,7 @@ def retrieval_grader(state: IntentRoutingState) -> IntentRoutingState:
         return {**state, "retrieval_grade": GradeSignal.YES}
 
     # Grade with LLM
-    grade_value = grade_with_llm(state["query"], state["retrieved_docs"])
+    grade_value = grade_with_statistics(state["query"], state["retrieved_docs"])
     logger.info(f"[retrieval_grader] Grade: {grade_value} in {time.time() - start:.2f}s")
 
     return {**state, "retrieval_grade": grade_value}

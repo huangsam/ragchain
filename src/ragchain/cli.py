@@ -99,7 +99,7 @@ def ask(query, model):
             "retry_count": 0,
         }
 
-        final_state = rag_graph.invoke(initial_state)  # type: ignore[arg-type]
+        final_state = rag_graph.invoke(initial_state)
         retrieved_docs = final_state["retrieved_docs"]
 
         if not retrieved_docs:

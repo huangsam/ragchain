@@ -10,8 +10,7 @@ A compact tree view of the repository layout:
 
 ```
 src/ragchain/
-├── api.py                # FastAPI app (/health, /ingest, /search, /ask)
-├── cli.py                # Click-based CLI (serve, ingest, search, ask)
+├── cli.py                # Click-based CLI (ingest, search, ask, evaluate)
 ├── prompts.py            # LLM prompt templates
 ├── core/                 # Core RAG functionality
 │   ├── rag.py            # LangChain RAG pipeline (embedding, chunking, retrieval, generation)
@@ -59,12 +58,11 @@ src/ragchain/
   - Wikipedia article fetching (via built-in Wikipedia API or custom parsers)
   - Extensible for other sources (local files, APIs, etc.)
 
-- **`api.py`** exposes FastAPI endpoints:
-  - `/health` — Health check
-  - `/search` — Legacy ensemble search
-  - `/ask` — Intent-based adaptive RAG (uses `rag_graph`)
-
-- **`cli.py`** provides Click-based commands for ingest, search, query, and stack management
+- **`cli.py`** provides Click-based commands:
+  - `ingest` — Load documents into vector store
+  - `search` — Semantic search over ingested documents
+  - `ask` — Intent-based adaptive RAG with LLM generation
+  - `evaluate` — LLM-as-judge evaluation framework
 
 - **`data/utils.py`** provides logger helpers to simplify the monitoring experience, including:
   - `log_with_prefix()` — Logs messages with a consistent prefix for easier filtering
@@ -90,8 +88,7 @@ src/ragchain/
 - **Ollama integration** — `langchain-ollama` for embedding (`bge-m3`) and LLM generation
 - **Vector store** — `chromadb` for semantic search (supports local persistent and remote HTTP)
 - **BM25** — `rank-bm25` for keyword-based retrieval and ensemble ranking
-- **FastAPI & Uvicorn** — REST API server
-- **Click** — CLI framework for stack management and data operations
+- **Click** — CLI framework for data operations and queries
 - **Pydantic Settings** — Environment configuration management
 - **Data fetching** — `aiohttp` for async HTTP, `beautifulsoup4` + `wikipedia` for document loading
 
@@ -104,7 +101,7 @@ src/ragchain/
 
 **Project entry points:**
 
-- `ragchain` console script → `ragchain.cli:cli` (enables `ragchain serve`, `ragchain up`, `ragchain down`, etc.)
+- `ragchain` console script → `ragchain.cli:cli` (enables `ragchain ingest`, `ragchain search`, `ragchain ask`, etc.)
 
 **Recommended Python version:** **3.12** (LangChain ecosystem has optimized wheels)
 
@@ -131,18 +128,17 @@ CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/in
 ragchain down --profile test
 ```
 
-**Local development and demo:**
+**Local development:**
 
-- `ragchain up` — Starts the demo stack (`docker compose up -d --profile demo`): Chroma + ragchain API + demo-runner
-- `ragchain up --profile test` — Starts minimal test stack (Chroma only) for CI-like testing
-- `ragchain down` — Stops the current docker compose stack
-- `docker compose up --build` — Manually start the full demo (builds all services)
+- `docker compose up -d` — Starts Chroma vector database
+- `ragchain ingest --n 50` — Ingest programming language documents
+- `ragchain search "Python programming"` — Search ingested documents
+- `ragchain ask "What is Python?"` — Ask questions with RAG + LLM
+- `ragchain evaluate` — Run LLM-as-judge evaluation
 
 **Stack components:**
 
-- **Chroma** (vector database) — `http://localhost:8000` (configured for both test and demo profiles)
-- **ragchain API** — `http://localhost:8003` (demo profile only)
-- **demo-runner** — Automatically runs example ingest + search workflows on startup (demo profile only)
+- **Chroma** (vector database) — `http://localhost:8000`
 
 ---
 

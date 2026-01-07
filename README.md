@@ -14,32 +14,36 @@ Your local RAG stack — no APIs, no cloud, full control.
 ## Quick start
 
 ```bash
-# Start the demo stack
+# 1. Start Chroma vector database
 docker compose up -d
 
-# Search ingested programming language data
+# 2. Ingest programming language documents
+ragchain ingest --n 50
+
+# 3. Search ingested documents
 ragchain search "functional programming paradigm" --k 4
 ragchain search "memory management" --k 5
 
-# Try some queries (requires `deepseek-r1` and `bge-m3` locally)
+# 4. Ask questions with RAG + LLM
 ragchain ask "What is Python used for?"
 ragchain ask "Compare Go and Rust for systems programming"
-ragchain ask "What are the key features of functional programming in Haskell?"
-ragchain ask "How has Java evolved since its release?"
-ragchain ask "What are the main differences between interpreted and compiled languages?"
-ragchain ask "Which languages are commonly used for machine learning?"
 ragchain ask "What are the top 10 most popular languages?"
 
-# Stop the stack
+# 5. Evaluate RAG quality with LLM-as-judge
+ragchain evaluate
+
+# Clean up
 docker compose down -v
 ```
 
-**What's running:**
-- **Chroma** (vector store) at http://localhost:8000
+**Requirements:**
+- Docker (for Chroma)
+- Ollama with `bge-m3` (embeddings) and `deepseek-r1` (generation)
+- Python 3.12+
 
 ## Intent-Based Retrieval
 
-The `/ask` endpoint adapts to query type:
+The `ragchain ask` command adapts to query type:
 
 | Type | Example | Strategy |
 |---|---|---|

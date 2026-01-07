@@ -26,15 +26,15 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
     Returns:
         dict with evaluation scores and explanations
     """
-    # Truncate context to avoid very long inference times (keep first ~4000 chars)
-    max_context_chars = 4000
+    # Truncate context to balance speed and quality (keep first ~2500 chars)
+    max_context_chars = 2500
     if len(context) > max_context_chars:
-        truncated_context = context[:max_context_chars] + "\n\n[...context truncated for evaluation...]"
+        truncated_context = context[:max_context_chars] + "\n\n[...truncated...]"
         log_with_prefix(logger, logging.INFO, "judge_answer", f"Truncated context from {len(context)} to {max_context_chars} chars")
     else:
         truncated_context = context
 
-    llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.0)
+    llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.0, num_ctx=2048)
 
     prompt = ChatPromptTemplate.from_template(JUDGE_PROMPT)
 

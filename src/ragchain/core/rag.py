@@ -113,7 +113,7 @@ def get_embedder():
     Returns:
         OllamaEmbeddings instance configured with model and base URL from env vars.
     """
-    return OllamaEmbeddings(model=config.ollama_embed_model, base_url=config.ollama_base_url, num_ctx=8192)
+    return OllamaEmbeddings(model=config.ollama_embed_model, base_url=config.ollama_base_url, num_ctx=config.ollama_embed_ctx)
 
 
 def get_vector_store():

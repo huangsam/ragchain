@@ -38,7 +38,7 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
         model=model,
         base_url=config.ollama_base_url,
         temperature=0.0,
-        num_ctx=config.ollama_num_ctx,
+        num_ctx=config.ollama_gen_ctx,
     )
 
     prompt = ChatPromptTemplate.from_template(JUDGE_PROMPT)
@@ -120,7 +120,7 @@ async def evaluate_questions(questions: list[str], model: str = config.ollama_mo
     """
     from ragchain.core.graph import rag_graph
 
-    llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1, num_ctx=config.ollama_num_ctx)
+    llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1, num_ctx=config.ollama_gen_ctx)
 
     evaluations = []
 

@@ -108,7 +108,7 @@ def ask(query, model):
 
         click.echo(f"Found {len(retrieved_docs)} documents. Generating answer...")
 
-        llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1, num_ctx=config.ollama_num_ctx)
+        llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1, num_ctx=config.ollama_gen_ctx)
         prompt = ChatPromptTemplate.from_template(RAG_ANSWER_TEMPLATE)
 
         context = "\n\n".join([doc.page_content for doc in retrieved_docs])

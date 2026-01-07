@@ -3,7 +3,6 @@
 import asyncio
 
 import click
-import httpx
 
 from ragchain.core.rag import ingest_documents
 from ragchain.data.config import config
@@ -14,21 +13,6 @@ from ragchain.data.loaders import load_tiobe_languages, load_wikipedia_pages
 def cli():
     """RAG pipeline CLI."""
     pass
-
-
-@cli.command()
-@click.option("--host", default="0.0.0.0", help="Host to bind to")
-@click.option("--port", default=8000, help="Port to bind to")
-def serve(host, port):
-    """Start the FastAPI server for RAG endpoints.
-
-    Args:
-        host: Host to bind to (default: 0.0.0.0)
-        port: Port to bind to (default: 8000)
-    """
-    import uvicorn
-
-    uvicorn.run("ragchain.api:app", host=host, port=port, reload=True)
 
 
 @cli.command()
@@ -90,7 +74,7 @@ def search(query, k):
 def ask(query, model):
     """Ask a question and get an answer using RAG + LLM.
 
-    Sends question to the API server for retrieval and LLM-based generation.
+    Uses the RAG pipeline to retrieve relevant documents and generate an answer.
 
     Args:
         query: Question to ask (positional argument)
@@ -98,14 +82,40 @@ def ask(query, model):
     """
 
     async def _ask():
-        # Increase timeout since LLM generation can take 30-60 seconds
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            click.echo("Asking question (this may take a while for LLM generation)...")
-            resp = await client.post(f"{config.ragchain_api_url}/ask", json={"query": query, "model": model})
-            resp.raise_for_status()
-            result = resp.json()
-            click.echo(f"\nQ: {result['query']}")
-            click.echo(f"A: {result['answer']}")
+        from langchain_core.prompts import ChatPromptTemplate
+        from langchain_ollama import OllamaLLM
+
+        from ragchain.core.graph import rag_graph
+        from ragchain.prompts import RAG_ANSWER_TEMPLATE
+
+        click.echo("Retrieving relevant documents...")
+
+        initial_state = {
+            "query": query,
+            "intent": "CONCEPT",
+            "retrieved_docs": [],
+            "retrieval_grade": "NO",
+            "rewritten_query": "",
+            "retry_count": 0,
+        }
+
+        final_state = rag_graph.invoke(initial_state)  # type: ignore[arg-type]
+        retrieved_docs = final_state["retrieved_docs"]
+
+        if not retrieved_docs:
+            click.echo("No relevant documents found.")
+            return
+
+        click.echo(f"Found {len(retrieved_docs)} documents. Generating answer...")
+
+        llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1, num_ctx=config.ollama_num_ctx)
+        prompt = ChatPromptTemplate.from_template(RAG_ANSWER_TEMPLATE)
+
+        context = "\n\n".join([doc.page_content for doc in retrieved_docs])
+        answer = llm.invoke(prompt.format(context=context, question=query))
+
+        click.echo(f"\nQ: {query}")
+        click.echo(f"A: {answer}")
 
     asyncio.run(_ask())
 

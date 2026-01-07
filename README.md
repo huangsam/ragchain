@@ -15,7 +15,7 @@ Your local RAG stack — no APIs, no cloud, full control.
 
 ```bash
 # Start the demo stack
-docker compose --profile demo up --build -d
+docker compose up -d
 
 # Search ingested programming language data
 ragchain search "functional programming paradigm" --k 4
@@ -31,13 +31,11 @@ ragchain ask "Which languages are commonly used for machine learning?"
 ragchain ask "What are the top 10 most popular languages?"
 
 # Stop the stack
-docker compose --profile demo down -v
+docker compose down -v
 ```
 
 **What's running:**
 - **Chroma** (vector store) at http://localhost:8000
-- **ragchain API** at http://localhost:8003
-- **demo-runner** ingests top 50 TIOBE languages on startup
 
 ## Intent-Based Retrieval
 

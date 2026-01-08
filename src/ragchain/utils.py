@@ -6,14 +6,7 @@ from typing import Any
 
 
 def get_logger(name: str) -> logging.Logger:
-    """Get a logger with the specified name.
-
-    Args:
-        name: The name of the logger.
-
-    Returns:
-        A logging.Logger instance.
-    """
+    """Get a logger with the specified name."""
     return logging.getLogger(name)
 
 

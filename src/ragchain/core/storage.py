@@ -17,14 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_embedder() -> OllamaEmbeddings:
-    """Create Ollama embedding function.
-
-    Returns OllamaEmbeddings configured with bge-m3 model.
-    Uses 1024-dimensional vector embeddings with 8k token context window.
-
-    Returns:
-        OllamaEmbeddings instance configured with model and base URL from env vars.
-    """
+    """Create Ollama embedding function with model configuration."""
     return OllamaEmbeddings(model=config.ollama_embed_model, base_url=config.ollama_base_url, num_ctx=config.ollama_embed_ctx)
 
 

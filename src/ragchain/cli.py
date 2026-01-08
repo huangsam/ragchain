@@ -4,7 +4,7 @@ import asyncio
 
 import click
 
-from ragchain.core.rag import ingest_documents
+from ragchain.core.storage import ingest_documents
 from ragchain.data.config import config
 from ragchain.data.loaders import load_tiobe_languages, load_wikipedia_pages
 

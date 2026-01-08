@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from langchain_core.documents import Document
 
-from ragchain.core.rag import ingest_documents, search
+from ragchain.core.rag import search
+from ragchain.core.storage import ingest_documents
 from ragchain.data.config import config
 
 
@@ -22,7 +23,7 @@ async def test_ingest_and_search():
     """Test ingesting and searching documents using mock embeddings."""
     # Mock OllamaEmbeddings to avoid requiring Ollama server
     # Use 1024 dimensions to match bge-m3
-    with patch("ragchain.core.rag.OllamaEmbeddings") as MockEmbeddings, patch.object(config, "chroma_server_url", None):  # Force local Chroma for testing
+    with patch("ragchain.core.storage.OllamaEmbeddings") as MockEmbeddings, patch.object(config, "chroma_server_url", None):  # Force local Chroma for testing
         mock_embed = MagicMock()
         mock_embed.embed_documents.return_value = [[0.1] * 1024 for _ in range(2)]
         mock_embed.embed_query.return_value = [0.1] * 1024

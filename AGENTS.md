@@ -13,7 +13,9 @@ src/ragchain/
 ├── cli.py                # Click-based CLI (ingest, search, ask, evaluate)
 ├── prompts.py            # LLM prompt templates
 ├── core/                 # Core RAG functionality
-│   ├── rag.py            # LangChain RAG pipeline (embedding, chunking, retrieval, generation)
+│   ├── rag.py            # RAG search orchestration
+│   ├── storage.py        # Storage utilities: embeddings, vector store, document ingestion
+│   ├── retrievers.py     # Retrieval utilities: ensemble retriever and helpers
 │   ├── graph.py          # LangGraph intent-based adaptive RAG orchestration
 │   ├── router.py         # Intent routing logic
 │   ├── grader.py         # Document relevance grading
@@ -32,11 +34,15 @@ src/ragchain/
   - Typed attributes for Ollama models, Chroma settings, and feature flags
   - Used throughout the codebase for consistent configuration access
 
-- **`core/rag.py`** is the core retrieval layer:
+- **`core/rag.py`** is the RAG search orchestration:
+  - `search()` — Ensemble retrieval using BM25 and Chroma vector search
+
+- **`core/storage.py`** handles storage and ingestion:
   - `get_embedder()` — Creates OllamaEmbeddings with `bge-m3` model for 1024-dimensional vectors with 8k context
   - `get_vector_store()` — Returns Chroma (local persistent or remote HTTP) with LangChain integration
   - `ingest_documents()` — Fetches documents → parses → chunks recursively → embeds → upserts to vector store
-  - `search()` — Legacy ensemble retrieval (BM25 + Chroma with RRF)
+
+- **`core/retrievers.py`** provides retrieval logic:
   - `EnsembleRetriever` — Custom retriever implementing Reciprocal Rank Fusion (RRF) with configurable weights
   - `get_ensemble_retriever()` — Factory with intent-specific weight support
 

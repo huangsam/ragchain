@@ -67,16 +67,24 @@ class IntentRoutingState(TypedDict):
 
 
 class IngestResult(TypedDict):
-    """Result of document ingestion operation."""
+    """Result of document ingestion operation.
 
-    status: str
-    count: int
-    message: str
-    elapsed_seconds: float
+    This TypedDict captures the outcome of an ingestion process, including status,
+    number of documents ingested, a message, and elapsed time.
+    """
+
+    status: str  # "SUCCESS" or "FAILURE"
+    count: int  # Number of documents ingested
+    message: str  # Additional information about the ingestion
+    elapsed_seconds: float  # Time taken for the ingestion process
 
 
 class SearchResult(TypedDict):
-    """Result of a RAG search operation."""
+    """Result of a RAG search operation.
 
-    query: str
-    results: list[dict[str, Any]]
+    This TypedDict captures the outcome of a search process, including the query,
+    and a list of result dictionaries containing relevant information.
+    """
+
+    query: str  # The search query
+    results: list[dict[str, Any]]  # List of result dictionaries with relevant information

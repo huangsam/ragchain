@@ -166,7 +166,7 @@ def get_ensemble_retriever(k: int = 12, bm25_weight: float = 0.4, chroma_weight:
     log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"Creating new retriever with k={k}, bm25={bm25_weight}, chroma={chroma_weight}")
     start = time.time()
 
-    from ragchain.core.storage import get_vector_store
+    from ragchain.ingestion.storage import get_vector_store
 
     store = get_vector_store()
     docs = _load_documents_from_chroma(store)

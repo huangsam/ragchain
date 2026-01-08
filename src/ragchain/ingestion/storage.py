@@ -10,8 +10,8 @@ from langchain_core.documents import Document
 from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from ragchain.core.types import IngestResult
-from ragchain.data.config import config
+from ragchain.config import config
+from ragchain.types import IngestResult
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ async def ingest_documents(docs: list[Document]) -> IngestResult:
     store.add_documents(chunks)
 
     # Clear retriever cache to ensure fresh data
-    from ragchain.core.retrievers import get_ensemble_retriever
+    from ragchain.retrieval.retrievers import get_ensemble_retriever
 
     get_ensemble_retriever.cache_clear()
 

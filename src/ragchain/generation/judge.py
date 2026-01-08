@@ -7,7 +7,7 @@ import time
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import OllamaLLM
 
-from ragchain.data.config import config
+from ragchain.config import config
 from ragchain.prompts import JUDGE_PROMPT, RAG_ANSWER_TEMPLATE
 from ragchain.utils import log_timing, log_with_prefix
 
@@ -118,7 +118,7 @@ async def evaluate_questions(questions: list[str], model: str = config.ollama_mo
     Returns:
         List of evaluation results with question, answer, and scores
     """
-    from ragchain.core.graph import rag_graph
+    from ragchain.graph import rag_graph
 
     llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1, num_ctx=config.ollama_gen_ctx)
 

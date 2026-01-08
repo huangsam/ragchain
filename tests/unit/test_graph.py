@@ -4,18 +4,18 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
 
-from ragchain.core.router import Intent
-from ragchain.core.types import Node
+from ragchain.retrieval.router import Intent
+from ragchain.types import Node
 
 
-@patch("ragchain.core.graph.get_ensemble_retriever")
+@patch("ragchain.graph.get_ensemble_retriever")
 def test_adaptive_retriever(mock_get_retriever):
     """Test adaptive retriever with different intents."""
     mock_retriever = MagicMock()
     mock_retriever.get_relevant_documents.return_value = [Document(page_content="Test doc", metadata={})]
     mock_get_retriever.return_value = mock_retriever
 
-    from ragchain.core.graph import adaptive_retriever
+    from ragchain.graph import adaptive_retriever
 
     # Test FACT intent
     state = {"query": "What are top languages?", "intent": Intent.FACT, "retrieved_docs": []}

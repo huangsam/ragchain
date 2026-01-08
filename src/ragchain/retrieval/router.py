@@ -5,9 +5,9 @@ import time
 
 from langchain_ollama import OllamaLLM
 
-from ragchain.core.types import Intent, IntentRoutingState
-from ragchain.data.config import config
+from ragchain.config import config
 from ragchain.prompts import INTENT_ROUTER_PROMPT
+from ragchain.types import Intent, IntentRoutingState
 from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)

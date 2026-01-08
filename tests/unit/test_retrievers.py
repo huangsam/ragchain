@@ -4,7 +4,13 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
 
-from ragchain.core.retrievers import EnsembleRetriever, _create_bm25_retriever, _create_chroma_retriever, _load_documents_from_chroma, get_ensemble_retriever
+from ragchain.retrieval.retrievers import (
+    EnsembleRetriever,
+    _create_bm25_retriever,
+    _create_chroma_retriever,
+    _load_documents_from_chroma,
+    get_ensemble_retriever,
+)
 
 
 def test_load_documents_from_chroma(mock_chroma_store):
@@ -20,7 +26,7 @@ def test_load_documents_from_chroma(mock_chroma_store):
 
 def test_create_bm25_retriever(sample_documents):
     """Test creating BM25 retriever."""
-    with patch("ragchain.core.retrievers.BM25Retriever") as MockBM25:
+    with patch("ragchain.retrieval.retrievers.BM25Retriever") as MockBM25:
         retriever = _create_bm25_retriever(sample_documents, k=5)
 
         MockBM25.from_documents.assert_called_once_with(sample_documents, k=5)
@@ -45,7 +51,7 @@ def test_ensemble_retriever_parallel_retrieve(mock_bm25_retriever, mock_chroma_r
     retriever.chroma_retriever = mock_chroma_retriever
 
     # Call the actual method
-    from ragchain.core.retrievers import EnsembleRetriever
+    from ragchain.retrieval.retrievers import EnsembleRetriever
 
     bm25_docs, chroma_docs = EnsembleRetriever._parallel_retrieve(retriever, "test query")
 
@@ -65,7 +71,7 @@ def test_ensemble_retriever_compute_rrf_scores():
     bm25_docs = [Document(page_content="Shared doc"), Document(page_content="BM25 only")]
     chroma_docs = [Document(page_content="Shared doc"), Document(page_content="Chroma only")]
 
-    from ragchain.core.retrievers import EnsembleRetriever
+    from ragchain.retrieval.retrievers import EnsembleRetriever
 
     sorted_docs = EnsembleRetriever._compute_rrf_scores(retriever, bm25_docs, chroma_docs)
 
@@ -76,7 +82,11 @@ def test_ensemble_retriever_compute_rrf_scores():
 
 def test_ensemble_retriever_get_relevant_documents():
     """Test full retrieval pipeline."""
-    with patch("ragchain.core.retrievers.log_with_prefix"), patch("ragchain.core.retrievers.log_timing"), patch("ragchain.core.retrievers.time") as MockTime:
+    with (
+        patch("ragchain.retrieval.retrievers.log_with_prefix"),
+        patch("ragchain.retrieval.retrievers.log_timing"),
+        patch("ragchain.retrieval.retrievers.time") as MockTime,
+    ):
         MockTime.time.return_value = 0
         # Create a mock retriever with the needed attributes
         retriever = MagicMock()
@@ -84,7 +94,7 @@ def test_ensemble_retriever_get_relevant_documents():
         retriever.chroma_weight = 0.5
         retriever._parallel_retrieve.return_value = ([Document(page_content="Doc1")], [Document(page_content="Doc2")])
 
-        from ragchain.core.retrievers import EnsembleRetriever
+        from ragchain.retrieval.retrievers import EnsembleRetriever
 
         docs = EnsembleRetriever._get_relevant_documents(retriever, "test query")
 
@@ -95,13 +105,13 @@ def test_ensemble_retriever_get_relevant_documents():
 def test_get_ensemble_retriever_caching(mock_init):
     """Test LRU caching in get_ensemble_retriever."""
     with (
-        patch("ragchain.core.storage.get_vector_store") as MockStore,
-        patch("ragchain.core.retrievers._load_documents_from_chroma") as MockLoad,
-        patch("ragchain.core.retrievers._create_bm25_retriever"),
-        patch("ragchain.core.retrievers._create_chroma_retriever"),
-        patch("ragchain.core.retrievers.log_with_prefix"),
-        patch("ragchain.core.retrievers.log_timing"),
-        patch("ragchain.core.retrievers.time") as MockTime,
+        patch("ragchain.ingestion.storage.get_vector_store") as MockStore,
+        patch("ragchain.retrieval.retrievers._load_documents_from_chroma") as MockLoad,
+        patch("ragchain.retrieval.retrievers._create_bm25_retriever"),
+        patch("ragchain.retrieval.retrievers._create_chroma_retriever"),
+        patch("ragchain.retrieval.retrievers.log_with_prefix"),
+        patch("ragchain.retrieval.retrievers.log_timing"),
+        patch("ragchain.retrieval.retrievers.time") as MockTime,
     ):
         MockTime.time.return_value = 0
         mock_store = MagicMock()
@@ -125,13 +135,13 @@ def test_get_ensemble_retriever_caching(mock_init):
 def test_get_ensemble_retriever_creation():
     """Test retriever creation with mocked dependencies."""
     with (
-        patch("ragchain.core.storage.get_vector_store") as MockStore,
-        patch("ragchain.core.retrievers._load_documents_from_chroma") as MockLoad,
-        patch("ragchain.core.retrievers._create_bm25_retriever") as MockBM25,
-        patch("ragchain.core.retrievers._create_chroma_retriever") as MockChroma,
-        patch("ragchain.core.retrievers.log_with_prefix"),
-        patch("ragchain.core.retrievers.log_timing"),
-        patch("ragchain.core.retrievers.time") as MockTime,
+        patch("ragchain.ingestion.storage.get_vector_store") as MockStore,
+        patch("ragchain.retrieval.retrievers._load_documents_from_chroma") as MockLoad,
+        patch("ragchain.retrieval.retrievers._create_bm25_retriever") as MockBM25,
+        patch("ragchain.retrieval.retrievers._create_chroma_retriever") as MockChroma,
+        patch("ragchain.retrieval.retrievers.log_with_prefix"),
+        patch("ragchain.retrieval.retrievers.log_timing"),
+        patch("ragchain.retrieval.retrievers.time") as MockTime,
         patch.object(EnsembleRetriever, "__init__", return_value=None),
     ):
         MockTime.time.return_value = 0

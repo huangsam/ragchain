@@ -32,6 +32,10 @@ class Config:
         # Generation context: needs to fit 12 docs × ~800 tokens = ~10k tokens
         self.ollama_gen_ctx: int = int(os.environ.get("OLLAMA_GEN_CTX", "8192"))
 
+        # Document chunking configuration
+        self.chunk_size: int = int(os.environ.get("CHUNK_SIZE", "2500"))
+        self.chunk_overlap: int = int(os.environ.get("CHUNK_OVERLAP", "500"))
+
         # Performance optimization flags
         self.enable_grading: bool = os.environ.get("ENABLE_GRADING", "true").lower() == "true"
         self.enable_intent_routing: bool = os.environ.get("ENABLE_INTENT_ROUTING", "true").lower() == "true"

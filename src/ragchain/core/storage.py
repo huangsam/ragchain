@@ -67,9 +67,8 @@ async def ingest_documents(docs: list[Document]) -> IngestResult:
 
     start_time = time.perf_counter()
 
-    # Increased overlap to 500 chars (20%) to fix "Missing Paragraph" issues where key context
-    # spans across chunk boundaries (e.g., Comparing interpreted vs compiled languages).
-    splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=500)
+    # Configurable chunking with overlap to preserve context across boundaries
+    splitter = RecursiveCharacterTextSplitter(chunk_size=config.chunk_size, chunk_overlap=config.chunk_overlap)
     chunks = splitter.split_documents(docs)
 
     store = get_vector_store()

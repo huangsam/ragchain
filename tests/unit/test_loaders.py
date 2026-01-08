@@ -39,7 +39,7 @@ async def test_load_tiobe_languages(mock_session_class):
 
 
 @pytest.mark.asyncio
-@patch("ragchain.data.loaders.aiohttp.ClientSession")
+@patch("ragchain.ingestion.loaders.aiohttp.ClientSession")
 async def test_load_tiobe_languages_network_error(mock_session_class):
     """Test TIOBE loader handles network errors gracefully."""
     # Mock a network error

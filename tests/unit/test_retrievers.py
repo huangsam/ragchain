@@ -4,7 +4,13 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
 
-from ragchain.retrieval.retrievers import EnsembleRetriever, _create_bm25_retriever, _create_chroma_retriever, _load_documents_from_chroma, get_ensemble_retriever
+from ragchain.retrieval.retrievers import (
+    EnsembleRetriever,
+    _create_bm25_retriever,
+    _create_chroma_retriever,
+    _load_documents_from_chroma,
+    get_ensemble_retriever,
+)
 
 
 def test_load_documents_from_chroma(mock_chroma_store):
@@ -45,7 +51,7 @@ def test_ensemble_retriever_parallel_retrieve(mock_bm25_retriever, mock_chroma_r
     retriever.chroma_retriever = mock_chroma_retriever
 
     # Call the actual method
-    from ragchain.core.retrievers import EnsembleRetriever
+    from ragchain.retrieval.retrievers import EnsembleRetriever
 
     bm25_docs, chroma_docs = EnsembleRetriever._parallel_retrieve(retriever, "test query")
 
@@ -65,7 +71,7 @@ def test_ensemble_retriever_compute_rrf_scores():
     bm25_docs = [Document(page_content="Shared doc"), Document(page_content="BM25 only")]
     chroma_docs = [Document(page_content="Shared doc"), Document(page_content="Chroma only")]
 
-    from ragchain.core.retrievers import EnsembleRetriever
+    from ragchain.retrieval.retrievers import EnsembleRetriever
 
     sorted_docs = EnsembleRetriever._compute_rrf_scores(retriever, bm25_docs, chroma_docs)
 

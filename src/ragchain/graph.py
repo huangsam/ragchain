@@ -7,10 +7,10 @@ from langchain_ollama import OllamaLLM
 from langgraph.graph import END, StateGraph
 
 from ragchain.config import config
+from ragchain.inference.grader import grade_with_statistics, should_accept_docs, should_skip_grading
+from ragchain.inference.retrievers import get_ensemble_retriever
+from ragchain.inference.router import intent_router
 from ragchain.prompts import QUERY_REWRITER_PROMPT
-from ragchain.retrieval.grader import grade_with_statistics, should_accept_docs, should_skip_grading
-from ragchain.retrieval.retrievers import get_ensemble_retriever
-from ragchain.retrieval.router import intent_router
 from ragchain.types import GradeSignal, Intent, IntentRoutingState, Node
 
 logger = logging.getLogger(__name__)

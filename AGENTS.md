@@ -12,18 +12,23 @@ A compact tree view of the repository layout:
 src/ragchain/
 ├── cli.py                # Click-based CLI (ingest, search, ask, evaluate)
 ├── prompts.py            # LLM prompt templates
-├── core/                 # Core RAG functionality
-│   ├── rag.py            # RAG search orchestration
-│   ├── storage.py        # Storage utilities: embeddings, vector store, document ingestion
-│   ├── retrievers.py     # Retrieval utilities: ensemble retriever and helpers
-│   ├── graph.py          # LangGraph intent-based adaptive RAG orchestration
-│   ├── router.py         # Intent routing logic
-│   ├── grader.py         # Document relevance grading
-│   └── types.py          # Shared enums and TypedDicts
-├── data/                 # Data handling and configuration
-│   ├── config.py         # Centralized configuration management (singleton)
+├── graph.py              # LangGraph intent-based adaptive RAG orchestration
+├── config.py             # Configuration management (singleton)
+├── types.py              # Shared enums and TypedDicts
+├── utils.py              # Utility functions for logging, timing, and other helpers
+├── generation/           # Answer generation and evaluation
+│   ├── __init__.py
+│   └── judge.py          # LLM-as-judge evaluation for RAG answers
+├── ingestion/            # Document loading and storage
+│   ├── __init__.py
 │   ├── loaders.py        # Document loaders for Wikipedia and other sources
-│   └── utils.py          # Utility functions for logging, timing, and other helpers
+│   └── storage.py        # Storage utilities: embeddings, vector store, document ingestion
+├── inference/            # Retrieval and intent routing
+│   ├── __init__.py
+│   ├── rag.py            # RAG search orchestration
+│   ├── retrievers.py     # Retrieval utilities: ensemble retriever and helpers
+│   ├── router.py         # Intent routing logic
+│   └── grader.py         # Document relevance grading
 └── __init__.py           # Package initialization
 ```
 
@@ -34,19 +39,19 @@ src/ragchain/
   - Typed attributes for Ollama models, Chroma settings, and feature flags
   - Used throughout the codebase for consistent configuration access
 
-- **`core/rag.py`** is the RAG search orchestration:
+- **`inference/rag.py`** is the RAG search orchestration:
   - `search()` — Ensemble retrieval using BM25 and Chroma vector search
 
-- **`core/storage.py`** handles storage and ingestion:
+- **`ingestion/storage.py`** handles storage and ingestion:
   - `get_embedder()` — Creates OllamaEmbeddings with `bge-m3` model for 1024-dimensional vectors with 8k context
   - `get_vector_store()` — Returns Chroma (local persistent or remote HTTP) with LangChain integration
   - `ingest_documents()` — Fetches documents → parses → chunks recursively → embeds → upserts to vector store
 
-- **`core/retrievers.py`** provides retrieval logic:
+- **`inference/retrievers.py`** provides retrieval logic:
   - `EnsembleRetriever` — Custom retriever implementing Reciprocal Rank Fusion (RRF) with configurable weights
   - `get_ensemble_retriever()` — Factory with intent-specific weight support
 
-- **`core/graph.py`** is the agentic orchestrator using LangGraph:
+- **`graph.py`** is the agentic orchestrator using LangGraph:
   - `IntentRoutingState` — Typed state management for the RAG graph
   - `intent_router()` — LLM-based query classification (FACT/CONCEPT/COMPARISON)
   - `adaptive_retriever()` — Retrieves with intent-specific BM25/Chroma weights
@@ -60,7 +65,7 @@ src/ragchain/
   - `RETRIEVAL_GRADER_PROMPT` — Document relevance validation
   - `QUERY_REWRITER_PROMPT` — Query enhancement
 
-- **`data/loaders.py`** provides document loading utilities:
+- **`ingestion/loaders.py`** provides document loading utilities:
   - Wikipedia article fetching (via built-in Wikipedia API or custom parsers)
   - Extensible for other sources (local files, APIs, etc.)
 
@@ -70,7 +75,7 @@ src/ragchain/
   - `ask` — Intent-based adaptive RAG with LLM generation
   - `evaluate` — LLM-as-judge evaluation framework
 
-- **`data/utils.py`** provides logger helpers to simplify the monitoring experience, including:
+- **`utils.py`** provides logger helpers to simplify the monitoring experience, including:
   - `log_with_prefix()` — Logs messages with a consistent prefix for easier filtering
   - `log_timing()` — Measures and logs the duration of operations
 

@@ -6,8 +6,8 @@ import pytest
 from langchain_core.documents import Document
 
 from ragchain.config import config
+from ragchain.inference.rag import search
 from ragchain.ingestion.storage import ingest_documents
-from ragchain.retrieval.rag import search
 
 
 @pytest.mark.asyncio
@@ -44,7 +44,7 @@ async def test_ingest_and_search(mock_embedder):
 @pytest.mark.asyncio
 async def test_search_empty_query():
     """Test search with empty query."""
-    with patch("ragchain.retrieval.rag.get_ensemble_retriever") as MockRetriever:
+    with patch("ragchain.inference.rag.get_ensemble_retriever") as MockRetriever:
         mock_retriever = MagicMock()
         mock_retriever.get_relevant_documents.return_value = []
         MockRetriever.return_value = mock_retriever
@@ -59,7 +59,7 @@ async def test_search_empty_query():
 @pytest.mark.asyncio
 async def test_search_k_zero():
     """Test search with k=0."""
-    with patch("ragchain.retrieval.rag.get_ensemble_retriever") as MockRetriever:
+    with patch("ragchain.inference.rag.get_ensemble_retriever") as MockRetriever:
         mock_retriever = MagicMock()
         mock_retriever.get_relevant_documents.return_value = [Document(page_content="Test")]
         MockRetriever.return_value = mock_retriever

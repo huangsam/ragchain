@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
 
-from ragchain.retrieval.router import Intent
+from ragchain.inference.router import Intent
 from ragchain.types import Node
 
 

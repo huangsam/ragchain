@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from ragchain.retrieval.router import intent_router
+from ragchain.inference.router import intent_router
 from ragchain.types import Intent
 
 
@@ -17,10 +17,10 @@ def test_intent_router_fast_path(mock_config):
     assert "original_query" in result
 
 
-@patch("ragchain.retrieval.router.OllamaLLM")
+@patch("ragchain.inference.router.OllamaLLM")
 def test_intent_router_with_llm(mock_llm_class, mock_config):
     """Test intent router with LLM classification."""
-    with patch("ragchain.retrieval.router.config", mock_config):
+    with patch("ragchain.inference.router.config", mock_config):
         mock_llm = MagicMock()
         mock_llm.invoke.return_value = "FACT"
         mock_llm_class.return_value = mock_llm

@@ -55,7 +55,7 @@ def search(query, k):
     """
 
     async def _search():
-        from ragchain.retrieval.rag import search as search_func
+        from ragchain.inference.rag import search as search_func
 
         result = await search_func(query, k=k)
         click.echo(f"Query: {result['query']}")

@@ -83,7 +83,7 @@ async def test_ingest_documents_success(sample_documents, mock_embedder):
     with (
         patch("ragchain.ingestion.storage.get_embedder", return_value=mock_embedder),
         patch("ragchain.ingestion.storage.Chroma") as MockChroma,
-        patch("ragchain.retrieval.retrievers.get_ensemble_retriever") as MockFunc,
+        patch("ragchain.inference.retrievers.get_ensemble_retriever") as MockFunc,
         patch.object(config, "chroma_server_url", None),
     ):
         mock_store = MagicMock()
@@ -103,7 +103,7 @@ async def test_ingest_documents_chunking(mock_embedder):
     with (
         patch("ragchain.ingestion.storage.get_embedder", return_value=mock_embedder),
         patch("ragchain.ingestion.storage.Chroma") as MockChroma,
-        patch("ragchain.retrieval.retrievers.get_ensemble_retriever"),
+        patch("ragchain.inference.retrievers.get_ensemble_retriever"),
         patch.object(config, "chroma_server_url", None),
     ):
         mock_store = MagicMock()

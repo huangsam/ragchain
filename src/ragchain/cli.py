@@ -159,7 +159,7 @@ def evaluate(model):
     click.echo(f"Evaluating {len(questions)} questions...")
 
     async def _evaluate():
-        from ragchain.generation.judge import evaluate_questions
+        from ragchain.evaluation.judge import evaluate_questions
 
         # Run evaluations
         for i, question in enumerate(questions, 1):

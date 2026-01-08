@@ -16,7 +16,7 @@ src/ragchain/
 ├── config.py             # Configuration management (singleton)
 ├── types.py              # Shared enums and TypedDicts
 ├── utils.py              # Utility functions for logging, timing, and other helpers
-├── generation/           # Answer generation and evaluation
+├── evaluation/           # Answer generation and evaluation
 │   ├── __init__.py
 │   └── judge.py          # LLM-as-judge evaluation for RAG answers
 ├── ingestion/            # Document loading and storage

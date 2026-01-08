@@ -71,12 +71,11 @@ def mock_chroma_retriever():
 
 
 @pytest.fixture
-def mock_ensemble_retriever(mock_bm25_retriever, mock_chroma_retriever):
-    """Provide a mocked EnsembleRetriever."""
-    retriever = MagicMock()
-    retriever.bm25_retriever = mock_bm25_retriever
-    retriever.chroma_retriever = mock_chroma_retriever
-    retriever.bm25_weight = 0.4
-    retriever.chroma_weight = 0.6
-    retriever.get_relevant_documents.return_value = [Document(page_content="Ensemble result")]
-    return retriever
+def mock_config():
+    """Provide a mocked config object."""
+    config = MagicMock()
+    config.enable_intent_routing = True
+    config.ollama_model = "test-model"
+    config.ollama_base_url = "http://test"
+    config.enable_grading = True
+    return config

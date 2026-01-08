@@ -1,11 +1,12 @@
-"""Shared enums and types for the RAG pipeline."""
+"""Shared types and enums for the RAG pipeline."""
 
 from enum import Enum
+from typing import Any
 
 from langchain_core.documents import Document
 from typing_extensions import TypedDict
 
-__all__ = ["Intent", "GradeSignal", "Node", "IntentRoutingState"]
+__all__ = ["Intent", "GradeSignal", "Node", "IntentRoutingState", "IngestResult", "SearchResult"]
 
 
 class Intent(str, Enum):
@@ -63,3 +64,19 @@ class IntentRoutingState(TypedDict):
     retrieval_grade: GradeSignal  # LLM assessment of document relevance (YES/NO)
     rewritten_query: str  # Rewritten query if grading failed (empty otherwise)
     retry_count: int  # Number of query rewriting attempts (max 1)
+
+
+class IngestResult(TypedDict):
+    """Result of document ingestion operation."""
+
+    status: str
+    count: int
+    message: str
+    elapsed_seconds: float
+
+
+class SearchResult(TypedDict):
+    """Result of a RAG search operation."""
+
+    query: str
+    results: list[dict[str, Any]]

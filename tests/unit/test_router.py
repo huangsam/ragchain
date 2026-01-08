@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-from ragchain.core.enums import Intent
 from ragchain.core.router import intent_router
+from ragchain.core.types import Intent
 
 
 @patch("ragchain.core.router.config")

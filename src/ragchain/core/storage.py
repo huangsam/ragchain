@@ -3,7 +3,6 @@
 import logging
 import time
 from pathlib import Path
-from typing import TypedDict
 from urllib.parse import urlparse
 
 from langchain_chroma import Chroma
@@ -11,18 +10,10 @@ from langchain_core.documents import Document
 from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from ragchain.core.types import IngestResult
 from ragchain.data.config import config
 
 logger = logging.getLogger(__name__)
-
-
-class IngestResult(TypedDict):
-    """Result of document ingestion operation."""
-
-    status: str
-    count: int
-    message: str
-    elapsed_seconds: float
 
 
 def get_embedder() -> OllamaEmbeddings:

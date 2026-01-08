@@ -55,33 +55,43 @@ async def load_tiobe_languages(n: int = 50) -> list[str]:
     return languages[:n]
 
 
-def _load_single_page(lang: str) -> Document | None:
-    """Load Wikipedia page for a programming language.
+def _load_single_page(lang: str, retries: int = 2) -> Document | None:
+    """Load Wikipedia page for a programming language with retry logic.
 
     Args:
         lang: Programming language name (e.g., 'Python')
+        retries: Number of retry attempts on failure (default: 2)
 
     Returns:
         Document with page content and language metadata, or None if loading fails.
     """
+    import time
+
     from langchain_community.document_loaders import WikipediaLoader
 
-    try:
-        # Set a shorter timeout for Wikipedia loader to avoid hanging
-        loader = WikipediaLoader(query=f"{lang} programming language", load_max_docs=1)
-        pages = loader.load()
-        if pages:
-            pages[0].metadata["language"] = lang
-            return pages[0]
-    except Exception as e:
-        log_with_prefix(logger, logging.WARNING, "load_wikipedia_page", f"Failed to load Wikipedia page for {lang}: {e}")
+    for attempt in range(retries + 1):
+        try:
+            # Set a shorter timeout for Wikipedia loader to avoid hanging
+            loader = WikipediaLoader(query=f"{lang} programming language", load_max_docs=1)
+            pages = loader.load()
+            if pages:
+                pages[0].metadata["language"] = lang
+                return pages[0]
+        except Exception as e:
+            if attempt < retries:
+                # Wait before retrying (exponential backoff)
+                wait_time = 0.5 * (2**attempt)
+                time.sleep(wait_time)
+            else:
+                log_with_prefix(logger, logging.WARNING, "load_wikipedia_page", f"Failed to load Wikipedia page for {lang} after {retries + 1} attempts: {e}")
     return None
 
 
 async def load_wikipedia_pages(language_names: list[str]) -> list[Document]:
-    """Fetch Wikipedia pages for programming languages concurrently.
+    """Fetch Wikipedia pages for programming languages sequentially.
 
-    Loads Wikipedia articles for given languages using concurrent ThreadPoolExecutor.
+    Loads Wikipedia articles for given languages one at a time to avoid
+    Wikipedia API rate limiting issues.
 
     Args:
         language_names: List of programming language names to fetch
@@ -93,17 +103,13 @@ async def load_wikipedia_pages(language_names: list[str]) -> list[Document]:
     docs = []
     loop = asyncio.get_event_loop()
 
-    # Load pages with concurrent futures to avoid blocking
-    import concurrent.futures
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        futures = [loop.run_in_executor(executor, _load_single_page, lang) for lang in language_names]
-        results = await asyncio.gather(*futures, return_exceptions=True)
-
-        for result in results:
-            if isinstance(result, Document):
+    # Load pages sequentially to avoid Wikipedia API rate limiting
+    for lang in language_names:
+        try:
+            result = await loop.run_in_executor(None, _load_single_page, lang)
+            if result:
                 docs.append(result)
-            elif isinstance(result, Exception):
-                log_with_prefix(logger, logging.ERROR, "load_wikipedia_pages", f"Error loading page: {result}")
+        except Exception as e:
+            log_with_prefix(logger, logging.ERROR, "load_wikipedia_pages", f"Error loading page: {e}")
 
     return docs

@@ -11,16 +11,13 @@ from ragchain.data.config import config
 
 
 @pytest.mark.asyncio
-async def test_ingest_and_search():
+async def test_ingest_and_search(mock_embedder):
     """Test ingesting and searching documents using mock embeddings."""
-    # Mock OllamaEmbeddings to avoid requiring Ollama server
     # Use 1024 dimensions to match bge-m3
-    with patch("ragchain.core.storage.OllamaEmbeddings") as MockEmbeddings, patch.object(config, "chroma_server_url", None):  # Force local Chroma for testing
-        mock_embed = MagicMock()
-        mock_embed.embed_documents.return_value = [[0.1] * 1024 for _ in range(2)]
-        mock_embed.embed_query.return_value = [0.1] * 1024
-        MockEmbeddings.return_value = mock_embed
-
+    with (
+        patch("ragchain.core.storage.get_embedder", return_value=mock_embedder),
+        patch.object(config, "chroma_server_url", None),
+    ):  # Force local Chroma for testing
         # Create sample docs
         docs = [
             Document(

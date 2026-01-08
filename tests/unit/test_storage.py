@@ -78,16 +78,14 @@ async def test_ingest_empty():
 
 
 @pytest.mark.asyncio
-async def test_ingest_documents_success(sample_documents):
+async def test_ingest_documents_success(sample_documents, mock_embedder):
     """Test ingesting documents successfully."""
     with (
-        patch("ragchain.core.storage.OllamaEmbeddings") as MockEmbeddings,
+        patch("ragchain.core.storage.get_embedder", return_value=mock_embedder),
         patch("ragchain.core.storage.Chroma") as MockChroma,
         patch("ragchain.core.retrievers.get_ensemble_retriever") as MockFunc,
         patch.object(config, "chroma_server_url", None),
     ):
-        mock_embed = MagicMock()
-        MockEmbeddings.return_value = mock_embed
         mock_store = MagicMock()
         MockChroma.return_value = mock_store
 
@@ -100,16 +98,14 @@ async def test_ingest_documents_success(sample_documents):
 
 
 @pytest.mark.asyncio
-async def test_ingest_documents_chunking():
+async def test_ingest_documents_chunking(mock_embedder):
     """Test document chunking in ingest_documents."""
     with (
-        patch("ragchain.core.storage.OllamaEmbeddings") as MockEmbeddings,
+        patch("ragchain.core.storage.get_embedder", return_value=mock_embedder),
         patch("ragchain.core.storage.Chroma") as MockChroma,
         patch("ragchain.core.retrievers.get_ensemble_retriever"),
         patch.object(config, "chroma_server_url", None),
     ):
-        mock_embed = MagicMock()
-        MockEmbeddings.return_value = mock_embed
         mock_store = MagicMock()
         MockChroma.return_value = mock_store
 

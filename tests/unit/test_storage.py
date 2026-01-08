@@ -78,7 +78,7 @@ async def test_ingest_empty():
 
 
 @pytest.mark.asyncio
-async def test_ingest_documents_success():
+async def test_ingest_documents_success(sample_documents):
     """Test ingesting documents successfully."""
     with (
         patch("ragchain.core.storage.OllamaEmbeddings") as MockEmbeddings,
@@ -91,12 +91,10 @@ async def test_ingest_documents_success():
         mock_store = MagicMock()
         MockChroma.return_value = mock_store
 
-        docs = [Document(page_content="Test content", metadata={"test": True})]
-
-        result = await ingest_documents(docs)
+        result = await ingest_documents(sample_documents)
 
         assert result["status"] == "ok"
-        assert result["count"] >= 1
+        assert result["count"] >= 2  # sample_documents has 2 docs
         mock_store.add_documents.assert_called_once()
         MockFunc.cache_clear.assert_called_once()
 

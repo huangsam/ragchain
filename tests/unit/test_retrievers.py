@@ -7,15 +7,9 @@ from langchain_core.documents import Document
 from ragchain.core.retrievers import EnsembleRetriever, _create_bm25_retriever, _create_chroma_retriever, _load_documents_from_chroma, get_ensemble_retriever
 
 
-def test_load_documents_from_chroma():
+def test_load_documents_from_chroma(mock_chroma_store):
     """Test loading documents from Chroma store."""
-    mock_store = MagicMock()
-    mock_store.get.return_value = {
-        "documents": ["Doc1", "Doc2"],
-        "metadatas": [{"key": "value"}, None],  # Test padding
-    }
-
-    docs = _load_documents_from_chroma(mock_store)
+    docs = _load_documents_from_chroma(mock_chroma_store)
 
     assert len(docs) == 2
     assert docs[0].page_content == "Doc1"
@@ -24,33 +18,31 @@ def test_load_documents_from_chroma():
     assert docs[1].metadata == {}  # Padded with empty dict
 
 
-def test_create_bm25_retriever():
+def test_create_bm25_retriever(sample_documents):
     """Test creating BM25 retriever."""
     with patch("ragchain.core.retrievers.BM25Retriever") as MockBM25:
-        docs = [Document(page_content="Test doc")]
-        retriever = _create_bm25_retriever(docs, k=5)
+        retriever = _create_bm25_retriever(sample_documents, k=5)
 
-        MockBM25.from_documents.assert_called_once_with(docs, k=5)
+        MockBM25.from_documents.assert_called_once_with(sample_documents, k=5)
         assert retriever == MockBM25.from_documents.return_value
 
 
-def test_create_chroma_retriever():
+def test_create_chroma_retriever(mock_chroma_store):
     """Test creating Chroma retriever."""
-    mock_store = MagicMock()
-    retriever = _create_chroma_retriever(mock_store, k=10)
+    retriever = _create_chroma_retriever(mock_chroma_store, k=10)
 
-    mock_store.as_retriever.assert_called_once_with(search_kwargs={"k": 10})
-    assert retriever == mock_store.as_retriever.return_value
+    mock_chroma_store.as_retriever.assert_called_once_with(search_kwargs={"k": 10})
+    assert retriever == mock_chroma_store.as_retriever.return_value
 
 
-def test_ensemble_retriever_parallel_retrieve():
+def test_ensemble_retriever_parallel_retrieve(mock_bm25_retriever, mock_chroma_retriever):
     """Test parallel retrieval in EnsembleRetriever."""
     # Create a mock retriever instance to test the method
     retriever = MagicMock()
     retriever.bm25_weight = 0.5
     retriever.chroma_weight = 0.5
-    retriever.bm25_retriever.invoke.return_value = [Document(page_content="BM25 doc")]
-    retriever.chroma_retriever.invoke.return_value = [Document(page_content="Chroma doc")]
+    retriever.bm25_retriever = mock_bm25_retriever
+    retriever.chroma_retriever = mock_chroma_retriever
 
     # Call the actual method
     from ragchain.core.retrievers import EnsembleRetriever
@@ -59,8 +51,8 @@ def test_ensemble_retriever_parallel_retrieve():
 
     assert len(bm25_docs) == 1
     assert len(chroma_docs) == 1
-    retriever.bm25_retriever.invoke.assert_called_once_with("test query")
-    retriever.chroma_retriever.invoke.assert_called_once_with("test query")
+    mock_bm25_retriever.invoke.assert_called_once_with("test query")
+    mock_chroma_retriever.invoke.assert_called_once_with("test query")
 
 
 def test_ensemble_retriever_compute_rrf_scores():

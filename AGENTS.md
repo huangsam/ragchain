@@ -123,10 +123,12 @@ src/ragchain/
 The following environment variables can be used to configure the RAGChain system:
 
 **Vector Store Configuration:**
+
 - `CHROMA_PERSIST_DIRECTORY` — Directory for local Chroma persistence (default: `./chroma_data`)
 - `CHROMA_SERVER_URL` — URL for remote Chroma server (default: `http://localhost:8000`)
 
 **Ollama Configuration:**
+
 - `OLLAMA_BASE_URL` — Base URL for Ollama API (default: `http://localhost:11434`)
 - `OLLAMA_EMBED_MODEL` — Model name for embeddings (default: `bge-m3`)
 - `OLLAMA_MODEL` — Model name for text generation (default: `deepseek-r1`)
@@ -134,14 +136,17 @@ The following environment variables can be used to configure the RAGChain system
 - `OLLAMA_GEN_CTX` — Context window size for generation model (default: `8192`)
 
 **Document Processing:**
+
 - `CHUNK_SIZE` — Size of document chunks in characters (default: `2500`)
 - `CHUNK_OVERLAP` — Overlap between chunks in characters (default: `500`)
 
 **Feature Flags:**
+
 - `ENABLE_GRADING` — Enable/disable document relevance grading (default: `true`)
 - `ENABLE_INTENT_ROUTING` — Enable/disable intent-based routing (default: `true`)
 
 **API Configuration:**
+
 - `RAGCHAIN_API_URL` — URL for the RAGChain API server (default: `http://localhost:8003`)
 
 ---

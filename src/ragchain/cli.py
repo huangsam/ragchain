@@ -85,7 +85,7 @@ def ask(query, model):
         from langchain_core.prompts import ChatPromptTemplate
         from langchain_ollama import OllamaLLM
 
-        from ragchain.graph import rag_graph
+        from ragchain.inference.graph import rag_graph
         from ragchain.prompts import RAG_ANSWER_TEMPLATE
 
         click.echo("Retrieving relevant documents...")

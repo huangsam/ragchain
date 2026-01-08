@@ -12,7 +12,6 @@ A compact tree view of the repository layout:
 src/ragchain/
 ├── cli.py                # Click-based CLI (ingest, search, ask, evaluate)
 ├── prompts.py            # LLM prompt templates
-├── graph.py              # LangGraph intent-based adaptive RAG orchestration
 ├── config.py             # Configuration management (singleton)
 ├── types.py              # Shared enums and TypedDicts
 ├── utils.py              # Utility functions for logging, timing, and other helpers
@@ -23,8 +22,9 @@ src/ragchain/
 │   ├── __init__.py
 │   ├── loaders.py        # Document loaders for Wikipedia and other sources
 │   └── storage.py        # Storage utilities: embeddings, vector store, document ingestion
-├── inference/            # Retrieval and intent routing
+├── inference/            # Retrieval, routing, and orchestration
 │   ├── __init__.py
+│   ├── graph.py          # LangGraph intent-based adaptive RAG orchestration
 │   ├── rag.py            # RAG search orchestration
 │   ├── retrievers.py     # Retrieval utilities: ensemble retriever and helpers
 │   ├── router.py         # Intent routing logic
@@ -51,7 +51,7 @@ src/ragchain/
   - `EnsembleRetriever` — Custom retriever implementing Reciprocal Rank Fusion (RRF) with configurable weights
   - `get_ensemble_retriever()` — Factory with intent-specific weight support
 
-- **`graph.py`** is the agentic orchestrator using LangGraph:
+- **`inference/graph.py`** is the agentic orchestrator using LangGraph:
   - `IntentRoutingState` — Typed state management for the RAG graph
   - `intent_router()` — LLM-based query classification (FACT/CONCEPT/COMPARISON)
   - `adaptive_retriever()` — Retrieves with intent-specific BM25/Chroma weights

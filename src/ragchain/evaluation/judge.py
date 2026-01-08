@@ -118,7 +118,7 @@ async def evaluate_questions(questions: list[str], model: str = config.ollama_mo
     Returns:
         List of evaluation results with question, answer, and scores
     """
-    from ragchain.graph import rag_graph
+    from ragchain.inference.graph import rag_graph
 
     llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1, num_ctx=config.ollama_gen_ctx)
 

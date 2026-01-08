@@ -11,7 +11,7 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.vectorstores import VectorStoreRetriever
 
-from ragchain.data.utils import log_timing, log_with_prefix
+from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
 

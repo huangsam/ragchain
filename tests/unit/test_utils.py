@@ -2,7 +2,7 @@
 
 import logging
 
-from ragchain.data.utils import get_logger, log_timing, log_with_prefix
+from ragchain.utils import get_logger, log_timing, log_with_prefix
 
 
 def test_get_logger():

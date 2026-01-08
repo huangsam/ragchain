@@ -1,4 +1,4 @@
-"""Utility functions for the ragchain package."""
+"""Shared utility functions for the ragchain package."""
 
 import logging
 import time

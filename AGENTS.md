@@ -102,7 +102,7 @@ src/ragchain/
 
 - **Ruff** (linter & formatter) — `line-length = 160`
 - **mypy** — static type checking (configured to ignore missing imports)
-- **pytest** + **pytest-asyncio** — testing framework
+- **pytest** + **pytest-asyncio** — testing framework with integration markers
 - **aioresponses** — mock async HTTP requests in tests
 
 **Project entry points:**
@@ -124,14 +124,11 @@ uv run --with-editable . pytest -q
 **Integration tests** against a running local Chroma service:
 
 ```bash
-# Start a Chroma test stack
-ragchain up --profile test
+# Start Ollama (if not already running)
+ollama serve
 
-# Run full pipeline integration tests
-CHROMA_SERVER_URL=http://localhost:8000 uv run --with-editable . pytest tests/integration/test_full_pipeline.py
-
-# Tear down the test stack
-ragchain down --profile test
+# Run full pipeline integration tests (uses local Chroma persistence)
+CHROMA_SERVER_URL= uv run --with-editable . pytest -m integration
 ```
 
 **Local development:**

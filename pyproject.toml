@@ -21,11 +21,11 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "aioresponses>=0.7.8",
-    "pytest>=9.0.2",
-    "pytest-asyncio>=1.3.0",
-    "ruff>=0.12.0",
-    "mypy>=1.10",
+  "aioresponses>=0.7.8",
+  "pytest>=9.0.2",
+  "pytest-asyncio>=1.3.0",
+  "ruff>=0.12.0",
+  "mypy>=1.10",
 ]
 
 [build-system]
@@ -50,3 +50,8 @@ python_version = "3.12"
 ignore_missing_imports = true
 follow_imports = "silent"
 warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+markers = [
+  "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
+]

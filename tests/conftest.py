@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", message=".*Enable tracemalloc to get the objec
 
 @pytest.fixture
 def temp_chroma_dir(tmp_path):
-    """Provide a temporary Chroma directory."""
+    """Provide a temporary Chroma directory for integration tests."""
     import os
 
     os.environ["CHROMA_PERSIST_DIRECTORY"] = str(tmp_path / "chroma")

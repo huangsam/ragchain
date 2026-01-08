@@ -12,15 +12,16 @@ __all__ = ["Intent", "GradeSignal", "Node", "IntentRoutingState", "IngestResult"
 class Intent(str, Enum):
     """Query intent classification for adaptive RAG retrieval.
 
-    Determines how to weight BM25 (keyword) vs Chroma (semantic) search:
-    - FACT: Keyword-heavy (0.7 BM25 / 0.3 Chroma) for lists/rankings
-    - CONCEPT: Balanced (0.3 BM25 / 0.7 Chroma) for explanations
-    - COMPARISON: Semantic-heavy (0.4 BM25 / 0.6 Chroma) for comparisons
+    Determines how to weight BM25 (keyword) vs Chroma (semantic) search.
+    Each intent type adjusts weights accordingly for different use cases.
     """
 
-    FACT = "FACT"  # Queries asking for specific lists, rankings, or enumerated facts
-    CONCEPT = "CONCEPT"  # Queries seeking explanations or understanding of concepts
-    COMPARISON = "COMPARISON"  # Queries comparing or contrasting multiple items
+    # Queries asking for specific lists, rankings, or enumerated facts
+    FACT = "FACT"
+    # Queries seeking explanations or understanding of concepts
+    CONCEPT = "CONCEPT"
+    # Queries comparing or contrasting multiple items
+    COMPARISON = "COMPARISON"
 
 
 class GradeSignal(str, Enum):
@@ -30,23 +31,27 @@ class GradeSignal(str, Enum):
     sufficiently answer the query. YES allows proceeding, NO triggers query rewriting.
     """
 
-    YES = "YES"  # Documents are relevant and provide useful information
-    NO = "NO"  # Documents are not relevant or insufficient for the query
+    # Documents are relevant and provide useful information
+    YES = "YES"
+    # Documents are not relevant or insufficient for the query
+    NO = "NO"
 
 
 class Node(str, Enum):
     """Graph node names in the LangGraph RAG workflow.
 
-    Each node represents a step in the intent-based adaptive RAG pipeline:
-    - INTENT_ROUTER: Classifies query intent (FACT/CONCEPT/COMPARISON)
-    - ADAPTIVE_RETRIEVER: Retrieves documents with intent-specific weights
-    - RETRIEVAL_GRADER: Grades document relevance, decides retry or end
-    - QUERY_REWRITER: Rewrites query for better retrieval on failure
+    Each node represents a step in the intent-based adaptive RAG pipeline.
+    Look at the corresponding functions in graph.py for implementation
+    details.
     """
 
+    # Classifies query intent (FACT/CONCEPT/COMPARISON)
     INTENT_ROUTER = "intent_router"
+    # Retrieves documents with intent-specific weights
     ADAPTIVE_RETRIEVER = "adaptive_retriever"
+    # Grades document relevance, decides retry or end
     RETRIEVAL_GRADER = "retrieval_grader"
+    # Rewrites query for better retrieval on failure
     QUERY_REWRITER = "query_rewriter"
 
 
@@ -57,13 +62,20 @@ class IntentRoutingState(TypedDict):
     It tracks the query lifecycle from intent classification through retrieval, grading, and potential rewriting.
     """
 
-    query: str  # Current query being processed (may be rewritten)
-    original_query: str  # Original user query, preserved for rewriting reference
-    intent: Intent  # Classified intent (FACT/CONCEPT/COMPARISON) for adaptive retrieval
-    retrieved_docs: list[Document]  # Documents retrieved from vector store
-    retrieval_grade: GradeSignal  # LLM assessment of document relevance (YES/NO)
-    rewritten_query: str  # Rewritten query if grading failed (empty otherwise)
-    retry_count: int  # Number of query rewriting attempts (max 1)
+    # Current query being processed (may be rewritten)
+    query: str
+    # Original user query, preserved for rewriting reference
+    original_query: str
+    # Classified intent (FACT/CONCEPT/COMPARISON) for adaptive retrieval
+    intent: Intent
+    # Documents retrieved from vector store
+    retrieved_docs: list[Document]
+    # LLM assessment of document relevance (YES/NO)
+    retrieval_grade: GradeSignal
+    # Rewritten query if grading failed (empty otherwise)
+    rewritten_query: str
+    # Number of query rewriting attempts (max 1)
+    retry_count: int
 
 
 class IngestResult(TypedDict):
@@ -73,10 +85,14 @@ class IngestResult(TypedDict):
     number of documents ingested, a message, and elapsed time.
     """
 
-    status: str  # "SUCCESS" or "FAILURE"
-    count: int  # Number of documents ingested
-    message: str  # Additional information about the ingestion
-    elapsed_seconds: float  # Time taken for the ingestion process
+    # "SUCCESS" or "FAILURE"
+    status: str
+    # Number of documents ingested
+    count: int
+    # Additional information about the ingestion
+    message: str
+    # Time taken for the ingestion process
+    elapsed_seconds: float
 
 
 class SearchResult(TypedDict):
@@ -86,5 +102,7 @@ class SearchResult(TypedDict):
     and a list of result dictionaries containing relevant information.
     """
 
-    query: str  # The search query
-    results: list[dict[str, Any]]  # List of result dictionaries with relevant information
+    # The search query
+    query: str
+    # List of result dictionaries with relevant information
+    results: list[dict[str, Any]]

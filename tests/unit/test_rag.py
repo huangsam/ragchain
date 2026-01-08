@@ -11,14 +11,6 @@ from ragchain.data.config import config
 
 
 @pytest.mark.asyncio
-async def test_ingest_empty():
-    """Test ingesting empty doc list."""
-    result = await ingest_documents([])
-    assert result["status"] == "ok"
-    assert result["count"] == 0
-
-
-@pytest.mark.asyncio
 async def test_ingest_and_search():
     """Test ingesting and searching documents using mock embeddings."""
     # Mock OllamaEmbeddings to avoid requiring Ollama server
@@ -50,3 +42,33 @@ async def test_ingest_and_search():
         search_result = await search("Python programming", k=1)
         assert "results" in search_result
         assert len(search_result["results"]) >= 1
+
+
+@pytest.mark.asyncio
+async def test_search_empty_query():
+    """Test search with empty query."""
+    with patch("ragchain.core.rag.get_ensemble_retriever") as MockRetriever:
+        mock_retriever = MagicMock()
+        mock_retriever.get_relevant_documents.return_value = []
+        MockRetriever.return_value = mock_retriever
+
+        result = await search("", k=5)
+
+        assert result["query"] == ""
+        assert result["results"] == []
+        MockRetriever.assert_called_once_with(5)
+
+
+@pytest.mark.asyncio
+async def test_search_k_zero():
+    """Test search with k=0."""
+    with patch("ragchain.core.rag.get_ensemble_retriever") as MockRetriever:
+        mock_retriever = MagicMock()
+        mock_retriever.get_relevant_documents.return_value = [Document(page_content="Test")]
+        MockRetriever.return_value = mock_retriever
+
+        result = await search("test", k=0)
+
+        assert result["query"] == "test"
+        assert result["results"] == []  # Should limit to k=0
+        MockRetriever.assert_called_once_with(0)

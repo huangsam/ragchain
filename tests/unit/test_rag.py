@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from langchain_core.documents import Document
 
-from ragchain.core.rag import search
-from ragchain.core.storage import ingest_documents
-from ragchain.data.config import config
+from ragchain.config import config
+from ragchain.ingestion.storage import ingest_documents
+from ragchain.retrieval.rag import search
 
 
 @pytest.mark.asyncio
@@ -15,7 +15,7 @@ async def test_ingest_and_search(mock_embedder):
     """Test ingesting and searching documents using mock embeddings."""
     # Use 1024 dimensions to match bge-m3
     with (
-        patch("ragchain.core.storage.get_embedder", return_value=mock_embedder),
+        patch("ragchain.ingestion.storage.get_embedder", return_value=mock_embedder),
         patch.object(config, "chroma_server_url", None),
     ):  # Force local Chroma for testing
         # Create sample docs
@@ -44,7 +44,7 @@ async def test_ingest_and_search(mock_embedder):
 @pytest.mark.asyncio
 async def test_search_empty_query():
     """Test search with empty query."""
-    with patch("ragchain.core.rag.get_ensemble_retriever") as MockRetriever:
+    with patch("ragchain.retrieval.rag.get_ensemble_retriever") as MockRetriever:
         mock_retriever = MagicMock()
         mock_retriever.get_relevant_documents.return_value = []
         MockRetriever.return_value = mock_retriever
@@ -59,7 +59,7 @@ async def test_search_empty_query():
 @pytest.mark.asyncio
 async def test_search_k_zero():
     """Test search with k=0."""
-    with patch("ragchain.core.rag.get_ensemble_retriever") as MockRetriever:
+    with patch("ragchain.retrieval.rag.get_ensemble_retriever") as MockRetriever:
         mock_retriever = MagicMock()
         mock_retriever.get_relevant_documents.return_value = [Document(page_content="Test")]
         MockRetriever.return_value = mock_retriever

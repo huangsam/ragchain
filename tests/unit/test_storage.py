@@ -5,13 +5,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from langchain_core.documents import Document
 
-from ragchain.core.storage import get_embedder, get_vector_store, ingest_documents
-from ragchain.data.config import config
+from ragchain.config import config
+from ragchain.ingestion.storage import get_embedder, get_vector_store, ingest_documents
 
 
 def test_get_embedder():
     """Test get_embedder creates OllamaEmbeddings with correct config."""
-    with patch("ragchain.core.storage.OllamaEmbeddings") as MockEmbeddings:
+    with patch("ragchain.ingestion.storage.OllamaEmbeddings") as MockEmbeddings:
         embedder = get_embedder()
         MockEmbeddings.assert_called_once_with(
             model=config.ollama_embed_model,
@@ -24,9 +24,9 @@ def test_get_embedder():
 def test_get_vector_store_local():
     """Test get_vector_store creates local Chroma store."""
     with (
-        patch("ragchain.core.storage.OllamaEmbeddings") as MockEmbeddings,
-        patch("ragchain.core.storage.Chroma") as MockChroma,
-        patch("ragchain.core.storage.Path") as MockPath,
+        patch("ragchain.ingestion.storage.OllamaEmbeddings") as MockEmbeddings,
+        patch("ragchain.ingestion.storage.Chroma") as MockChroma,
+        patch("ragchain.ingestion.storage.Path") as MockPath,
         patch.object(config, "chroma_server_url", None),
     ):
         mock_embed = MagicMock()
@@ -48,8 +48,8 @@ def test_get_vector_store_local():
 def test_get_vector_store_remote():
     """Test get_vector_store creates remote Chroma store."""
     with (
-        patch("ragchain.core.storage.OllamaEmbeddings") as MockEmbeddings,
-        patch("ragchain.core.storage.Chroma") as MockChroma,
+        patch("ragchain.ingestion.storage.OllamaEmbeddings") as MockEmbeddings,
+        patch("ragchain.ingestion.storage.Chroma") as MockChroma,
         patch("chromadb.HttpClient") as MockHttpClient,
         patch.object(config, "chroma_server_url", "http://localhost:8000"),
     ):
@@ -81,9 +81,9 @@ async def test_ingest_empty():
 async def test_ingest_documents_success(sample_documents, mock_embedder):
     """Test ingesting documents successfully."""
     with (
-        patch("ragchain.core.storage.get_embedder", return_value=mock_embedder),
-        patch("ragchain.core.storage.Chroma") as MockChroma,
-        patch("ragchain.core.retrievers.get_ensemble_retriever") as MockFunc,
+        patch("ragchain.ingestion.storage.get_embedder", return_value=mock_embedder),
+        patch("ragchain.ingestion.storage.Chroma") as MockChroma,
+        patch("ragchain.retrieval.retrievers.get_ensemble_retriever") as MockFunc,
         patch.object(config, "chroma_server_url", None),
     ):
         mock_store = MagicMock()
@@ -101,9 +101,9 @@ async def test_ingest_documents_success(sample_documents, mock_embedder):
 async def test_ingest_documents_chunking(mock_embedder):
     """Test document chunking in ingest_documents."""
     with (
-        patch("ragchain.core.storage.get_embedder", return_value=mock_embedder),
-        patch("ragchain.core.storage.Chroma") as MockChroma,
-        patch("ragchain.core.retrievers.get_ensemble_retriever"),
+        patch("ragchain.ingestion.storage.get_embedder", return_value=mock_embedder),
+        patch("ragchain.ingestion.storage.Chroma") as MockChroma,
+        patch("ragchain.retrieval.retrievers.get_ensemble_retriever"),
         patch.object(config, "chroma_server_url", None),
     ):
         mock_store = MagicMock()

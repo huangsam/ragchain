@@ -4,9 +4,9 @@ import asyncio
 
 import click
 
-from ragchain.core.storage import ingest_documents
-from ragchain.data.config import config
-from ragchain.data.loaders import load_tiobe_languages, load_wikipedia_pages
+from ragchain.config import config
+from ragchain.ingestion.loaders import load_tiobe_languages, load_wikipedia_pages
+from ragchain.ingestion.storage import ingest_documents
 
 
 @click.group()
@@ -55,7 +55,7 @@ def search(query, k):
     """
 
     async def _search():
-        from ragchain.core.rag import search as search_func
+        from ragchain.retrieval.rag import search as search_func
 
         result = await search_func(query, k=k)
         click.echo(f"Query: {result['query']}")
@@ -85,7 +85,7 @@ def ask(query, model):
         from langchain_core.prompts import ChatPromptTemplate
         from langchain_ollama import OllamaLLM
 
-        from ragchain.core.graph import rag_graph
+        from ragchain.graph import rag_graph
         from ragchain.prompts import RAG_ANSWER_TEMPLATE
 
         click.echo("Retrieving relevant documents...")
@@ -159,7 +159,7 @@ def evaluate(model):
     click.echo(f"Evaluating {len(questions)} questions...")
 
     async def _evaluate():
-        from ragchain.core.judge import evaluate_questions
+        from ragchain.generation.judge import evaluate_questions
 
         # Run evaluations
         for i, question in enumerate(questions, 1):

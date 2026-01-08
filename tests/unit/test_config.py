@@ -3,7 +3,7 @@
 import os
 from unittest.mock import patch
 
-from ragchain.data.config import Config, config
+from ragchain.config import Config, config
 
 
 def test_config_singleton():

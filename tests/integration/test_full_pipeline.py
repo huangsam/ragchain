@@ -3,9 +3,9 @@
 import pytest
 from langchain_core.documents import Document
 
-from ragchain.core.rag import search
-from ragchain.core.storage import ingest_documents
-from ragchain.data.config import config
+from ragchain.config import config
+from ragchain.ingestion.storage import ingest_documents
+from ragchain.retrieval.rag import search
 
 
 @pytest.mark.integration

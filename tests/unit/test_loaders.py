@@ -4,11 +4,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ragchain.data.loaders import load_tiobe_languages
+from ragchain.ingestion.loaders import load_tiobe_languages
 
 
 @pytest.mark.asyncio
-@patch("ragchain.data.loaders.aiohttp.ClientSession")
+@patch("ragchain.ingestion.loaders.aiohttp.ClientSession")
 async def test_load_tiobe_languages(mock_session_class):
     """Test that TIOBE loader returns a list of languages."""
     # Mock the HTTP response

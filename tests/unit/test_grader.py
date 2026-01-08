@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 from langchain_core.documents import Document
 
-from ragchain.core.grader import extract_keywords, grade_with_statistics, should_accept_docs, should_skip_grading
-from ragchain.core.types import GradeSignal
+from ragchain.retrieval.grader import extract_keywords, grade_with_statistics, should_accept_docs, should_skip_grading
+from ragchain.retrieval.types import GradeSignal
 
 
 class TestShouldSkipGrading:
@@ -14,13 +14,13 @@ class TestShouldSkipGrading:
     def test_should_skip_when_disabled(self, mock_config):
         """Test that grading is skipped when disabled."""
         mock_config.enable_grading = False
-        with patch("ragchain.core.grader.config", mock_config):
+        with patch("ragchain.retrieval.grader.config", mock_config):
             assert should_skip_grading() is True
 
     def test_should_not_skip_when_enabled(self, mock_config):
         """Test that grading is not skipped when enabled."""
         mock_config.enable_grading = True
-        with patch("ragchain.core.grader.config", mock_config):
+        with patch("ragchain.retrieval.grader.config", mock_config):
             assert should_skip_grading() is False
 
 

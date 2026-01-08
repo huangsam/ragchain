@@ -5,7 +5,7 @@ from unittest.mock import patch
 from langchain_core.documents import Document
 
 from ragchain.retrieval.grader import extract_keywords, grade_with_statistics, should_accept_docs, should_skip_grading
-from ragchain.retrieval.types import GradeSignal
+from ragchain.types import GradeSignal
 
 
 class TestShouldSkipGrading:

@@ -1,7 +1,7 @@
 """RAG pipeline orchestration using LangChain."""
 
 from ragchain.retrieval.retrievers import get_ensemble_retriever
-from ragchain.retrieval.types import SearchResult
+from ragchain.types import SearchResult
 
 
 async def search(query: str, k: int = 12) -> SearchResult:

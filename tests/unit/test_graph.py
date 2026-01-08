@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from langchain_core.documents import Document
 
 from ragchain.retrieval.router import Intent
-from ragchain.retrieval.types import Node
+from ragchain.types import Node
 
 
 @patch("ragchain.graph.get_ensemble_retriever")

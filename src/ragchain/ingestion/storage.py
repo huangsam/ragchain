@@ -11,7 +11,7 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from ragchain.config import config
-from ragchain.ingestion.types import IngestResult
+from ragchain.types import IngestResult
 
 logger = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ import re
 from langchain_core.documents import Document
 
 from ragchain.config import config
-from ragchain.retrieval.types import GradeSignal
+from ragchain.types import GradeSignal
 
 logger = logging.getLogger(__name__)
 

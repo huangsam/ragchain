@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from ragchain.retrieval.router import intent_router
-from ragchain.retrieval.types import Intent
+from ragchain.types import Intent
 
 
 def test_intent_router_fast_path(mock_config):

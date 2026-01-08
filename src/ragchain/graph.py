@@ -11,7 +11,7 @@ from ragchain.prompts import QUERY_REWRITER_PROMPT
 from ragchain.retrieval.grader import grade_with_statistics, should_accept_docs, should_skip_grading
 from ragchain.retrieval.retrievers import get_ensemble_retriever
 from ragchain.retrieval.router import intent_router
-from ragchain.retrieval.types import GradeSignal, Intent, IntentRoutingState, Node
+from ragchain.types import GradeSignal, Intent, IntentRoutingState, Node
 
 logger = logging.getLogger(__name__)
 

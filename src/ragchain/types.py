@@ -1,4 +1,4 @@
-"""Shared types and enums for the retrieval pipeline."""
+"""Shared types and enums for the RAG pipeline."""
 
 from enum import Enum
 from typing import Any
@@ -6,7 +6,7 @@ from typing import Any
 from langchain_core.documents import Document
 from typing_extensions import TypedDict
 
-__all__ = ["Intent", "GradeSignal", "Node", "IntentRoutingState", "SearchResult"]
+__all__ = ["Intent", "GradeSignal", "Node", "IntentRoutingState", "IngestResult", "SearchResult"]
 
 
 class Intent(str, Enum):
@@ -76,6 +76,23 @@ class IntentRoutingState(TypedDict):
     rewritten_query: str
     # Number of query rewriting attempts (max 1)
     retry_count: int
+
+
+class IngestResult(TypedDict):
+    """Result of document ingestion operation.
+
+    This TypedDict captures the outcome of an ingestion process, including status,
+    number of documents ingested, a message, and elapsed time.
+    """
+
+    # "SUCCESS" or "FAILURE"
+    status: str
+    # Number of documents ingested
+    count: int
+    # Additional information about the ingestion
+    message: str
+    # Time taken for the ingestion process
+    elapsed_seconds: float
 
 
 class SearchResult(TypedDict):

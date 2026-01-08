@@ -1,9 +1,18 @@
 """RAG pipeline orchestration using LangChain."""
 
+from typing import Any, TypedDict
+
 from ragchain.core.retrievers import get_ensemble_retriever
 
 
-async def search(query: str, k: int = 12) -> dict:
+class SearchResult(TypedDict):
+    """Result of a search operation."""
+
+    query: str
+    results: list[dict[str, Any]]
+
+
+async def search(query: str, k: int = 12) -> SearchResult:
     """Perform ensemble retrieval using BM25 and Chroma vector search.
 
     Args:

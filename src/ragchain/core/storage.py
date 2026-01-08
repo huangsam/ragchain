@@ -3,6 +3,7 @@
 import logging
 import time
 from pathlib import Path
+from typing import TypedDict
 from urllib.parse import urlparse
 
 from langchain_chroma import Chroma
@@ -15,7 +16,16 @@ from ragchain.data.config import config
 logger = logging.getLogger(__name__)
 
 
-def get_embedder():
+class IngestResult(TypedDict):
+    """Result of document ingestion operation."""
+
+    status: str
+    count: int
+    message: str
+    elapsed_seconds: float
+
+
+def get_embedder() -> OllamaEmbeddings:
     """Create Ollama embedding function.
 
     Returns OllamaEmbeddings configured with bge-m3 model.
@@ -27,7 +37,7 @@ def get_embedder():
     return OllamaEmbeddings(model=config.ollama_embed_model, base_url=config.ollama_base_url, num_ctx=config.ollama_embed_ctx)
 
 
-def get_vector_store():
+def get_vector_store() -> Chroma:
     """Get or create Chroma vector store for semantic search.
 
     Returns either remote Chroma (HTTP) or local persistent Chroma depending on
@@ -57,7 +67,7 @@ def get_vector_store():
         )
 
 
-async def ingest_documents(docs: list[Document]) -> dict:
+async def ingest_documents(docs: list[Document]) -> IngestResult:
     """Process and store documents in vector store.
 
     Pipeline: Split docs → Embed chunks → Store in Chroma.
@@ -69,7 +79,7 @@ async def ingest_documents(docs: list[Document]) -> dict:
         dict with status, count, and message
     """
     if not docs:
-        return {"status": "ok", "count": 0, "message": "No documents to ingest"}
+        return {"status": "ok", "count": 0, "message": "No documents to ingest", "elapsed_seconds": 0.0}
 
     start_time = time.perf_counter()
 

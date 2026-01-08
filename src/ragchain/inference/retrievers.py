@@ -11,6 +11,7 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.vectorstores import VectorStoreRetriever
 
+from ragchain.config import config
 from ragchain.utils import log_timing, log_with_prefix
 
 logger = logging.getLogger(__name__)
@@ -91,8 +92,8 @@ class EnsembleRetriever(BaseRetriever):
 
         sorted_docs = self._compute_rrf_scores(bm25_docs, chroma_docs)
 
-        # Limit to top 10 results to keep context manageable (~8k tokens)
-        top_docs = sorted_docs[:10]
+        # Limit to configured max results to keep context manageable
+        top_docs = sorted_docs[: config.retrieval_max_results]
         log_timing(logger, "EnsembleRetriever", start, f"RRF combined {len(sorted_docs)} docs, returning top {len(top_docs)}")
 
         return top_docs
@@ -149,20 +150,22 @@ def _create_chroma_retriever(store: Chroma, k: int) -> VectorStoreRetriever:
 
 
 @lru_cache(maxsize=32)
-def get_ensemble_retriever(k: int = 12, bm25_weight: float = 0.4, chroma_weight: float = 0.6) -> EnsembleRetriever:
+def get_ensemble_retriever(k: int | None = None, bm25_weight: float = 0.4, chroma_weight: float = 0.6) -> EnsembleRetriever:
     """Create an ensemble retriever combining BM25 and Chroma vector search.
 
     Uses LRU cache to avoid rebuilding the BM25 index on every request.
     Cache is keyed by (k, bm25_weight, chroma_weight).
 
     Args:
-        k: Number of results per retriever (Default bumped to 12 to improve recall)
+        k: Number of results per retriever (default: from config.retrieval_k)
         bm25_weight: Weight for BM25 results in RRF (default: 0.4)
         chroma_weight: Weight for Chroma results in RRF (default: 0.6)
 
     Returns:
         EnsembleRetriever instance (cached if available)
     """
+    if k is None:
+        k = config.retrieval_k
     log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"Creating new retriever with k={k}, bm25={bm25_weight}, chroma={chroma_weight}")
     start = time.time()
 

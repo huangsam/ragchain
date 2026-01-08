@@ -36,6 +36,11 @@ class Config:
         self.chunk_size: int = int(os.environ.get("CHUNK_SIZE", "2500"))
         self.chunk_overlap: int = int(os.environ.get("CHUNK_OVERLAP", "500"))
 
+        # Retrieval configuration
+        self.retrieval_k: int = int(os.environ.get("RETRIEVAL_K", "10"))  # Number of docs per retriever
+        self.retrieval_max_results: int = int(os.environ.get("RETRIEVAL_MAX_RESULTS", "10"))  # Max results after RRF
+        self.retrieval_k_adaptive: int = int(os.environ.get("RETRIEVAL_K_ADAPTIVE", "6"))  # For graph adaptive retrieval
+
         # Performance optimization flags
         self.enable_grading: bool = os.environ.get("ENABLE_GRADING", "true").lower() == "true"
         self.enable_intent_routing: bool = os.environ.get("ENABLE_INTENT_ROUTING", "true").lower() == "true"

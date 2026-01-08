@@ -140,6 +140,12 @@ The following environment variables can be used to configure the RAGChain system
 - `CHUNK_SIZE` — Size of document chunks in characters (default: `2500`)
 - `CHUNK_OVERLAP` — Overlap between chunks in characters (default: `500`)
 
+**Retrieval Configuration:**
+
+- `RETRIEVAL_K` — Number of documents to retrieve per retriever (default: `10`)
+- `RETRIEVAL_MAX_RESULTS` — Maximum results to return after RRF fusion (default: `10`)
+- `RETRIEVAL_K_ADAPTIVE` — Number of documents for adaptive graph retrieval (default: `6`)
+
 **Feature Flags:**
 
 - `ENABLE_GRADING` — Enable/disable document relevance grading (default: `true`)

@@ -99,10 +99,6 @@ class EnsembleRetriever(BaseRetriever):
 
         return top_docs
 
-    def get_relevant_documents(self, query: str) -> list[Document]:
-        """Get relevant documents using parallel retrieval (default behavior)."""
-        return self._get_relevant_documents(query)
-
 
 def _load_documents_from_chroma(store: Chroma) -> list[Document]:
     """Load all documents from Chroma vector store.

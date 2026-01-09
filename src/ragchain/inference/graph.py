@@ -34,7 +34,7 @@ def adaptive_retriever(state: IntentRoutingState) -> IntentRoutingState:
     try:
         # Use smaller k for adaptive retrieval to fit context window constraints
         retriever = get_ensemble_retriever(k=config.retrieval_k_adaptive, bm25_weight=bm25_weight, chroma_weight=chroma_weight)
-        docs = retriever.get_relevant_documents(query)
+        docs = retriever.invoke(query)
         logger.debug(f"[adaptive_retriever] Retrieved {len(docs)} documents for {state['intent'].value}")
     except Exception as e:
         logger.error(f"[adaptive_retriever] Error during retrieval: {e}")

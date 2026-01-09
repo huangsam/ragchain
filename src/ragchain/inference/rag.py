@@ -19,7 +19,7 @@ async def search(query: str, k: int | None = None) -> SearchResult:
         k = config.retrieval_k
     ensemble_retriever = get_ensemble_retriever(k)
 
-    results = ensemble_retriever.get_relevant_documents(query)
+    results = ensemble_retriever.invoke(query)
 
     results = results[:k]
 

@@ -46,7 +46,7 @@ async def test_search_empty_query():
     """Test search with empty query."""
     with patch("ragchain.inference.rag.get_ensemble_retriever") as MockRetriever:
         mock_retriever = MagicMock()
-        mock_retriever.get_relevant_documents.return_value = []
+        mock_retriever.invoke.return_value = []
         MockRetriever.return_value = mock_retriever
 
         result = await search("", k=5)
@@ -61,7 +61,7 @@ async def test_search_k_zero():
     """Test search with k=0."""
     with patch("ragchain.inference.rag.get_ensemble_retriever") as MockRetriever:
         mock_retriever = MagicMock()
-        mock_retriever.get_relevant_documents.return_value = [Document(page_content="Test")]
+        mock_retriever.invoke.return_value = [Document(page_content="Test")]
         MockRetriever.return_value = mock_retriever
 
         result = await search("test", k=0)

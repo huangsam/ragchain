@@ -12,7 +12,7 @@ from ragchain.types import Node
 def test_adaptive_retriever(mock_get_retriever):
     """Test adaptive retriever with different intents."""
     mock_retriever = MagicMock()
-    mock_retriever.get_relevant_documents.return_value = [Document(page_content="Test doc", metadata={})]
+    mock_retriever.invoke.return_value = [Document(page_content="Test doc", metadata={})]
     mock_get_retriever.return_value = mock_retriever
 
     from ragchain.inference.graph import adaptive_retriever

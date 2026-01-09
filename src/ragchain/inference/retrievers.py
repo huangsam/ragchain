@@ -148,23 +148,20 @@ def _create_chroma_retriever(store: Chroma, k: int) -> VectorStoreRetriever:
 
 @lru_cache(maxsize=32)
 @timed(logger, "get_ensemble_retriever")
-def get_ensemble_retriever(k: int | None = None, bm25_weight: float = 0.4, chroma_weight: float = 0.6) -> EnsembleRetriever:
+def get_ensemble_retriever(k: int, bm25_weight: float = 0.4, chroma_weight: float = 0.6) -> EnsembleRetriever:
     """Create an ensemble retriever combining BM25 and Chroma vector search.
 
     Uses LRU cache to avoid rebuilding the BM25 index on every request.
     Cache is keyed by (k, bm25_weight, chroma_weight).
 
     Args:
-        k: Number of results per retriever (default: from config.retrieval_k)
+        k: Number of results per retriever
         bm25_weight: Weight for BM25 results in RRF (default: 0.4)
         chroma_weight: Weight for Chroma results in RRF (default: 0.6)
 
     Returns:
         EnsembleRetriever instance (cached if available)
     """
-    if k is None:
-        k = config.retrieval_k
-
     from ragchain.ingestion.storage import get_vector_store
 
     store = get_vector_store()
@@ -181,5 +178,5 @@ def get_ensemble_retriever(k: int | None = None, bm25_weight: float = 0.4, chrom
         chroma_weight=chroma_weight,
     )
 
-    logger.debug(f"[get_ensemble_retriever] Initialized with {len(docs)} documents")
+    logger.debug(f"[get_ensemble_retriever] Initialized with {len(docs)} documents, k={k}")
     return retriever

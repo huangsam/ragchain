@@ -141,9 +141,9 @@ The following environment variables can be used to configure the RAGChain system
 
 **Retrieval Configuration:**
 
-- `RETRIEVAL_K` — Number of documents to retrieve per retriever (default: `10`)
-- `RETRIEVAL_MAX_RESULTS` — Maximum results to return after RRF fusion (default: `10`)
-- `RETRIEVAL_K_ADAPTIVE` — Number of documents for adaptive graph retrieval (default: `6`)
+- `SEARCH_K` — Number of documents to retrieve per retriever for search API (default: `10`)
+- `GRAPH_K` — Number of documents for graph-based RAG pipeline (default: `6`)
+- `RRF_MAX_RESULTS` — Maximum results to return after RRF fusion (default: `10`)
 
 **Feature Flags:**
 

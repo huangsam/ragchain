@@ -91,7 +91,7 @@ class EnsembleRetriever(BaseRetriever):
         sorted_docs = self._compute_rrf_scores(bm25_docs, chroma_docs)
 
         # Limit to configured max results to keep context manageable
-        top_docs = sorted_docs[: config.retrieval_max_results]
+        top_docs = sorted_docs[: config.rrf_max_results]
         elapsed = time.time() - start
         logger.debug(
             f"[EnsembleRetriever] Retrieved {len(bm25_docs)} BM25 + {len(chroma_docs)} semantic, RRF returned {len(top_docs)}/{len(sorted_docs)} in {elapsed:.2f}s"

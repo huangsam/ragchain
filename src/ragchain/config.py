@@ -39,10 +39,10 @@ class Config:
         self.chunk_overlap: int = int(os.environ.get("CHUNK_OVERLAP", "500"))
 
         # Retrieval configuration
-        # We define values k, max_results, and k_adaptive, which control the documents retrieved
-        self.retrieval_k: int = int(os.environ.get("RETRIEVAL_K", "10"))  # Number of docs per retriever
-        self.retrieval_max_results: int = int(os.environ.get("RETRIEVAL_MAX_RESULTS", "10"))  # Max results after RRF
-        self.retrieval_k_adaptive: int = int(os.environ.get("RETRIEVAL_K_ADAPTIVE", "6"))  # For graph adaptive retrieval
+        # We define values search_k, graph_k, rrf_max_results which control the documents retrieved
+        self.search_k: int = int(os.environ.get("SEARCH_K", "10"))  # For direct search API
+        self.graph_k: int = int(os.environ.get("GRAPH_K", "6"))  # For graph-based RAG pipeline
+        self.rrf_max_results: int = int(os.environ.get("RRF_MAX_RESULTS", "10"))  # Max results after RRF
 
         # Performance optimization flags
         # Enable or disable parts of the RAG graph for performance reasons

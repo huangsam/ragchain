@@ -2,18 +2,18 @@
 
 import json
 import logging
-import time
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama import OllamaLLM
 
 from ragchain.config import config
 from ragchain.prompts import JUDGE_PROMPT, RAG_ANSWER_TEMPLATE
-from ragchain.utils import log_timing, log_with_prefix
+from ragchain.utils import log_with_prefix, timed
 
 logger = logging.getLogger(__name__)
 
 
+@timed(logger, "judge_answer")
 async def judge_answer(question: str, context: str, answer: str, model: str = config.ollama_model) -> dict:
     """Evaluate a RAG answer using LLM-as-judge for correctness, relevance, and faithfulness.
 
@@ -30,7 +30,6 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
     max_context_chars = 2500
     if len(context) > max_context_chars:
         truncated_context = context[:max_context_chars] + "\n\n[...truncated...]"
-        log_with_prefix(logger, logging.INFO, "judge_answer", f"Truncated context from {len(context)} to {max_context_chars} chars")
     else:
         truncated_context = context
 
@@ -45,11 +44,7 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
 
     judge_input = prompt.format(question=question, context=truncated_context, answer=answer)
 
-    log_with_prefix(logger, logging.INFO, "judge_answer", f"Judging answer for question: {question[:50]}...")
-
-    start = time.time()
     raw_response = llm.invoke(judge_input)
-    log_timing(logger, "judge_answer", start, "LLM judgment completed")
 
     # Parse JSON response - extract JSON from potential markdown or text wrapper
     def extract_json_object(text: str) -> dict | None:
@@ -85,9 +80,7 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
     except json.JSONDecodeError:
         # Try to extract JSON object with proper brace matching
         evaluation = extract_json_object(raw_response)
-        if evaluation and "correctness" in evaluation:
-            log_with_prefix(logger, logging.INFO, "judge_answer", "Successfully extracted JSON from wrapped response")
-        else:
+        if not (evaluation and "correctness" in evaluation):
             # Log the raw response for debugging
             log_with_prefix(logger, logging.ERROR, "judge_answer", f"Failed to parse judge response. Raw response: {raw_response[:500]}")
             return {
@@ -101,7 +94,7 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
         if criterion in evaluation and isinstance(evaluation[criterion], dict):
             score = evaluation[criterion].get("score", 0)
             if not isinstance(score, int) or score < 1 or score > 5:
-                log_with_prefix(logger, logging.WARNING, "judge_answer", f"Invalid {criterion} score {score}, marking as parse error")
+                logger.warning(f"[judge_answer] Invalid {criterion} score {score}, marking as parse error")
                 evaluation[criterion]["score"] = 0
                 evaluation[criterion]["explanation"] = f"Invalid score: {score}. " + evaluation[criterion].get("explanation", "")
 
@@ -139,7 +132,7 @@ async def evaluate_questions(questions: list[str], model: str = config.ollama_mo
         retrieved_docs = final_state["retrieved_docs"]
 
         if not retrieved_docs:
-            log_with_prefix(logger, logging.WARNING, "evaluate_questions", f"No documents retrieved for: {question[:50]}...")
+            logger.warning(f"[evaluate_questions] No documents retrieved for: {question[:50]}...")
             continue
 
         # Generate answer

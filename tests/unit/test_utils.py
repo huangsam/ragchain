@@ -2,7 +2,7 @@
 
 import logging
 
-from ragchain.utils import get_logger, log_timing, log_with_prefix
+from ragchain.utils import get_logger, log_timing
 
 
 def test_get_logger():
@@ -10,15 +10,6 @@ def test_get_logger():
     logger = get_logger("test")
     assert isinstance(logger, logging.Logger)
     assert logger.name == "test"
-
-
-def test_log_with_prefix(caplog):
-    """Test log_with_prefix adds prefix to message."""
-    logger = get_logger("test")
-    with caplog.at_level(logging.INFO):
-        log_with_prefix(logger, logging.INFO, "TEST", "Hello world")
-
-    assert "[TEST] Hello world" in caplog.text
 
 
 def test_log_timing(caplog):

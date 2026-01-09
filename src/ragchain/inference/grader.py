@@ -110,7 +110,7 @@ def grade_with_statistics(query: str, docs: list[Document]) -> GradeSignal:
         GradeSignal.YES if relevant documents found in top positions, GradeSignal.NO otherwise.
     """
     try:
-        logger.info(f"[grade_with_statistics] Grading {len(docs)} docs for query: {query}")
+        logger.debug(f"[grade_with_statistics] Grading {len(docs)} docs for query: {query[:50]}...")
 
         # Extract keywords from query
         query_keywords = extract_keywords(query)

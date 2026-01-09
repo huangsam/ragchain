@@ -12,7 +12,7 @@ from langchain_core.retrievers import BaseRetriever
 from langchain_core.vectorstores import VectorStoreRetriever
 
 from ragchain.config import config
-from ragchain.utils import log_timing, log_with_prefix
+from ragchain.utils import timed
 
 logger = logging.getLogger(__name__)
 
@@ -84,17 +84,18 @@ class EnsembleRetriever(BaseRetriever):
         Returns:
             List of top 10 retrieved documents sorted by RRF score.
         """
-        log_with_prefix(logger, logging.DEBUG, "EnsembleRetriever", f"Query: {query[:50]}...")
         start = time.time()
 
         bm25_docs, chroma_docs = self._parallel_retrieve(query)
-        log_timing(logger, "EnsembleRetriever", start, f"Parallel retrieval: BM25={len(bm25_docs)}, Chroma={len(chroma_docs)}")
 
         sorted_docs = self._compute_rrf_scores(bm25_docs, chroma_docs)
 
         # Limit to configured max results to keep context manageable
         top_docs = sorted_docs[: config.retrieval_max_results]
-        log_timing(logger, "EnsembleRetriever", start, f"RRF combined {len(sorted_docs)} docs, returning top {len(top_docs)}")
+        elapsed = time.time() - start
+        logger.debug(
+            f"[EnsembleRetriever] Retrieved {len(bm25_docs)} BM25 + {len(chroma_docs)} semantic, RRF returned {len(top_docs)}/{len(sorted_docs)} in {elapsed:.2f}s"
+        )
 
         return top_docs
 
@@ -150,6 +151,7 @@ def _create_chroma_retriever(store: Chroma, k: int) -> VectorStoreRetriever:
 
 
 @lru_cache(maxsize=32)
+@timed(logger, "get_ensemble_retriever")
 def get_ensemble_retriever(k: int | None = None, bm25_weight: float = 0.4, chroma_weight: float = 0.6) -> EnsembleRetriever:
     """Create an ensemble retriever combining BM25 and Chroma vector search.
 
@@ -166,18 +168,13 @@ def get_ensemble_retriever(k: int | None = None, bm25_weight: float = 0.4, chrom
     """
     if k is None:
         k = config.retrieval_k
-    log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"Creating new retriever with k={k}, bm25={bm25_weight}, chroma={chroma_weight}")
-    start = time.time()
 
     from ragchain.ingestion.storage import get_vector_store
 
     store = get_vector_store()
     docs = _load_documents_from_chroma(store)
 
-    log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"Loaded {len(docs)} documents from Chroma")
-
     bm25_retriever = _create_bm25_retriever(docs, k)
-    log_with_prefix(logger, logging.DEBUG, "get_ensemble_retriever", f"BM25 initialized with k={k} over {len(docs)} docs")
 
     chroma_retriever = _create_chroma_retriever(store, k)
 
@@ -188,5 +185,5 @@ def get_ensemble_retriever(k: int | None = None, bm25_weight: float = 0.4, chrom
         chroma_weight=chroma_weight,
     )
 
-    log_timing(logger, "get_ensemble_retriever", start, "Ensemble created")
+    logger.debug(f"[get_ensemble_retriever] Initialized with {len(docs)} documents")
     return retriever

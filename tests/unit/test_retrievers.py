@@ -83,8 +83,6 @@ def test_ensemble_retriever_compute_rrf_scores():
 def test_ensemble_retriever_get_relevant_documents():
     """Test full retrieval pipeline."""
     with (
-        patch("ragchain.inference.retrievers.log_with_prefix"),
-        patch("ragchain.inference.retrievers.log_timing"),
         patch("ragchain.inference.retrievers.time") as MockTime,
     ):
         MockTime.time.return_value = 0
@@ -109,8 +107,6 @@ def test_get_ensemble_retriever_caching(mock_init):
         patch("ragchain.inference.retrievers._load_documents_from_chroma") as MockLoad,
         patch("ragchain.inference.retrievers._create_bm25_retriever"),
         patch("ragchain.inference.retrievers._create_chroma_retriever"),
-        patch("ragchain.inference.retrievers.log_with_prefix"),
-        patch("ragchain.inference.retrievers.log_timing"),
         patch("ragchain.inference.retrievers.time") as MockTime,
     ):
         MockTime.time.return_value = 0
@@ -139,8 +135,6 @@ def test_get_ensemble_retriever_creation():
         patch("ragchain.inference.retrievers._load_documents_from_chroma") as MockLoad,
         patch("ragchain.inference.retrievers._create_bm25_retriever") as MockBM25,
         patch("ragchain.inference.retrievers._create_chroma_retriever") as MockChroma,
-        patch("ragchain.inference.retrievers.log_with_prefix"),
-        patch("ragchain.inference.retrievers.log_timing"),
         patch("ragchain.inference.retrievers.time") as MockTime,
         patch.object(EnsembleRetriever, "__init__", return_value=None),
     ):

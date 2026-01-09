@@ -2,6 +2,8 @@
 
 import logging
 import time
+from collections.abc import Callable
+from functools import wraps
 from typing import Any
 
 
@@ -37,3 +39,29 @@ def log_timing(logger: logging.Logger, prefix: str, start_time: float, message: 
     """
     elapsed = time.time() - start_time
     log_with_prefix(logger, logging.DEBUG, prefix, f"{message} in {elapsed:.2f}s", *args, **kwargs)
+
+
+def timed(logger: logging.Logger, prefix: str, level: int = logging.DEBUG) -> Callable:
+    """Decorator to log execution time of a function.
+
+    Args:
+        logger: The logger to use.
+        prefix: The prefix for the log message.
+        level: The logging level (default: DEBUG).
+
+    Returns:
+        Decorated function that logs elapsed time.
+    """
+
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            start = time.time()
+            result = func(*args, **kwargs)
+            elapsed = time.time() - start
+            logger.log(level, f"[{prefix}] {func.__name__} completed in {elapsed:.2f}s")
+            return result
+
+        return wrapper
+
+    return decorator

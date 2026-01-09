@@ -26,21 +26,6 @@ def log_with_prefix(logger: logging.Logger, level: int, prefix: str, message: st
     logger.log(level, f"[{prefix}] {message}", *args, **kwargs)
 
 
-def log_timing(logger: logging.Logger, prefix: str, start_time: float, message: str, *args: Any, **kwargs: Any) -> None:
-    """Log a timing message with elapsed time.
-
-    Args:
-        logger: The logger to use.
-        prefix: The prefix for the log message.
-        start_time: The start time (from time.time() or time.perf_counter()).
-        message: The base message to log.
-        *args: Additional arguments for the logger.
-        **kwargs: Additional keyword arguments for the logger.
-    """
-    elapsed = time.time() - start_time
-    log_with_prefix(logger, logging.DEBUG, prefix, f"{message} in {elapsed:.2f}s", *args, **kwargs)
-
-
 def timed(logger: logging.Logger, prefix: str, level: int = logging.DEBUG) -> Callable:
     """Decorator to log execution time of a function.
 

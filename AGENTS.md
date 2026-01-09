@@ -77,7 +77,6 @@ src/ragchain/
 
 - **`utils.py`** provides logger helpers to simplify the monitoring experience, including:
   - `log_with_prefix()` — Logs messages with a consistent prefix for easier filtering
-  - `log_timing()` — Measures and logs the duration of operations
 
 - Supports both **local persistent Chroma** (`CHROMA_PERSIST_DIRECTORY`) and **remote HTTP Chroma** (`CHROMA_SERVER_URL`)
 - Uses **ensemble retrieval** with Reciprocal Rank Fusion (RRF) combining BM25 keyword search and semantic vector search

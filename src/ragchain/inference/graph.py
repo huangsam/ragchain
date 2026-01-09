@@ -69,7 +69,7 @@ def query_rewriter(state: IntentRoutingState) -> IntentRoutingState:
     llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0.5)
 
     # Always rewrite from the original query
-    original = state.get("original_query", state["query"])
+    original = state["original_query"]
     prompt = QUERY_REWRITER_PROMPT.format(query=original)
     rewritten = llm.invoke(prompt).strip()
 

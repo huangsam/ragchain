@@ -7,6 +7,7 @@ import click
 from ragchain.config import config
 from ragchain.ingestion.loaders import load_tiobe_languages, load_wikipedia_pages
 from ragchain.ingestion.storage import ingest_documents
+from ragchain.types import Intent
 
 
 @click.group()
@@ -92,7 +93,8 @@ def ask(query, model):
 
         initial_state = {
             "query": query,
-            "intent": "CONCEPT",
+            "original_query": query,
+            "intent": Intent.CONCEPT,
             "retrieved_docs": [],
             "retrieval_grade": "NO",
             "rewritten_query": "",

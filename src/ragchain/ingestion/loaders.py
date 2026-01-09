@@ -12,6 +12,20 @@ from ragchain.utils import log_with_prefix
 
 logger = logging.getLogger(__name__)
 
+# Define the "Bridge Pages" that provide conceptual glue
+CONCEPTUAL_TOPICS = [
+    "Programming language",
+    "Programming language implementation",  # Crucial for Compiled vs Interpreted
+    "Programming paradigm",  # Imperative vs Functional etc
+    "Type system",  # Static vs Dynamic
+    "Memory management",  # Garbage Collection vs Manual
+    "History of programming languages",
+    "Compiler",
+    "Interpreter (computing)",
+    "Standard library",
+    "Syntax (programming languages)",
+]
+
 
 async def load_tiobe_languages(n: int = 50) -> list[str]:
     """Fetch top-n programming languages from TIOBE index.
@@ -87,6 +101,39 @@ def _load_single_page(lang: str, retries: int = 2) -> Document | None:
     return None
 
 
+def _load_topic_page(topic: str, retries: int = 2) -> Document | None:
+    """Load a specific Wikipedia topic page without query modification.
+
+    Args:
+        topic: Exact Wikipedia page title to search for.
+        retries: Number of retry attempts on failure.
+
+    Returns:
+        Document with content and category metadata.
+    """
+    import time
+
+    from langchain_community.document_loaders import WikipediaLoader
+
+    for attempt in range(retries + 1):
+        try:
+            # Use the exact topic as the query, unlike the language loader
+            loader = WikipediaLoader(query=topic, load_max_docs=1)
+            pages = loader.load()
+            if pages:
+                # Tag these as 'concept' so you can filter/weight them differently if needed
+                pages[0].metadata["category"] = "concept"
+                pages[0].metadata["topic"] = topic
+                return pages[0]
+        except Exception as e:
+            if attempt < retries:
+                wait_time = 0.5 * (2**attempt)
+                time.sleep(wait_time)
+            else:
+                log_with_prefix(logger, logging.WARNING, "load_topic_page", f"Failed to load topic {topic}: {e}")
+    return None
+
+
 async def load_wikipedia_pages(language_names: list[str]) -> list[Document]:
     """Fetch Wikipedia pages for programming languages sequentially.
 
@@ -111,5 +158,29 @@ async def load_wikipedia_pages(language_names: list[str]) -> list[Document]:
                 docs.append(result)
         except Exception as e:
             log_with_prefix(logger, logging.ERROR, "load_wikipedia_pages", f"Error loading page: {e}")
+
+    return docs
+
+
+async def load_conceptual_pages() -> list[Document]:
+    """Fetch the pre-defined list of conceptual/theory pages.
+
+    Returns:
+        List of Documents containing computer science theory.
+    """
+    docs = []
+    loop = asyncio.get_event_loop()
+
+    logger.info(f"Loading {len(CONCEPTUAL_TOPICS)} conceptual pages...")
+
+    for topic in CONCEPTUAL_TOPICS:
+        try:
+            # Run blocking Wikipedia calls in executor to keep async loop alive
+            result = await loop.run_in_executor(None, _load_topic_page, topic)
+            if result:
+                docs.append(result)
+                logger.info(f"Successfully loaded concept: {topic}")
+        except Exception as e:
+            log_with_prefix(logger, logging.ERROR, "load_conceptual_pages", f"Error loading {topic}: {e}")
 
     return docs

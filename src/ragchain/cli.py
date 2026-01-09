@@ -5,7 +5,7 @@ import asyncio
 import click
 
 from ragchain.config import config
-from ragchain.ingestion.loaders import load_tiobe_languages, load_wikipedia_pages
+from ragchain.ingestion.loaders import load_conceptual_pages, load_tiobe_languages, load_wikipedia_pages
 from ragchain.ingestion.storage import ingest_documents
 from ragchain.types import Intent
 
@@ -17,28 +17,33 @@ def cli():
 
 
 @cli.command()
-@click.option("--n", default=10, help="Number of languages to ingest")
-def ingest(n):
-    """Ingest programming language documents into local vector store.
+def ingest():
+    """Ingest programming language and conceptual documents into local vector store.
 
-    Fetches top-n from TIOBE, loads Wikipedia articles, splits them,
-    and stores in Chroma for semantic search.
-
-    Args:
-        n: Number of languages to ingest (default: 10)
+    Fetches top-50 languages from TIOBE, loads Wikipedia articles, fetches conceptual
+    bridge pages (e.g., "Compiler", "Type system"), splits them, and stores in Chroma
+    for semantic search.
     """
 
     async def _ingest():
-        click.echo(f"Fetching top {n} languages from TIOBE...")
-        langs = await load_tiobe_languages(n)
+        click.echo("Fetching top 50 languages from TIOBE...")
+        langs = await load_tiobe_languages(50)
         click.echo(f"Fetched {len(langs)} languages: {', '.join(langs)}")
 
-        click.echo("Loading Wikipedia pages...")
-        docs = await load_wikipedia_pages(langs)
-        click.echo(f"Loaded {len(docs)} documents from languages: {', '.join({d.metadata.get('language', 'Unknown') for d in docs})}")
+        click.echo("Loading Wikipedia pages for languages...")
+        language_docs = await load_wikipedia_pages(langs)
+        click.echo(f"Loaded {len(language_docs)} language documents")
+
+        click.echo("Loading conceptual bridge pages...")
+        concept_docs = await load_conceptual_pages()
+        click.echo(f"Loaded {len(concept_docs)} conceptual documents")
+
+        # Combine all documents
+        all_docs = language_docs + concept_docs
+        click.echo(f"Total documents to ingest: {len(all_docs)}")
 
         click.echo("Ingesting into vector store...")
-        result = await ingest_documents(docs)
+        result = await ingest_documents(all_docs)
         click.echo(f"Result: {result}")
 
     asyncio.run(_ingest())

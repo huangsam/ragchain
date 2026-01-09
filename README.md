@@ -17,8 +17,8 @@ Your local RAG stack — no APIs, no cloud, full control.
 # 1. Start Chroma vector database
 docker compose up -d
 
-# 2. Ingest programming language documents
-ragchain ingest --n 50
+# 2. Ingest programming language and conceptual documents
+ragchain ingest
 
 # 3. Search ingested documents
 ragchain search "functional programming paradigm" --k 4

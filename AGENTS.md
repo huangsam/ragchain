@@ -173,7 +173,7 @@ CHROMA_SERVER_URL= uv run --with-editable . pytest -m integration
 **Local development:**
 
 - `docker compose up -d` — Starts Chroma vector database
-- `ragchain ingest --n 50` — Ingest programming language documents
+- `ragchain ingest` — Ingest all 50 programming languages + 10 conceptual bridge pages
 - `ragchain search "Python programming"` — Search ingested documents
 - `ragchain ask "What is Python?"` — Ask questions with RAG + LLM
 - `ragchain evaluate` — Run LLM-as-judge evaluation

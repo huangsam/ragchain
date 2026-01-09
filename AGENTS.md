@@ -150,10 +150,6 @@ The following environment variables can be used to configure the RAGChain system
 - `ENABLE_GRADING` — Enable/disable document relevance grading (default: `true`)
 - `ENABLE_INTENT_ROUTING` — Enable/disable intent-based routing (default: `true`)
 
-**API Configuration:**
-
-- `RAGCHAIN_API_URL` — URL for the RAGChain API server (default: `http://localhost:8003`)
-
 ---
 
 ## 🧪 Running tests and remote Chroma

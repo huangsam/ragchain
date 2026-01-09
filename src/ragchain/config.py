@@ -45,9 +45,6 @@ class Config:
         self.enable_grading: bool = os.environ.get("ENABLE_GRADING", "true").lower() == "true"
         self.enable_intent_routing: bool = os.environ.get("ENABLE_INTENT_ROUTING", "true").lower() == "true"
 
-        # CLI configuration
-        self.ragchain_api_url: str = os.environ.get("RAGCHAIN_API_URL", "http://localhost:8003")
-
 
 # Global singleton instance
 config = Config()

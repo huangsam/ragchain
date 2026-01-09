@@ -53,7 +53,7 @@ async def test_search_empty_query():
 
         assert result["query"] == ""
         assert result["results"] == []
-        MockRetriever.assert_called_once_with(k=5)
+        MockRetriever.assert_called_once_with(5)
 
 
 @pytest.mark.asyncio
@@ -68,4 +68,4 @@ async def test_search_k_zero():
 
         assert result["query"] == "test"
         assert result["results"] == []  # Should limit to k=0
-        MockRetriever.assert_called_once_with(k=0)
+        MockRetriever.assert_called_once_with(0)

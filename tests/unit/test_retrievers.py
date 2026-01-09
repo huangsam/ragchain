@@ -115,16 +115,16 @@ def test_get_ensemble_retriever_caching(mock_init):
         MockLoad.return_value = [Document(page_content="Test doc")]
 
         # First call
-        retriever1 = get_ensemble_retriever(k=5, bm25_weight=0.4, chroma_weight=0.6)
+        retriever1 = get_ensemble_retriever(5, bm25_weight=0.4, chroma_weight=0.6)
         assert MockStore.call_count == 1
 
         # Second call with same params should use cache
-        retriever2 = get_ensemble_retriever(k=5, bm25_weight=0.4, chroma_weight=0.6)
+        retriever2 = get_ensemble_retriever(5, bm25_weight=0.4, chroma_weight=0.6)
         assert MockStore.call_count == 1  # Not called again
         assert retriever1 is retriever2
 
         # Different params should create new
-        get_ensemble_retriever(k=10, bm25_weight=0.4, chroma_weight=0.6)
+        get_ensemble_retriever(10, bm25_weight=0.4, chroma_weight=0.6)
         assert MockStore.call_count == 2
 
 
@@ -147,7 +147,7 @@ def test_get_ensemble_retriever_creation():
         MockBM25.return_value = mock_bm25
         MockChroma.return_value = mock_chroma
 
-        get_ensemble_retriever(k=5)
+        get_ensemble_retriever(5)
 
         MockLoad.assert_called_once_with(mock_store)
         MockBM25.assert_called_once_with([Document(page_content="Test doc")], 5)

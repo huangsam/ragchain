@@ -2,12 +2,10 @@
 
 import logging
 
-from langchain_ollama import OllamaLLM
-
 from ragchain.config import config
 from ragchain.prompts import INTENT_ROUTER_PROMPT
 from ragchain.types import Intent, IntentRoutingState
-from ragchain.utils import timed
+from ragchain.utils import get_llm, timed
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +25,7 @@ def intent_router(state: IntentRoutingState) -> IntentRoutingState:
         logger.debug("[intent_router] Using fast-path, defaulting to CONCEPT")
         return {**state, "intent": Intent.CONCEPT, "original_query": state["query"]}
 
-    llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0)
+    llm = get_llm(purpose="routing")
 
     prompt = INTENT_ROUTER_PROMPT.format(query=state["query"])
     response = llm.invoke(prompt).strip().upper()

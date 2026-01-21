@@ -2,7 +2,6 @@
 
 import logging
 
-from langchain_ollama import OllamaLLM
 from langgraph.graph import END, StateGraph
 
 from ragchain.config import config
@@ -11,7 +10,7 @@ from ragchain.inference.retrievers import get_ensemble_retriever
 from ragchain.inference.router import intent_router
 from ragchain.prompts import QUERY_REWRITER_PROMPT
 from ragchain.types import GradeSignal, Intent, IntentRoutingState, Node
-from ragchain.utils import timed
+from ragchain.utils import get_llm, timed
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +65,7 @@ def retrieval_grader(state: IntentRoutingState) -> IntentRoutingState:
 def query_rewriter(state: IntentRoutingState) -> IntentRoutingState:
     """Rewrite query for better retrieval."""
 
-    llm = OllamaLLM(model=config.ollama_model, base_url=config.ollama_base_url, temperature=0.5)
+    llm = get_llm(purpose="rewriting")
 
     # Always rewrite from the original query
     original = state["original_query"]

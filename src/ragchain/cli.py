@@ -89,10 +89,10 @@ def ask(query, model):
 
     async def _ask():
         from langchain_core.prompts import ChatPromptTemplate
-        from langchain_ollama import OllamaLLM
 
         from ragchain.inference.graph import rag_graph
         from ragchain.prompts import RAG_ANSWER_TEMPLATE
+        from ragchain.utils import get_llm
 
         click.echo("Retrieving relevant documents...")
 
@@ -115,7 +115,7 @@ def ask(query, model):
 
         click.echo(f"Found {len(retrieved_docs)} documents. Generating answer...")
 
-        llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1, num_ctx=config.ollama_gen_ctx)
+        llm = get_llm(model=model, purpose="generation")
         prompt = ChatPromptTemplate.from_template(RAG_ANSWER_TEMPLATE)
 
         context = "\n\n".join([doc.page_content for doc in retrieved_docs])

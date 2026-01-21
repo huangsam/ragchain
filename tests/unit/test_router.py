@@ -17,13 +17,13 @@ def test_intent_router_fast_path(mock_config):
     assert "original_query" in result
 
 
-@patch("ragchain.inference.router.OllamaLLM")
-def test_intent_router_with_llm(mock_llm_class, mock_config):
+@patch("ragchain.inference.router.get_llm")
+def test_intent_router_with_llm(mock_get_llm, mock_config):
     """Test intent router with LLM classification."""
     with patch("ragchain.inference.router.config", mock_config):
         mock_llm = MagicMock()
         mock_llm.invoke.return_value = "FACT"
-        mock_llm_class.return_value = mock_llm
+        mock_get_llm.return_value = mock_llm
 
         state = {"query": "What are the top 10 languages?", "intent": Intent.CONCEPT}
         result = intent_router(state)

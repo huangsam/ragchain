@@ -4,11 +4,10 @@ import json
 import logging
 
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_ollama import OllamaLLM
 
 from ragchain.config import config
 from ragchain.prompts import JUDGE_PROMPT, RAG_ANSWER_TEMPLATE
-from ragchain.utils import log_with_prefix, timed
+from ragchain.utils import get_llm, log_with_prefix, timed
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +32,7 @@ async def judge_answer(question: str, context: str, answer: str, model: str = co
     else:
         truncated_context = context
 
-    llm = OllamaLLM(
-        model=model,
-        base_url=config.ollama_base_url,
-        temperature=0.0,
-        num_ctx=config.ollama_gen_ctx,
-    )
+    llm = get_llm(model=model, purpose="judging")
 
     prompt = ChatPromptTemplate.from_template(JUDGE_PROMPT)
 
@@ -113,7 +107,7 @@ async def evaluate_questions(questions: list[str], model: str = config.ollama_mo
     """
     from ragchain.inference.graph import rag_graph
 
-    llm = OllamaLLM(model=model, base_url=config.ollama_base_url, temperature=0.1, num_ctx=config.ollama_gen_ctx)
+    llm = get_llm(model=model, purpose="generation")
 
     evaluations = []
 
@@ -131,8 +125,8 @@ async def evaluate_questions(questions: list[str], model: str = config.ollama_mo
         final_state = rag_graph.invoke(initial_state)  # type: ignore[arg-type]
         retrieved_docs = final_state["retrieved_docs"]
 
+        logger.info(f"[evaluate_questions] Retrieved {len(retrieved_docs)} docs for question: {question[:50]}...")
         if not retrieved_docs:
-            logger.warning(f"[evaluate_questions] No documents retrieved for: {question[:50]}...")
             continue
 
         # Generate answer

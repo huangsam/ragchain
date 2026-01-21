@@ -32,6 +32,10 @@ class Config:
         self.ollama_model: str = os.environ.get("OLLAMA_MODEL", "deepseek-r1")
         self.ollama_embed_ctx: int = int(os.environ.get("OLLAMA_EMBED_CTX", "4096"))
         self.ollama_gen_ctx: int = int(os.environ.get("OLLAMA_GEN_CTX", "8192"))
+        # Smaller context windows for lightweight LLM tasks (routing, judging, rewriting)
+        self.ollama_routing_ctx: int = int(os.environ.get("OLLAMA_ROUTING_CTX", "2048"))
+        self.ollama_judging_ctx: int = int(os.environ.get("OLLAMA_JUDGING_CTX", "4096"))
+        self.ollama_rewriting_ctx: int = int(os.environ.get("OLLAMA_REWRITING_CTX", "2048"))
 
         # Document chunking configuration
         # Chunk size is 2500 characters (625 tokens) with a 20% overlap by default

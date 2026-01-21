@@ -38,7 +38,7 @@ docker compose down -v
 
 **Requirements:**
 - Docker (for Chroma)
-- Ollama with `bge-m3` (embeddings) and `deepseek-r1` (generation)
+- Ollama (local LLMs and embeddings)
 - Python 3.12+
 
 ## Intent-Based Retrieval

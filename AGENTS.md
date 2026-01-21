@@ -129,8 +129,8 @@ The following environment variables can be used to configure the RAGChain system
 **Ollama Configuration:**
 
 - `OLLAMA_BASE_URL` — Base URL for Ollama API (default: `http://localhost:11434`)
-- `OLLAMA_EMBED_MODEL` — Model name for embeddings (default: `bge-m3`)
-- `OLLAMA_MODEL` — Model name for text generation (default: `deepseek-r1`)
+- `OLLAMA_EMBED_MODEL` — Model name for embeddings (default: `qwen3-embedding:4b`)
+- `OLLAMA_MODEL` — Model name for text generation (default: `qwen3:8b`)
 - `OLLAMA_EMBED_CTX` — Context window size for embedding model (default: `4096`)
 - `OLLAMA_GEN_CTX` — Context window size for generation model (default: `8192`)
 

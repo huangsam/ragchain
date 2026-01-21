@@ -24,12 +24,12 @@ class Config:
         self.chroma_server_url: str = os.environ.get("CHROMA_SERVER_URL", "http://localhost:8000")
 
         # Ollama configuration
-        # We use bge-m3 for embeddings and deepseek-r1 for generation
+        # We use qwen3-embedding:4b for embeddings and qwen3:8b for generation
         # Embedding context: chunks are ~700 tokens, 4096 provides headroom
         # Generation context: needs to fit 12 docs × ~800 tokens = ~10k tokens
         self.ollama_base_url: str = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
-        self.ollama_embed_model: str = os.environ.get("OLLAMA_EMBED_MODEL", "bge-m3")
-        self.ollama_model: str = os.environ.get("OLLAMA_MODEL", "deepseek-r1")
+        self.ollama_embed_model: str = os.environ.get("OLLAMA_EMBED_MODEL", "qwen3-embedding:4b")
+        self.ollama_model: str = os.environ.get("OLLAMA_MODEL", "qwen3:8b")
         self.ollama_embed_ctx: int = int(os.environ.get("OLLAMA_EMBED_CTX", "4096"))
         self.ollama_gen_ctx: int = int(os.environ.get("OLLAMA_GEN_CTX", "8192"))
         # Smaller context windows for lightweight LLM tasks (routing, judging, rewriting)

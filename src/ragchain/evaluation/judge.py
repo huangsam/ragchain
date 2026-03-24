@@ -2,11 +2,13 @@
 
 import json
 import logging
+from typing import cast
 
 from langchain_core.prompts import ChatPromptTemplate
 
 from ragchain.config import config
 from ragchain.prompts import JUDGE_PROMPT, RAG_ANSWER_TEMPLATE
+from ragchain.types import IntentRoutingState
 from ragchain.utils import get_llm, log_with_prefix, timed
 
 logger = logging.getLogger(__name__)
@@ -113,14 +115,18 @@ async def evaluate_questions(questions: list[str], model: str = config.ollama_mo
 
     for question in questions:
         # Run RAG pipeline
-        initial_state = {
-            "query": question,
-            "intent": "CONCEPT",
-            "retrieved_docs": [],
-            "retrieval_grade": "NO",
-            "rewritten_query": "",
-            "retry_count": 0,
-        }
+        initial_state = cast(
+            IntentRoutingState,
+            {
+                "query": question,
+                "original_query": question,
+                "intent": "CONCEPT",
+                "retrieved_docs": [],
+                "retrieval_grade": "NO",
+                "rewritten_query": "",
+                "retry_count": 0,
+            },
+        )
 
         final_state = rag_graph.invoke(initial_state)  # type: ignore[arg-type]
         retrieved_docs = final_state["retrieved_docs"]

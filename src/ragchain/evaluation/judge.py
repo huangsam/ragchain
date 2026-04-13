@@ -128,7 +128,7 @@ async def evaluate_questions(questions: list[str], model: str = config.ollama_mo
             },
         )
 
-        final_state = rag_graph.invoke(initial_state)  # type: ignore[arg-type]
+        final_state = rag_graph.invoke(initial_state)
         retrieved_docs = final_state["retrieved_docs"]
 
         logger.info(f"[evaluate_questions] Retrieved {len(retrieved_docs)} docs for question: {question[:50]}...")
